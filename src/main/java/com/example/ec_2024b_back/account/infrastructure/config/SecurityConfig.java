@@ -31,10 +31,16 @@ public class SecurityConfig {
    */
   @Bean
   public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-    // TODO: Configure security rules properly (e.g., permit /api/authentication/login, require JWT
-    // for others)
+    // TODO: JWT検証フィルターを追加する必要がある
     return http.authorizeExchange(
-            exchanges -> exchanges.anyExchange().permitAll()) // Allow all for now
+            exchanges ->
+                exchanges
+                    .pathMatchers("/api/authentication/login") // ログインAPIは認証不要
+                    .permitAll()
+                    .pathMatchers("/api/**") // その他のAPIは認証が必要
+                    .authenticated()
+                    .anyExchange() // 上記以外（静的リソースなど）は一旦許可（必要に応じて変更）
+                    .permitAll())
         .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF for stateless API
         .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // Disable Basic Auth
         .formLogin(ServerHttpSecurity.FormLoginSpec::disable) // Disable Form Login

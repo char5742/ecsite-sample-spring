@@ -1,6 +1,5 @@
 package com.example.ec_2024b_back.user.infrastructure.repository;
 
-import com.example.ec_2024b_back.account.domain.models.Account;
 import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import io.vavr.control.Option;
@@ -30,24 +29,9 @@ public interface MongoUserRepository
   @Override
   default Mono<Try<Option<User>>> findByEmail(String email) {
     return findDocumentByEmail(email)
-        .map(userDocument -> Option.of(convertToDomain(userDocument)))
+        .map(userDocument -> Option.of(userDocument.toDomain())) // UserDocument#toDomain() を使用
         .defaultIfEmpty(Option.none())
         .map(Try::success)
         .onErrorResume(e -> Mono.just(Try.failure(e)));
-  }
-
-  /**
-   * UserDocumentをUserドメインモデルに変換するヘルパーメソッド. (実際の変換ロジックはここに実装)
-   *
-   * @param document 変換元のUserDocument
-   * @return 変換後のUserドメインモデル
-   */
-  private User convertToDomain(UserDocument document) {
-    return new User(
-        new Account.AccountId(document.getId()),
-        document.getFirstName(),
-        document.getLastName(),
-        document.getAddress(),
-        document.getTelephone());
   }
 }

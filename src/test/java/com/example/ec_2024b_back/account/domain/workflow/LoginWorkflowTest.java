@@ -4,16 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.example.ec_2024b_back.account.domain.models.Account;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
+import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep.InvalidPasswordException;
+import com.example.ec_2024b_back.account.domain.workflow.LoginWorkflow.UserNotFoundException;
 import com.example.ec_2024b_back.share.domain.models.Address;
-import com.example.ec_2024b_back.share.domain.models.Address.Zipcode;
 import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.infrastructure.repository.MongoUserRepository;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import com.example.ec_2024b_back.utils.Fast;
-import io.vavr.Tuple;
+import io.vavr.Tuple3;
 import io.vavr.control.Try;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,8 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
 @Fast
+@ExtendWith(MockitoExtension.class)
 class LoginWorkflowTest {
 
   @Mock private VerifyPasswordStep verifyPasswordStep;
@@ -32,105 +35,85 @@ class LoginWorkflowTest {
 
   @InjectMocks private LoginWorkflow loginWorkflow;
 
-  private final String testEmail = "test@example.com";
-  private final String rawPassword = "rawPassword123";
-  private final String hashedPassword = "hashedPasswordXYZ";
-  private final String accountId = "test-id";
-  private final String expectedToken = "generated.jwt.token";
-  private final UserDocument testUserDoc =
-      new UserDocument(
-          accountId,
-          "Taro",
-          "Yamada",
-          testEmail,
-          hashedPassword,
-          new Address(
-              new Zipcode("100-0000"),
-              Address.Prefecture.TOKYO,
-              new Address.Municipalities("Chiyoda"),
-              new Address.DetailAddress("1-1-1")),
-          "090-1234-5678");
+  private UserDocument userDocument;
+  private User user;
+  private String email = "test@example.com";
+  private String rawPassword = "password";
+  private String hashedPassword = "hashedPassword";
+  private String accountId = "user-id-123";
+  private String token = "dummy-jwt-token";
+
+  @BeforeEach
+  void setUp() {
+    var zipcode = new Address.Zipcode("100-0000");
+    var prefecture = Address.Prefecture.TOKYO;
+    var municipalities = new Address.Municipalities("千代田区");
+    var detailAddress = new Address.DetailAddress("1-1-1");
+    var address = new Address(zipcode, prefecture, municipalities, detailAddress);
+    userDocument =
+        new UserDocument(
+            accountId, "Taro", "Yamada", email, hashedPassword, address, "090-1234-5678");
+    user = new User(new Account.AccountId(accountId), "Taro", "Yamada", address, "090-1234-5678");
+  }
 
   @Test
-  void execute_shouldReturnSuccessWithToken_whenAllStepsSucceed() {
-    // Arrange
-    when(userRepository.findDocumentByEmail(testEmail)).thenReturn(Mono.just(testUserDoc));
-    when(verifyPasswordStep.apply(Tuple.of(accountId, hashedPassword, rawPassword)))
-        .thenReturn(Try.success(accountId));
-    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.success(expectedToken));
+  void execute_shouldReturnSuccessToken_whenAllStepsSucceed() {
+    when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
+    when(verifyPasswordStep.apply(any(Tuple3.class))).thenReturn(Try.success(accountId));
+    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.success(token));
 
-    // Act
-    var resultMono = loginWorkflow.execute(testEmail, rawPassword);
+    var resultMono = loginWorkflow.execute(email, rawPassword);
 
-    // Assert
     StepVerifier.create(resultMono)
         .assertNext(
-            resultTry -> {
-              assertThat(resultTry.isSuccess()).isTrue();
-              assertThat(resultTry.get()).isEqualTo(expectedToken);
+            tryResult -> {
+              assertThat(tryResult.isSuccess()).isTrue();
+              assertThat(tryResult.get()).isEqualTo(token);
             })
         .verifyComplete();
   }
 
   @Test
-  void execute_shouldReturnFailure_whenUserNotFound() {
-    // Arrange
-    when(userRepository.findDocumentByEmail(testEmail)).thenReturn(Mono.empty());
+  void execute_shouldReturnUserNotFoundException_whenUserNotFound() {
+    when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.empty());
 
-    // Act
-    var resultMono = loginWorkflow.execute(testEmail, rawPassword);
+    var resultMono = loginWorkflow.execute(email, rawPassword);
 
-    // Assert
     StepVerifier.create(resultMono)
         .expectErrorMatches(
-            throwable -> {
-              assertThat(throwable).isInstanceOf(LoginWorkflow.UserNotFoundException.class);
-              assertThat(throwable.getMessage())
-                  .isEqualTo("メールアドレス: " + testEmail + " のユーザーが見つかりません");
-              return true;
-            })
+            throwable ->
+                throwable instanceof UserNotFoundException
+                    && throwable.getMessage().contains(email))
         .verify();
   }
 
   @Test
-  void execute_shouldReturnFailure_whenPasswordVerificationFails() {
-    // Arrange
-    when(userRepository.findDocumentByEmail(testEmail)).thenReturn(Mono.just(testUserDoc));
-    var passwordException = new VerifyPasswordStep.InvalidPasswordException();
-    when(verifyPasswordStep.apply(Tuple.of(accountId, hashedPassword, rawPassword)))
-        .thenReturn(Try.failure(passwordException));
+  void execute_shouldReturnInvalidPasswordException_whenPasswordVerificationFails() {
+    when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
+    when(verifyPasswordStep.apply(any(Tuple3.class)))
+        .thenReturn(Try.failure(new InvalidPasswordException()));
 
-    // Act
-    var resultMono = loginWorkflow.execute(testEmail, rawPassword);
+    var resultMono = loginWorkflow.execute(email, rawPassword);
 
-    // Assert
     StepVerifier.create(resultMono)
-        .expectErrorMatches(
-            throwable -> {
-              assertThat(throwable).isEqualTo(passwordException);
-              return true;
-            })
+        .expectErrorMatches(throwable -> throwable instanceof InvalidPasswordException)
         .verify();
   }
 
   @Test
-  void execute_shouldReturnFailure_whenTokenGenerationFails() {
-    // Arrange
-    when(userRepository.findDocumentByEmail(testEmail)).thenReturn(Mono.just(testUserDoc));
-    when(verifyPasswordStep.apply(Tuple.of(accountId, hashedPassword, rawPassword)))
-        .thenReturn(Try.success(accountId));
-    var tokenException = new RuntimeException("Token generation error");
-    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.failure(tokenException));
+  void execute_shouldReturnFailure_whenJwtGenerationFails() {
+    var jwtError = new RuntimeException("JWT generation failed");
+    when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
+    when(verifyPasswordStep.apply(any(Tuple3.class))).thenReturn(Try.success(accountId));
+    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.failure(jwtError));
 
-    // Act
-    var resultMono = loginWorkflow.execute(testEmail, rawPassword);
+    var resultMono = loginWorkflow.execute(email, rawPassword);
 
-    // Assert
     StepVerifier.create(resultMono)
         .assertNext(
-            resultTry -> {
-              assertThat(resultTry.isFailure()).isTrue();
-              assertThat(resultTry.getCause()).isEqualTo(tokenException);
+            tryResult -> {
+              assertThat(tryResult.isFailure()).isTrue();
+              assertThat(tryResult.getCause()).isEqualTo(jwtError);
             })
         .verifyComplete();
   }

@@ -1,11 +1,8 @@
 package com.example.ec_2024b_back.account.domain.workflow;
 
-import com.example.ec_2024b_back.account.domain.models.Account;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
-import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.infrastructure.repository.MongoUserRepository;
-import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import io.vavr.Tuple;
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +37,11 @@ public class LoginWorkflow {
               return verifiedAccountIdTry
                   .map(
                       accountId -> {
-                        var user = convertToDomain(userDoc);
+                        // UserDocumentから直接ドメインモデルに変換
+                        var user = userDoc.toDomain();
                         return generateJwtTokenStep.apply(user);
                       })
-                  .map(Mono::just)
+                  .map(Mono::just) // 結果をMonoでラップ
                   .getOrElseGet(Mono::error);
             })
         .switchIfEmpty(Mono.error(new UserNotFoundException(email)));
@@ -56,16 +54,5 @@ public class LoginWorkflow {
     }
   }
 
-  // TODO: この変換ロジックの配置場所を再検討する。Usecaseまたはマッパーに配置すべきか？
-  private User convertToDomain(UserDocument document) {
-    if (document == null) {
-      throw new IllegalArgumentException("null のUserDocumentをUserに変換することはできません");
-    }
-    return new User(
-        new Account.AccountId(document.getId()),
-        document.getFirstName(),
-        document.getLastName(),
-        document.getAddress(),
-        document.getTelephone());
-  }
+  // convertToDomainメソッドは削除
 }

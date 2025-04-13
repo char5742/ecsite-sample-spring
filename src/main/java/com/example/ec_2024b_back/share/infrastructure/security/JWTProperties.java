@@ -1,19 +1,20 @@
 package com.example.ec_2024b_back.share.infrastructure.security;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated; // NoArgsConstructorを追加 (ConfigurationPropertiesに必要)
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.annotation.Validated;
+import lombok.Getter;
 
 @Validated
-@Data
+@Getter
 @AllArgsConstructor
-@Configuration("jwt")
+@ConfigurationProperties("jwt")
 public class JWTProperties {
   /** JWTのシークレットキー */
-  @NotNull private String secret;
+  @NotNull private final String secret;
 
   /** JWTの有効期限（ミリ秒） */
-  @NotNull private Long expirationMillis;
+  @NotNull private final Long expirationMillis;
 }
