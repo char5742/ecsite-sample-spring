@@ -81,7 +81,32 @@
 
 ## 認証・認可 (Spring Security)
 
-*(SecurityFilterChain, WebFilter, UserDetailsService, メソッドレベルセキュリティなどを記載予定)*
+本プロジェクトでは、Spring Security を活用して認証・認可の仕組みを実装しています。
+
+### JWT (JSON Web Token) による認証
+
+APIリクエストの認証には、JWTを使用しています。
+
+*   **JWTライブラリ:** 
+    *   Auth0 java-jwt (com.auth0:java-jwt)
+    *   近代的なJavaの日時APIを活用し、セキュアなJWT実装を提供
+    *   非同期・リアクティブな処理モデルとの互換性を考慮
+
+*   **主要コンポーネント:**
+    *   `JsonWebTokenProvider`: JWTの生成と検証を行うユーティリティクラス
+    *   `JWTProperties`: JWT関連の設定（シークレットキー、有効期限など）を管理するクラス
+
+*   **実装の特徴:**
+    *   `java.time.Instant`を使用した現代的な日時処理
+    *   Vavrの`Try`モナドを活用したエラーハンドリング
+    *   HMAC-SHA256を用いた署名によるトークンの検証
+
+*   **トークンのライフサイクル:**
+    *   生成: ユーザーログイン時に`JsonWebTokenProvider.generateToken()`メソッドでJWTを生成
+    *   検証: リクエスト時に`JsonWebTokenProvider.validateToken()`メソッドでJWTの有効性をチェック
+    *   抽出: `extractUserId()`などのメソッドでトークンからユーザー情報を取得
+
+*(その他のSecurity関連の情報: SecurityFilterChain, WebFilter, UserDetailsService, メソッドレベルセキュリティなどについては今後追記予定)*
 
 ## Null安全性 (JSpecify)
 

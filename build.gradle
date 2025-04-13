@@ -48,10 +48,8 @@ dependencies {
     implementation 'org.openapitools:openapi-generator-gradle-plugin:7.12.0'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
-	// JWT Library
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' // Using Jackson for JSON processing with JWT
+	// JWT Library - Auth0 java-jwt
+	implementation 'com.auth0:java-jwt:4.4.0'
 
 	// 性的解析ツール
 	api 'org.jspecify:jspecify:1.0.0'

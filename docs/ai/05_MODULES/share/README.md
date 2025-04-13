@@ -11,13 +11,21 @@
 
 ## 主要コンポーネント
 
-*(共通のドメインモデル、例外クラス、ユーティリティクラスなどを記載予定)*
-*   **Domain Models:**
-    *   `Address`
-    *   `Email`
-*   **Exceptions:**
-    *   `DomainException`
-*   **(その他、共通のインターフェースや基底クラスなどがあれば記載)**
+### 共通ドメインモデル
+*   `Address`: 住所を表す値オブジェクト
+*   `Email`: メールアドレスを表す値オブジェクト
+
+### セキュリティ関連（infrastructure/security）
+*   `JsonWebTokenProvider`: JWT（JSON Web Token）の生成と検証を行うユーティリティクラス
+    * Auth0の`java-jwt`ライブラリを使用
+    * 現代的なJavaの日時API（`java.time.Instant`）を活用
+    * Vavrの`Try`モナドを使用した柔軟なエラーハンドリングを実装
+*   `JWTProperties`: JWT関連の設定（シークレットキー、有効期限など）を管理するクラス
+
+### 例外
+*   `DomainException`: ドメインルール違反を表す基底例外クラス
+
+*（その他、共通のインターフェースや基底クラスについては今後追記予定）*
 
 ## 他モジュールとの連携
 

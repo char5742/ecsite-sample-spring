@@ -1,16 +1,15 @@
 package com.example.ec_2024b_back.share.infrastructure.security;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.ec_2024b_back.user.domain.models.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import io.vavr.control.Try;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import javax.crypto.SecretKey;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,32 +19,18 @@ import org.springframework.stereotype.Component;
 public class JsonWebTokenProvider {
   private final JWTProperties properties;
 
-  private SecretKey getSigningKey() {
-    var keyBytes = properties.getSecret().getBytes(StandardCharsets.UTF_8);
-    return Keys.hmacShaKeyFor(keyBytes);
+  private Algorithm getAlgorithm() {
+    return Algorithm.HMAC256(properties.getSecret().getBytes(StandardCharsets.UTF_8));
   }
 
   /**
-   * 指定されたトークンからクレームを抽出します.
+   * トークンをデコードします。
    *
    * @param token JWTトークン
-   * @return クレーム
+   * @return デコードされたJWT
    */
-  private Claims extractAllClaims(String token) {
-    return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
-  }
-
-  /**
-   * 指定されたトークンから特定のクレームを抽出します.
-   *
-   * @param <T> クレームの型
-   * @param token JWTトークン
-   * @param claimsResolver クレームを解決する関数
-   * @return 特定のクレーム
-   */
-  public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-    final var claims = extractAllClaims(token);
-    return claimsResolver.apply(claims);
+  private DecodedJWT decodeToken(String token) {
+    return JWT.require(getAlgorithm()).build().verify(token);
   }
 
   /**
@@ -55,17 +40,17 @@ public class JsonWebTokenProvider {
    * @return ユーザーID
    */
   public String extractUserId(String token) {
-    return extractClaim(token, Claims::getSubject);
+    return decodeToken(token).getSubject();
   }
 
   /**
    * 指定されたトークンから有効期限を抽出します.
    *
    * @param token JWTトークン
-   * @return 有効期限
+   * @return 有効期限のInstant
    */
-  public Date extractExpiration(String token) {
-    return extractClaim(token, Claims::getExpiration);
+  public Instant extractExpiration(String token) {
+    return decodeToken(token).getExpiresAtAsInstant();
   }
 
   /**
@@ -75,7 +60,7 @@ public class JsonWebTokenProvider {
    * @return 期限切れの場合はtrue
    */
   private Boolean isTokenExpired(String token) {
-    return extractExpiration(token).before(new Date());
+    return extractExpiration(token).isBefore(Instant.now());
   }
 
   /**
@@ -97,13 +82,15 @@ public class JsonWebTokenProvider {
    * @return 作成されたJWTトークン
    */
   private String createToken(Map<String, Object> claims, String subject) {
-    return Jwts.builder()
-        .claims(claims)
-        .subject(subject)
-        .issuedAt(new Date(System.currentTimeMillis()))
-        .expiration(new Date(System.currentTimeMillis() + properties.getExpirationMillis()))
-        .signWith(getSigningKey())
-        .compact();
+    Instant now = Instant.now();
+    Instant expiry = now.plus(properties.getExpirationMillis(), ChronoUnit.MILLIS);
+
+    return JWT.create()
+        .withPayload(claims)
+        .withSubject(subject)
+        .withIssuedAt(now)
+        .withExpiresAt(expiry)
+        .sign(getAlgorithm());
   }
 
   /**
