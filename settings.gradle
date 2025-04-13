@@ -6,6 +6,3 @@ pluginManagement {
 	}
 }
 rootProject.name = 'ec-2024b-back'
-
-// サブプロジェクトを追加
-include 'api-model'
