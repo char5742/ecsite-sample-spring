@@ -78,6 +78,12 @@ sourceSets {
 			srcDirs 'src/main/java', 'build/generated/src/main/java'
 		}
 	}
+	// Add generated sources to test classpath as well
+	test {
+		java {
+			srcDirs 'src/test/java', 'build/generated/src/main/java' // Include generated sources
+		}
+	}
 }
 
 tasks.named('test') {
