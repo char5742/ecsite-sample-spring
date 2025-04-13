@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'org.openapi.generator' version '7.12.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+}
+
+dependencies {
+    // Spring WebFlux
+    implementation 'org.springframework:spring-webflux:6.2.1'
+    
+    // OpenAPI Generator関連の依存関係
+    implementation 'io.swagger:swagger-annotations:2.0.0'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
+    
+    // Reactor
+    implementation 'io.projectreactor:reactor-core:3.6.12'
+}
+
+// OpenAPI Generator設定
+openApiGenerate {
+    generatorName = "spring"
+    inputSpec = "$rootDir/docs/openapi/entry.yml"
+    outputDir = "$buildDir/generated"
+    apiPackage = "com.example.ec_2024b_back.api"
+    modelPackage = "com.example.ec_2024b_back.model"
+    configOptions = [
+        dateLibrary: "java8",
+        interfaceOnly: "true",
+        reactive: "true",
+        useSpringBoot3: "true",
+        useSwaggerUI: "false",
+        delegatePattern: "true",
+        useTags: "true"
+    ]
+}
+
+// コンパイル前にOpenAPI Generatorを実行
+compileJava.dependsOn('openApiGenerate')
+
+// 生成されたソースディレクトリをコンパイル対象に追加
+sourceSets {
+    main {
+        java {
+            srcDir "$buildDir/generated/src/main/java"
+        }
+    }
+}
