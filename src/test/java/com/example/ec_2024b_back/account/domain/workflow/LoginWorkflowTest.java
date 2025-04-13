@@ -1,14 +1,8 @@
 package com.example.ec_2024b_back.account.domain.workflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.ec_2024b_back.account.domain.models.Account;
 import com.example.ec_2024b_back.account.domain.step.FindUserByEmailStep;
@@ -20,9 +14,14 @@ import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.infrastructure.repository.MongoUserRepository;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import com.example.ec_2024b_back.utils.Fast;
-
 import io.vavr.Tuple;
 import io.vavr.control.Try;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
