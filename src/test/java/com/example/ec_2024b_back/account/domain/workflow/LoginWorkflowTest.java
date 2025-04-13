@@ -82,13 +82,14 @@ class LoginWorkflowTest {
 
     // Assert
     StepVerifier.create(resultMono)
-        .assertNext(
-            resultTry -> {
-              assertThat(resultTry.isFailure()).isTrue();
-              assertThat(resultTry.getCause())
-                  .isInstanceOf(LoginWorkflow.UserNotFoundException.class);
+        .expectErrorMatches(
+            throwable -> {
+              assertThat(throwable).isInstanceOf(LoginWorkflow.UserNotFoundException.class);
+              assertThat(throwable.getMessage())
+                  .isEqualTo("メールアドレス: " + testEmail + " のユーザーが見つかりません");
+              return true;
             })
-        .verifyComplete();
+        .verify();
   }
 
   @Test
@@ -104,12 +105,12 @@ class LoginWorkflowTest {
 
     // Assert
     StepVerifier.create(resultMono)
-        .assertNext(
-            resultTry -> {
-              assertThat(resultTry.isFailure()).isTrue();
-              assertThat(resultTry.getCause()).isEqualTo(passwordException);
+        .expectErrorMatches(
+            throwable -> {
+              assertThat(throwable).isEqualTo(passwordException);
+              return true;
             })
-        .verifyComplete();
+        .verify();
   }
 
   @Test
