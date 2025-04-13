@@ -40,12 +40,18 @@ dependencies {
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
 	implementation 'org.jspecify:jspecify:1.0.0'
+	implementation 'io.vavr:vavr:0.10.6'
 	
     
 	// OpenAPI Generator関連の依存関係
     implementation 'org.openapitools:openapi-generator-gradle-plugin:7.12.0'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-	
+
+	// JWT Library
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' // Using Jackson for JSON processing with JWT
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
