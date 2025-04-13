@@ -100,65 +100,124 @@ Javaの型推論キーワード `var` は以下のガイドラインに従って
         @NotNull private Long expirationMillis;
       }
       ```
-    *   利用側では、このPropertiesクラスをDIして使用します:
-      ```java
-      @Component
-      @RequiredArgsConstructor
-      public class JsonWebTokenProvider {
-        private final JWTProperties jwtProperties;
-        
-        // jwtProperties.getSecret() などで値を取得
+
+## 静的解析とバグ検出
+
+本プロジェクトでは、コードの品質向上と潜在的なバグの早期発見のため、複数の静的解析ツールを採用しています。
+
+### Error Prone
+
+[Error Prone](https://errorprone.info/)は、Googleが開発したJavaコードの静的解析ツールで、コンパイル時に一般的なプログラミングエラーを検出します。
+
+* **設定方法**:
+  * プロジェクトでは`build.gradle`ファイル内で設定されています
+  * 依存関係: `errorprone "com.google.errorprone:error_prone_core:2.37.0"`
+  * Gradleプラグイン: `net.ltgt.errorprone`を使用
+
+* **エラー重要度レベル**:
+  * `ERROR`: ビルドが失敗するレベルのエラー
+  * `WARNING`: 警告として表示されるが、ビルドは続行する
+
+* **チェック方法**:
+  * 通常のビルドプロセス中に自動的に実行: `./gradlew build`
+  * 単独で実行することも可能: `./gradlew compileJava`
+
+### NullAway
+
+[NullAway](https://github.com/uber/NullAway)は、Uberが開発したError Proneプラグインで、null参照例外（NullPointerException）を検出するためのツールです。
+
+* **設定概要**:
+  * `build.gradle`内に以下の設定があります:
+  ```gradle
+  tasks.withType(JavaCompile) {
+    options.errorprone {
+      check("NullAway", CheckSeverity.ERROR)
+      option("NullAway:AnnotatedPackages", "com.example.ec_2024b_back")
+      excludedPaths = ".*build/generated/.*"
+    }
+    // テストコードではNullAwayを無効化
+    if (name.toLowerCase().contains("test")) {
+      options.errorprone {
+        disable("NullAway")
       }
-      ```
+    }
+  }
+  ```
 
-*   **理由:**
-    *   型安全性の向上: 設定値の型が明示的に定義されます
-    *   テスト容易性: モックやスタブの作成が容易になります
-    *   設定のグループ化: 関連する設定値がクラスにまとめられることで可読性が向上します
-    *   バリデーション: `@Validated`アノテーションにより、起動時に設定値の検証が可能です
-    *   IDE補完: フィールド名の補完が利用できるため、タイプミスを減らせます
+* **主要設定パラメータ**:
+  * `AnnotatedPackages`: NullAwayの検査対象となるパッケージ
+  * `excludedPaths`: 検査から除外するパス（OpenAPI Generatorで生成されたコードなど）
+  * テストコードでは検査が無効化されています
 
-*   **避けるべき方法:**
+* **パッケージレベルのnull安全性設定**:
+  * プロジェクトでは、パッケージレベルで`@NullMarked`アノテーションを適用して、そのパッケージ内のすべてのクラスでデフォルトで非null型として扱われるようにしています:
+  ```java
+  // package-info.javaファイル
+  @NullMarked
+  package com.example.ec_2024b_back;
+  
+  import org.jspecify.annotations.NullMarked;
+  ```
+  * この設定により、明示的に`@Nullable`が付与されていない限り、すべてのフィールド、引数、戻り値はnon-nullとして扱われます
+  * 開発者は`@Nullable`を明示的に使用してnullを許容する箇所を示す必要があります
+
+* **アノテーション**:
+  * プロジェクトでは[JSpecify](https://jspecify.dev/)のアノテーションを採用しています:
+    * `@NullMarked`: パッケージまたはクラスレベルで適用し、デフォルトですべての型がnon-nullとして扱われることを示す
+    * `@Nullable`: nullである可能性があることを示す
+    * `@NullUnmarked`: nullabilityのチェックを一時的に緩和するクラスを示す
+  * 使用例:
     ```java
-    @Value("${jwt.secret}")
-    private String secret; // これは避ける
+    // クラスレベルでnullチェックを緩和
+    @NullUnmarked
+    public class UserDocument {
+      // フィールド
+    }
+    
+    // 個別の変数でnull許容を明示
+    public User findByEmail(@Nullable String email) {
+      // メソッド内で適切なnullチェックが必要
+    }
     ```
 
-## 関数型プログラミング (Vavr) 規約
+* **nullチェックのベストプラクティス**:
+  * コンストラクタで引数の非nullチェックを行う
+  * Optional<T>を適切に使用する
+  * 冗長なnullチェックを避ける
+  * ドメインモデルでは基本的にすべてのフィールドを非nullとする
+  * MongoDBドキュメントクラスなど、外部データソースとのインターフェースでは@NullUnmarkedを使用することができる
 
-本プロジェクトでは、コードの堅牢性、テスト容易性、表現力を高めるために、関数型プログラミングの原則と [Vavr](https://www.vavr.io/) ライブラリの活用を推奨します。特に Domain 層と Application 層での積極的な利用を検討してください。
+### 運用ガイドライン
 
-*   **不変性 (Immutability):**
-    *   可能な限り不変なデータ構造を使用します。Vavr のイミュータブルコレクション (`List`, `Map`, `Set` など) の利用を推奨します。
-    *   ドメインオブジェクトやDTOも可能な限りイミュータブルに設計します (Lombok の `@Value` など)。
-*   **副作用の分離 (Side Effect Isolation):**
-    *   副作用（状態の変更、I/O操作など）を持つ処理は、純粋な関数から分離します。
-    *   `Try`, `Either`, `Option` を使用して、エラーや欠損値を明示的に扱います。
-*   **エラーハンドリング (`Try`, `Either`):**
-    *   例外をスローする代わりに、`Try` や `Either` を使用して処理の成功/失敗を表現します。これにより、呼び出し側でエラー処理を強制し、より安全なコードになります。
-    *   `Try`: 例外が発生する可能性のある処理をラップします。
-    *   `Either`: 成功時の値 (Right) または失敗時の値/エラー情報 (Left) のいずれかを持つことを表現します。ドメインエラーなど、特定の失敗ケースを型で表現したい場合に有効です。
-*   **値の欠損 (`Option`):**
-    *   `null` を返す代わりに `Option` (`Some` または `None`) を使用します。これにより、NullPointerException を防ぎ、値が存在しないケースを明示的に扱えます。
-    *   Java 標準の `Optional` よりも Vavr の `Option` の方が、より豊富な API を提供するため推奨されます。
-*   **関数合成 (Function Composition):**
-    *   `andThen()` や `compose()` を利用して、小さな関数を組み合わせて複雑な処理を構築します。
-    *   Domain 層の Workflow/Step パターンでは、この関数合成を積極的に活用します。
-*   **パターンマッチング (Pattern Matching):**
-    *   `Match` API を使用して、複雑な `if-else` や `switch` 文をより宣言的かつ安全に記述します。`Try`, `Either`, `Option` などの結果を処理する際に特に有効です。
-*   **Vavr コレクション:**
-    *   Java 標準のコレクションよりも関数型操作が豊富な Vavr のイミュータブルコレクション (`io.vavr.collection.*`) の利用を検討します。
+* **CI/CD統合**: プルリクエスト時に自動的に静的解析が実行されます
+* **違反の修正**:
+  * Error Proneの警告は原則として無視せず、コードを修正するか、必要な場合のみ`@SuppressWarnings("ErrorProneCheck")`を使用して抑制
+  * NullAwayの警告は厳密に対応し、nullの可能性がある場合は適切にマークし、処理する
 
-これらの規約を適用することで、より宣言的で、予測可能で、テストしやすいコードを目指します。
+* **NullAway違反の修正例**:
+  ```java
+  // 不適切な例: null検査なし
+  public User findByEmail(String email) {
+    UserDocument doc = repository.findByEmail(email);
+    return convertToDomain(doc); // docがnullの場合NPE発生
+  }
+  
+  // 適切な例1: Optional使用
+  public Optional<User> findByEmail(String email) {
+    return Optional.ofNullable(repository.findByEmail(email))
+      .map(this::convertToDomain);
+  }
+  
+  // 適切な例2: 明示的なnull検査
+  public User findByEmail(String email) {
+    UserDocument doc = repository.findByEmail(email);
+    if (doc == null) {
+      throw new UserNotFoundException("メールアドレス: " + email + " のユーザーが見つかりません");
+    }
+    return convertToDomain(doc);
+  }
+  ```
 
-## リアクティブプログラミング規約
-
-*(パイプラインの書き方, `subscribe()` の位置, エラーハンドリングなどを記載予定)*
-
-## ログ規約
-
-*(ログレベルの使い分け, メッセージフォーマットなどを記載予定)*
-
-## その他
-
-*(マジックナンバー禁止, DRY原則など、その他の規約を記載予定)*
+* **ビルド/コンパイル時のエラー対応**:
+  * NullAwayエラーは明確なメッセージとソースコード位置を表示します
+  * ビルドログを確認し、指摘された問題を修正してください
