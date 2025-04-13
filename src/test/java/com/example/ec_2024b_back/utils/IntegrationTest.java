@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import org.junit.jupiter.api.Tag;
 
 /** 統合テストを示すためのカスタムアノテーション. JUnit 5の @Tag("IntegrationTest") をメタアノテーションとして使用します. */
