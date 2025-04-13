@@ -1,10 +1,12 @@
 plugins {
 	id 'java'
+	id 'java-library'
 	id 'org.springframework.boot' version '3.5.0-SNAPSHOT'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'org.graalvm.buildtools.native' version '0.10.6'
 	id 'com.diffplug.spotless' version '7.0.3'
-	   id 'org.openapi.generator' version '7.12.0'
+	id 'org.openapi.generator' version '7.12.0'
+	id "net.ltgt.errorprone" version '4.1.0'
 }
 
 group = 'com.example'
@@ -39,7 +41,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
-	implementation 'org.jspecify:jspecify:1.0.0'
 	implementation 'io.vavr:vavr:0.10.6'
 	
     
@@ -51,6 +52,12 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' // Using Jackson for JSON processing with JWT
+
+	// 性的解析ツール
+	api 'org.jspecify:jspecify:1.0.0'
+	errorprone "com.uber.nullaway:nullaway:0.12.6"
+	errorprone "com.google.errorprone:error_prone_core:2.37.0"
+
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -94,3 +101,19 @@ apply from: "spotless.gradle"
 
 // OpenAPI Generator設定
 apply from: "openapi.gradle"
+
+// NullAway設定
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+tasks.withType(JavaCompile) {
+  options.errorprone {
+    check("NullAway", CheckSeverity.ERROR)
+    option("NullAway:AnnotatedPackages", "com.example.ec_2024b_back")
+  }
+  // Include to disable NullAway on test code
+  if (name.toLowerCase().contains("test")) {
+    options.errorprone {
+      disable("NullAway")
+    }
+  }
+}
