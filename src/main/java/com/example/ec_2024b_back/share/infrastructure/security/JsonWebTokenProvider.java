@@ -11,11 +11,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /** JWT (JSON Web Token) の生成と検証を行うユーティリティクラス. */
 @Component
 @AllArgsConstructor
+@Slf4j
 public class JsonWebTokenProvider {
   private final JWTProperties properties;
 
@@ -106,6 +108,6 @@ public class JsonWebTokenProvider {
               final var extractedUserId = extractUserId(token);
               return (extractedUserId.equals(userId) && !isTokenExpired(token));
             })
-        .onFailure(e -> System.err.println("Token validation failed: " + e.getMessage()));
+        .onFailure(e -> log.error("Token validation failed: " + e.getMessage()));
   }
 }
