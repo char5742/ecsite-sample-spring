@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.example.ec_2024b_back.account.domain.models.Account;
-import com.example.ec_2024b_back.account.domain.step.FindUserByEmailStep;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.share.domain.models.Address;
@@ -16,7 +14,6 @@ import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDoc
 import com.example.ec_2024b_back.utils.Fast;
 import io.vavr.Tuple;
 import io.vavr.control.Try;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,7 +26,6 @@ import reactor.test.StepVerifier;
 @Fast
 class LoginWorkflowTest {
 
-  @Mock private FindUserByEmailStep findUserByEmailStep;
   @Mock private VerifyPasswordStep verifyPasswordStep;
   @Mock private GenerateJwtTokenStep generateJwtTokenStep;
   @Mock private MongoUserRepository userRepository;
@@ -54,20 +50,6 @@ class LoginWorkflowTest {
               new Address.Municipalities("Chiyoda"),
               new Address.DetailAddress("1-1-1")),
           "090-1234-5678");
-  private final User testUser =
-      new User(
-          new Account.AccountId(accountId),
-          "Taro",
-          "Yamada",
-          new Address(
-              new Zipcode("100-0000"),
-              Address.Prefecture.TOKYO,
-              new Address.Municipalities("Chiyoda"),
-              new Address.DetailAddress("1-1-1")),
-          "090-1234-5678");
-
-  @BeforeEach
-  void setUp() {}
 
   @Test
   void execute_shouldReturnSuccessWithToken_whenAllStepsSucceed() {

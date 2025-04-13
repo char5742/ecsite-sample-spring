@@ -1,12 +1,14 @@
 package com.example.ec_2024b_back.share.infrastructure.security;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Data
+@AllArgsConstructor
 @Configuration("jwt")
 public class JWTProperties {
   /** JWTのシークレットキー */

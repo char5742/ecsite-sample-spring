@@ -43,12 +43,6 @@ public interface MongoUserRepository
    * @return 変換後のUserドメインモデル
    */
   private User convertToDomain(UserDocument document) {
-    if (document == null) {
-      // This case should ideally be handled before calling this method,
-      // but returning null or throwing an exception are options.
-      // Returning Option<User> might be better.
-      return null;
-    }
     return new User(
         new Account.AccountId(document.getId()),
         document.getFirstName(),

@@ -1,7 +1,6 @@
 package com.example.ec_2024b_back.account.domain.workflow;
 
 import com.example.ec_2024b_back.account.domain.models.Account;
-import com.example.ec_2024b_back.account.domain.step.FindUserByEmailStep;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.user.domain.models.User;
@@ -18,7 +17,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class LoginWorkflow {
 
-  private final FindUserByEmailStep findUserByEmailStep;
   private final VerifyPasswordStep verifyPasswordStep;
   private final GenerateJwtTokenStep generateJwtTokenStep;
   private final MongoUserRepository userRepository;

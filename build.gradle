@@ -107,6 +107,7 @@ tasks.withType(JavaCompile) {
   options.errorprone {
     check("NullAway", CheckSeverity.ERROR)
     option("NullAway:AnnotatedPackages", "com.example.ec_2024b_back")
+	excludedPaths = ".*build/generated/.*"
   }
   // Include to disable NullAway on test code
   if (name.toLowerCase().contains("test")) {

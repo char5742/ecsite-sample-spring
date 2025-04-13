@@ -1,17 +1,19 @@
 package com.example.ec_2024b_back.user.infrastructure.repository.document;
 
 import com.example.ec_2024b_back.share.domain.models.Address;
-import lombok.AllArgsConstructor; // Address値オブジェクトを使用
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.Indexed; // Address値オブジェクトを使用
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /** MongoDBのusersコレクションに対応するドキュメントクラス. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NullUnmarked
 @Document(collection = "users")
 public class UserDocument {
 
