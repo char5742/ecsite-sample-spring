@@ -23,8 +23,10 @@
 
 多くの API は認証 (ログイン) が必要です。認証には JWT (JSON Web Token) を使用します。
 
-1.  **トークン取得:**
-    *   まず、`/api/authentication/login` エンドポイント (Swagger UI または curl/Postman などで) を使用してログインし、レスポンスに含まれる JWT トークンを取得します。
+1.  **トークン取得 (ログイン API):**
+    *   まず、`POST /api/authentication/login` エンドポイントを使用してログインします。リクエストボディには `email` と `password` を含めます。
+    *   認証に成功すると、レスポンスボディに JWT トークンが含まれます。
+    *   このエンドポイントは認証が不要です。
 2.  **Swagger UI でのトークン設定:**
     *   Swagger UI 右上の "Authorize" ボタンをクリックします。
     *   表示されたダイアログの "Value" フィールドに、取得した JWT トークンを `Bearer <token>` の形式で入力します (例: `Bearer eyJhbGciOiJIUzI1NiJ9...`)。
@@ -38,6 +40,32 @@
 ## 主要API利用例
 
 *(アカウント登録、ログイン、商品検索、注文など、代表的なAPIについて `curl` や Postman でのリクエスト/レスポンス例を記載予定)*
+
+### 例: ログイン (curl)
+
+```bash
+curl -X POST "http://localhost:8080/api/authentication/login" \
+ -H "accept: application/json" \
+ -H "Content-Type: application/json" \
+ -d '{
+  "email": "user@example.com",
+  "password": "password"
+}'
+
+# 成功時のレスポンス例 (ステータスコード 200)
+# {
+#  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzEzMDE4MjAwLCJleHAiOjE3MTMwMjE4MDB9.xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# }
+
+# 失敗時のレスポンス例 (ステータスコード 401)
+# {
+#  "timestamp": "...",
+#  "status": 401,
+#  "error": "Unauthorized",
+#  "message": "Authentication failed",
+#  "path": "/api/authentication/login"
+# }
+```
 
 ### 例: 商品一覧取得 (curl)
 
