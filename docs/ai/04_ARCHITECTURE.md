@@ -106,7 +106,15 @@ APIリクエストの認証には、JWTを使用しています。
     *   検証: リクエスト時に`JsonWebTokenProvider.validateToken()`メソッドでJWTの有効性をチェック
     *   抽出: `extractUserId()`などのメソッドでトークンからユーザー情報を取得
 
-*(その他のSecurity関連の情報: SecurityFilterChain, WebFilter, UserDetailsService, メソッドレベルセキュリティなどについては今後追記予定)*
+*   **アクセス制御 (`SecurityFilterChain`):**
+    *   `account.infrastructure.config.SecurityConfig` クラスで `SecurityFilterChain` Bean を定義し、HTTPリクエストに対するセキュリティルールを設定しています。
+    *   **現在の設定:**
+        *   `/api/authentication/login`: 認証不要 (permitAll) でアクセス可能です。
+        *   `/api/**` (上記ログインAPIを除く): 認証が必須 (authenticated) です。有効なJWTがリクエストヘッダーに含まれている必要があります。
+        *   上記以外のパス: デフォルトでアクセス拒否 (denyAll) されます。静的リソースなど、認証不要でアクセスさせたいパスがある場合は、明示的に設定を追加する必要があります。
+    *   CSRF保護、HTTP Basic認証、フォームログインは無効化されています (ステートレスなJWT認証のため)。
+
+*(その他のSecurity関連の情報: WebFilter, UserDetailsService, メソッドレベルセキュリティなどについては今後追記予定)*
 
 ## Null安全性 (JSpecify)
 

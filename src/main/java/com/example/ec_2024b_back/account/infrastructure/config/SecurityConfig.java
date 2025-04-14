@@ -35,15 +35,15 @@ public class SecurityConfig {
     return http.authorizeExchange(
             exchanges ->
                 exchanges
-                    .pathMatchers("/api/authentication/login") // ログインAPIは認証不要
+                    .pathMatchers("/api/authentication/login")
                     .permitAll()
-                    .pathMatchers("/api/**") // その他のAPIは認証が必要
+                    .pathMatchers("/api/**")
                     .authenticated()
-                    .anyExchange() // 上記以外（静的リソースなど）は一旦許可（必要に応じて変更）
-                    .permitAll())
-        .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF for stateless API
-        .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // Disable Basic Auth
-        .formLogin(ServerHttpSecurity.FormLoginSpec::disable) // Disable Form Login
+                    .anyExchange()
+                    .denyAll())
+        .csrf(ServerHttpSecurity.CsrfSpec::disable)
+        .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+        .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
         .build();
   }
 }

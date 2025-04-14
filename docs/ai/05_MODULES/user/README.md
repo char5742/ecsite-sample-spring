@@ -58,7 +58,16 @@ classDiagram
 
 ## 主要クラス解説
 
-*(Service, Repository, Delegate などの役割を記載予定)*
+*   **`UserRepository` (Interface):**
+    *   場所: `com.example.ec_2024b_back.user.domain.repository`
+    *   責務: `User` ドメインオブジェクトの永続化に関するインターフェースを定義します。ドメイン層に配置され、インフラストラクチャ層の詳細（例: MongoDB）から独立しています。
+    *   主要メソッド:
+        *   `findByEmail(String email)`: メールアドレスを基にユーザーを検索します。
+*   **`MongoUserRepository` (Class):**
+    *   場所: `com.example.ec_2024b_back.user.infrastructure.repository`
+    *   責務: `UserRepository` インターフェースの MongoDB 実装を提供します。Spring Data MongoDB を利用してデータベース操作を行います。
+
+*(その他の Service, Delegate などの役割を記載予定)*
 
 ## 関連API
 

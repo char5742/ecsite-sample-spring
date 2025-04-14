@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.user.infrastructure.repository;
 
 import com.example.ec_2024b_back.user.domain.models.User;
+import com.example.ec_2024b_back.user.domain.repository.UserRepository;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import io.vavr.control.Option;
 import io.vavr.control.Try;

@@ -1,13 +1,11 @@
-package com.example.ec_2024b_back.user.infrastructure.repository;
+package com.example.ec_2024b_back.user.domain.repository;
 
 import com.example.ec_2024b_back.user.domain.models.User;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono; // Reactive対応のためMonoを使用
 
 /** Userエンティティのリポジトリインターフェース. */
-@Repository // Spring Dataのコンポーネントスキャン対象とする
 public interface UserRepository {
 
   /**
