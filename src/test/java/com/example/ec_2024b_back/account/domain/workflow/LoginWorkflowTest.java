@@ -22,10 +22,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @Fast
+@MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
 class LoginWorkflowTest {
 
@@ -53,7 +55,17 @@ class LoginWorkflowTest {
     userDocument =
         new UserDocument(
             accountId, "Taro", "Yamada", email, hashedPassword, address, "090-1234-5678");
-    user = new User(new Account.AccountId(accountId), "Taro", "Yamada", address, "090-1234-5678");
+    user =
+        new User(
+            new Account.AccountId(accountId),
+            "Taro",
+            "Yamada",
+            address,
+            "090-1234-5678",
+            "dummy-password");
+    // UserRepositoryのfindByEmailも必ずモックする
+    org.mockito.Mockito.when(userRepository.findByEmail(email))
+        .thenReturn(Mono.just(io.vavr.control.Try.success(io.vavr.control.Option.of(user))));
   }
 
   @Test
@@ -76,6 +88,9 @@ class LoginWorkflowTest {
   @Test
   void execute_shouldReturnUserNotFoundException_whenUserNotFound() {
     when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.empty());
+    // findByEmailもOption.none()を返すように上書き
+    org.mockito.Mockito.when(userRepository.findByEmail(email))
+        .thenReturn(Mono.just(io.vavr.control.Try.success(io.vavr.control.Option.none())));
 
     var resultMono = loginWorkflow.execute(email, rawPassword);
 

@@ -38,7 +38,14 @@ class FindUserByEmailStepImplTest {
     var municipalities = new Address.Municipalities("テスト区");
     var detailAddress = new Address.DetailAddress("テスト1-1");
     var address = new Address(zipcode, prefecture, municipalities, detailAddress);
-    user = new User(new Account.AccountId("user-id-123"), "Test", "User", address, "000-0000-0000");
+    user =
+        new User(
+            new Account.AccountId("user-id-123"),
+            "Test",
+            "User",
+            address,
+            "000-0000-0000",
+            "dummy-password");
   }
 
   @Test

@@ -3,6 +3,7 @@ package com.example.ec_2024b_back.account.domain.workflow;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.user.domain.repository.UserRepository;
+import io.vavr.Tuple;
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -38,14 +39,15 @@ public class LoginWorkflow {
                                       var verifiedAccountIdTry =
                                           verifyPasswordStep.apply(
                                               Tuple.of(
-                                                  user.getId(), user.getPassword(), rawPassword));
+                                                  user.id().id(), user.password(), rawPassword));
                                       return verifiedAccountIdTry
                                           .map(accountId -> generateJwtTokenStep.apply(user))
                                           .map(Mono::just)
                                           .getOrElseGet(Mono::error);
                                     })
-                                .getOrElse(Mono.error(new UserNotFoundException(email))))
-                    .getOrElse(Mono::error));
+                                .getOrElse(
+                                    Mono.<Try<String>>error(new UserNotFoundException(email))))
+                    .getOrElseGet(Mono::error));
   }
 
   /** ユーザーが見つからない場合のカスタム例外. */

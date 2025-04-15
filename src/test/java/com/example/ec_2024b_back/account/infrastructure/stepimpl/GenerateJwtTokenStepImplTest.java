@@ -35,7 +35,13 @@ class GenerateJwtTokenStepImplTest {
     var detailAddress = new Address.DetailAddress("1-1-1");
     var address = new Address(zipcode, prefecture, municipalities, detailAddress);
     user =
-        new User(new Account.AccountId("user-id-123"), "Taro", "Yamada", address, "090-1234-5678");
+        new User(
+            new Account.AccountId("user-id-123"),
+            "Taro",
+            "Yamada",
+            address,
+            "090-1234-5678",
+            "dummy-password");
   }
 
   @Test
