@@ -19,17 +19,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "users")
 public class UserDocument {
 
-  @Id private String id; // AccountIdに対応
+  @Id private String id;
 
   private String firstName;
   private String lastName;
 
-  @Indexed(unique = true) // emailはユニーク制約とインデックスを設定
+  @Indexed(unique = true)
   private String email;
 
-  private String password; // ハッシュ化されたパスワード
-
-  private Address address; // 住所情報を埋め込み
+  private String password;
+  private Address address;
 
   private String telephone;
 
@@ -41,15 +40,14 @@ public class UserDocument {
    */
   public User toDomain() {
     if (this.id == null) {
-      // IDがnullの場合はドメインオブジェクトを構築できないため例外をスロー
       throw new IllegalArgumentException("UserDocumentのIDがnullです。ドメインオブジェクトに変換できません。");
     }
-    // Account.AccountIdはnullを許容しないため、ここでnullチェックは不要
     return new User(
         new Account.AccountId(this.id),
         this.firstName,
         this.lastName,
-        this.address, // Addressはnull許容かもしれないので、必要に応じてドメイン側で処理
-        this.telephone);
+        this.address,
+        this.telephone,
+        this.password);
   }
 }

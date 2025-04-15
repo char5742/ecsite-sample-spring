@@ -20,6 +20,17 @@
 
 より深く理解するため、または特定のタスクに取り組む際には、以下のドキュメントを参照してください。
 
+---
+
+### ドメイン層とインフラ層の責務分離について
+
+本プロジェクトでは、MongoDBのDocument（UserDocument等）はインフラ層でのみ扱い、  
+ドメイン層やアプリケーション層では必ずドメインモデル（User等の集約）を利用する設計方針としています。  
+インフラ層のfindDocumentByEmail等のメソッドは外部に公開せず、  
+UserRepositoryのfindByEmailのようにドメインモデルを返すAPIを通じて利用してください。
+
+---
+
 *   **[04_ARCHITECTURE.md](./04_ARCHITECTURE.md):** システムアーキテクチャの詳細（Modulith, リアクティブ, API設計など）。
 *   **[05_MODULES/](./05_MODULES/):** 各機能モジュール（`account`, `user` など）の詳細な説明。
 *   **[06_CODING_STANDARDS.md](./06_CODING_STANDARDS.md):** コーディング規約とベストプラクティス。

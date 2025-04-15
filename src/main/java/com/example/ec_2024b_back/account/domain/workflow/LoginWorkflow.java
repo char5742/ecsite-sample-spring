@@ -3,7 +3,6 @@ package com.example.ec_2024b_back.account.domain.workflow;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.user.domain.repository.UserRepository;
-import io.vavr.Tuple;
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -27,24 +26,26 @@ public class LoginWorkflow {
    */
   public Mono<Try<String>> execute(String email, String rawPassword) {
     return userRepository
-        .findDocumentByEmail(email)
+        .findByEmail(email)
         .flatMap(
-            userDoc -> {
-              var verifiedAccountIdTry =
-                  verifyPasswordStep.apply(
-                      Tuple.of(userDoc.getId(), userDoc.getPassword(), rawPassword));
-
-              return verifiedAccountIdTry
-                  .map(
-                      accountId -> {
-                        // UserDocumentから直接ドメインモデルに変換
-                        var user = userDoc.toDomain();
-                        return generateJwtTokenStep.apply(user);
-                      })
-                  .map(Mono::just) // 結果をMonoでラップ
-                  .getOrElseGet(Mono::error);
-            })
-        .switchIfEmpty(Mono.error(new UserNotFoundException(email)));
+            tryOptionUser ->
+                tryOptionUser
+                    .map(
+                        optionUser ->
+                            optionUser
+                                .map(
+                                    user -> {
+                                      var verifiedAccountIdTry =
+                                          verifyPasswordStep.apply(
+                                              Tuple.of(
+                                                  user.getId(), user.getPassword(), rawPassword));
+                                      return verifiedAccountIdTry
+                                          .map(accountId -> generateJwtTokenStep.apply(user))
+                                          .map(Mono::just)
+                                          .getOrElseGet(Mono::error);
+                                    })
+                                .getOrElse(Mono.error(new UserNotFoundException(email))))
+                    .getOrElse(Mono::error));
   }
 
   /** ユーザーが見つからない場合のカスタム例外. */
@@ -53,6 +54,4 @@ public class LoginWorkflow {
       super("メールアドレス: " + email + " のユーザーが見つかりません");
     }
   }
-
-  // convertToDomainメソッドは削除
 }
