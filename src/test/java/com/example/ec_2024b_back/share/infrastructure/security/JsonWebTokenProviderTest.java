@@ -49,8 +49,11 @@ class JsonWebTokenProviderTest {
 
     assertThat(token).isNotNull().isNotEmpty();
     var validationResult = jsonWebTokenProvider.validateToken(token, userId);
-    assertThat(validationResult.isSuccess()).isTrue();
-    assertThat(validationResult.get()).isTrue();
+    validationResult.subscribe(
+        result -> assertThat(result).isTrue(),
+        error -> {
+          throw new AssertionError("Validation failed with error", error);
+        });
     assertThat(jsonWebTokenProvider.extractUserId(token)).isEqualTo(userId);
   }
 
@@ -60,8 +63,11 @@ class JsonWebTokenProviderTest {
 
     var result = jsonWebTokenProvider.validateToken(token, userId);
 
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.get()).isTrue();
+    result.subscribe(
+        r -> assertThat(r).isTrue(),
+        e -> {
+          throw new AssertionError("Validation failed with error", e);
+        });
   }
 
   @Test
@@ -72,8 +78,12 @@ class JsonWebTokenProviderTest {
 
     var result = jsonWebTokenProvider.validateToken(expiredToken, userId);
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getCause()).isInstanceOf(TokenExpiredException.class);
+    result
+        .doOnError(
+            e -> {
+              assertThat(e).isInstanceOf(TokenExpiredException.class);
+            })
+        .subscribe();
   }
 
   @Test
@@ -83,8 +93,12 @@ class JsonWebTokenProviderTest {
 
     var result = jsonWebTokenProvider.validateToken(invalidToken, userId);
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getCause()).isInstanceOf(SignatureVerificationException.class);
+    result
+        .doOnError(
+            e -> {
+              assertThat(e).isInstanceOf(SignatureVerificationException.class);
+            })
+        .subscribe();
   }
 
   @Test
@@ -94,8 +108,11 @@ class JsonWebTokenProviderTest {
 
     var result = jsonWebTokenProvider.validateToken(token, wrongUserId);
 
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.get()).isFalse();
+    result.subscribe(
+        r -> assertThat(r).isFalse(),
+        e -> {
+          throw new AssertionError("Validation failed with error", e);
+        });
   }
 
   @Test

@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.ec_2024b_back.user.domain.models.User;
-import io.vavr.control.Try;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +12,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 /** JWT (JSON Web Token) の生成と検証を行うユーティリティクラス. */
 @Component
@@ -102,12 +102,14 @@ public class JsonWebTokenProvider {
    * @param userId 検証対象のユーザーID
    * @return トークンが有効な場合はTry.success(true)、無効な場合はTry.success(false) または Try.failure
    */
-  public Try<Boolean> validateToken(String token, String userId) {
-    return Try.of(
-            () -> {
-              final var extractedUserId = extractUserId(token);
-              return (extractedUserId.equals(userId) && !isTokenExpired(token));
-            })
-        .onFailure(e -> log.error("Token validation failed: " + e.getMessage()));
+  public Mono<Boolean> validateToken(String token, String userId) {
+    try {
+      final var extractedUserId = extractUserId(token);
+      boolean valid = extractedUserId.equals(userId) && !isTokenExpired(token);
+      return Mono.just(valid);
+    } catch (Exception e) {
+      log.error("Token validation failed: " + e.getMessage());
+      return Mono.error(e);
+    }
   }
 }

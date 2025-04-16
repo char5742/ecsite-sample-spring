@@ -8,7 +8,6 @@ import com.example.ec_2024b_back.account.application.usecase.LoginUsecase.Authen
 import com.example.ec_2024b_back.account.domain.workflow.LoginWorkflow;
 import com.example.ec_2024b_back.model.LoginDto;
 import com.example.ec_2024b_back.utils.Fast;
-import io.vavr.control.Try;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,8 +38,7 @@ class LoginUsecaseTest {
   void execute_shouldReturnSuccessDto_whenWorkflowSucceeds() {
     var expectedToken = "dummy-jwt-token";
 
-    when(loginWorkflow.execute(anyString(), anyString()))
-        .thenReturn(Mono.just(Try.success(expectedToken)));
+    when(loginWorkflow.execute(anyString(), anyString())).thenReturn(Mono.just(expectedToken));
 
     var resultMono = loginUsecase.execute(loginDto);
 
@@ -56,7 +54,7 @@ class LoginUsecaseTest {
   @Test
   void execute_shouldThrowAuthenticationFailedException_whenWorkflowFails() {
     var cause = new RuntimeException("Workflow error");
-    when(loginWorkflow.execute(anyString(), anyString())).thenReturn(Mono.just(Try.failure(cause)));
+    when(loginWorkflow.execute(anyString(), anyString())).thenReturn(Mono.error(cause));
 
     var resultMono = loginUsecase.execute(loginDto);
 

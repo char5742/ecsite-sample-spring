@@ -1,10 +1,9 @@
 package com.example.ec_2024b_back.account.domain.workflow;
 
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
+import com.example.ec_2024b_back.account.domain.step.PasswordInput;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.user.domain.repository.UserRepository;
-import io.vavr.Tuple;
-import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -25,29 +24,26 @@ public class LoginWorkflow {
    * @param rawPassword 生パスワード
    * @return JWTトークンを含むMono (成功時 Try.success(token), 失敗時 Try.failure(exception))
    */
-  public Mono<Try<String>> execute(String email, String rawPassword) {
+  public Mono<String> execute(String email, String rawPassword) {
     return userRepository
         .findByEmail(email)
         .flatMap(
-            tryOptionUser ->
-                tryOptionUser
-                    .map(
-                        optionUser ->
-                            optionUser
-                                .map(
-                                    user -> {
-                                      var verifiedAccountIdTry =
-                                          verifyPasswordStep.apply(
-                                              Tuple.of(
-                                                  user.id().id(), user.password(), rawPassword));
-                                      return verifiedAccountIdTry
-                                          .map(accountId -> generateJwtTokenStep.apply(user))
-                                          .map(Mono::just)
-                                          .getOrElseGet(Mono::error);
-                                    })
-                                .getOrElse(
-                                    Mono.<Try<String>>error(new UserNotFoundException(email))))
-                    .getOrElseGet(Mono::error));
+            optionalUser -> {
+              if (optionalUser.isPresent()) {
+                var user = optionalUser.get();
+                try {
+                  var verifiedAccountId =
+                      verifyPasswordStep.apply(
+                          new PasswordInput(user.id().id(), user.password(), rawPassword));
+                  var token = generateJwtTokenStep.apply(user);
+                  return Mono.just(token);
+                } catch (Exception e) {
+                  return Mono.error(e);
+                }
+              } else {
+                return Mono.error(new UserNotFoundException(email));
+              }
+            });
   }
 
   /** ユーザーが見つからない場合のカスタム例外. */

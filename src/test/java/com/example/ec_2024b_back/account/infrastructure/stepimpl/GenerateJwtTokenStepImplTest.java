@@ -50,8 +50,7 @@ class GenerateJwtTokenStepImplTest {
 
     var result = generateJwtTokenStep.apply(user);
 
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.get()).isEqualTo(expectedToken);
+    assertThat(result).isEqualTo(expectedToken);
   }
 
   @Test
@@ -59,9 +58,11 @@ class GenerateJwtTokenStepImplTest {
     var exception = new RuntimeException("Token generation error");
     when(jsonWebTokenProvider.generateToken(any(User.class))).thenThrow(exception);
 
-    var result = generateJwtTokenStep.apply(user);
-
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getCause()).isEqualTo(exception);
+    try {
+      generateJwtTokenStep.apply(user);
+      org.junit.jupiter.api.Assertions.fail("Expected RuntimeException");
+    } catch (RuntimeException e) {
+      assertThat(e).isEqualTo(exception);
+    }
   }
 }

@@ -25,14 +25,8 @@ public class LoginUsecase {
   public Mono<LoginSuccessDto> execute(LoginDto loginDto) {
     return loginWorkflow
         .execute(loginDto.getEmail(), loginDto.getPassword())
-        .flatMap(
-            tryResult ->
-                tryResult
-                    .map(token -> Mono.just(new LoginSuccessDto(token))) // 成功時: トークンをDTOにラップ
-                    .getOrElseGet(
-                        error ->
-                            Mono.error(
-                                new AuthenticationFailedException(error)))); // 失敗時: カスタム例外をスロー
+        .map(token -> new LoginSuccessDto(token))
+        .onErrorMap(AuthenticationFailedException::new);
   }
 
   /** 認証失敗を表すカスタム例外. */

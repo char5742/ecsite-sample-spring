@@ -3,9 +3,9 @@ package com.example.ec_2024b_back.account.infrastructure.stepimpl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.example.ec_2024b_back.account.domain.step.PasswordInput;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep.InvalidPasswordException;
 import com.example.ec_2024b_back.utils.Fast;
-import io.vavr.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,22 +28,23 @@ class VerifyPasswordStepImplTest {
   @Test
   void apply_shouldReturnSuccessWithAccountId_whenPasswordMatches() {
     when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(true);
-    var input = Tuple.of(accountId, hashedPassword, rawPassword);
+    var input = new PasswordInput(accountId, hashedPassword, rawPassword);
 
     var result = verifyPasswordStep.apply(input);
 
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.get()).isEqualTo(accountId);
+    assertThat(result).isEqualTo(accountId);
   }
 
   @Test
   void apply_shouldReturnFailureWithInvalidPasswordException_whenPasswordDoesNotMatch() {
     when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(false);
-    var input = Tuple.of(accountId, hashedPassword, rawPassword);
+    var input = new PasswordInput(accountId, hashedPassword, rawPassword);
 
-    var result = verifyPasswordStep.apply(input);
-
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getCause()).isInstanceOf(InvalidPasswordException.class);
+    try {
+      verifyPasswordStep.apply(input);
+      org.junit.jupiter.api.Assertions.fail("Expected InvalidPasswordException");
+    } catch (InvalidPasswordException e) {
+      // expected
+    }
   }
 }

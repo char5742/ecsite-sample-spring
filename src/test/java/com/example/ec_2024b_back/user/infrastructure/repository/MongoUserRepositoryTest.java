@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.ec_2024b_back.share.domain.models.Address;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import com.example.ec_2024b_back.utils.IntegrationTest;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,10 +93,10 @@ class MongoUserRepositoryTest {
     StepVerifier.create(resultMono)
         .assertNext(
             tryResult -> {
-              assertThat(tryResult.isSuccess()).isTrue();
+              assertThat(tryResult).isPresent();
               var userOption = tryResult.get();
-              assertThat(userOption.isDefined()).isTrue();
-              var user = userOption.get();
+              assertThat(userOption).isNotNull();
+              var user = userOption;
               assertThat(user.id().id()).isEqualTo(testUserDoc.getId());
               assertThat(user.firstName()).isEqualTo(testUserDoc.getFirstName());
             })
@@ -108,9 +109,9 @@ class MongoUserRepositoryTest {
 
     StepVerifier.create(resultMono)
         .assertNext(
-            tryResult -> {
-              assertThat(tryResult.isSuccess()).isTrue();
-              assertThat(tryResult.get().isEmpty()).isTrue();
+            userOption -> {
+              // Optionalは存在するが、中身は空
+              assertThat(userOption).isEqualTo(Optional.empty());
             })
         .verifyComplete();
   }

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.ec_2024b_back.account.domain.models.Account;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
+import com.example.ec_2024b_back.account.domain.step.PasswordInput;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep.InvalidPasswordException;
 import com.example.ec_2024b_back.account.domain.workflow.LoginWorkflow.UserNotFoundException;
@@ -14,8 +15,6 @@ import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.infrastructure.repository.MongoUserRepository;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import com.example.ec_2024b_back.utils.Fast;
-import io.vavr.Tuple3;
-import io.vavr.control.Try;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,32 +64,28 @@ class LoginWorkflowTest {
             "dummy-password");
     // UserRepositoryのfindByEmailも必ずモックする
     org.mockito.Mockito.when(userRepository.findByEmail(email))
-        .thenReturn(Mono.just(io.vavr.control.Try.success(io.vavr.control.Option.of(user))));
+        .thenReturn(Mono.just(java.util.Optional.of(user)));
   }
 
   @Test
   void execute_shouldReturnSuccessToken_whenAllStepsSucceed() {
     when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
-    when(verifyPasswordStep.apply(any(Tuple3.class))).thenReturn(Try.success(accountId));
-    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.success(token));
+    when(verifyPasswordStep.apply(any(PasswordInput.class))).thenReturn(accountId);
+    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(token);
 
     var resultMono = loginWorkflow.execute(email, rawPassword);
 
     StepVerifier.create(resultMono)
-        .assertNext(
-            tryResult -> {
-              assertThat(tryResult.isSuccess()).isTrue();
-              assertThat(tryResult.get()).isEqualTo(token);
-            })
+        .assertNext(tokenResult -> assertThat(tokenResult).isEqualTo(token))
         .verifyComplete();
   }
 
   @Test
   void execute_shouldReturnUserNotFoundException_whenUserNotFound() {
     when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.empty());
-    // findByEmailもOption.none()を返すように上書き
+    // findByEmailもOptional.empty()を返すように上書き
     org.mockito.Mockito.when(userRepository.findByEmail(email))
-        .thenReturn(Mono.just(io.vavr.control.Try.success(io.vavr.control.Option.none())));
+        .thenReturn(Mono.just(java.util.Optional.empty()));
 
     var resultMono = loginWorkflow.execute(email, rawPassword);
 
@@ -105,8 +100,8 @@ class LoginWorkflowTest {
   @Test
   void execute_shouldReturnInvalidPasswordException_whenPasswordVerificationFails() {
     when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
-    when(verifyPasswordStep.apply(any(Tuple3.class)))
-        .thenReturn(Try.failure(new InvalidPasswordException()));
+    when(verifyPasswordStep.apply(any(PasswordInput.class)))
+        .thenThrow(new InvalidPasswordException());
 
     var resultMono = loginWorkflow.execute(email, rawPassword);
 
@@ -119,17 +114,13 @@ class LoginWorkflowTest {
   void execute_shouldReturnFailure_whenJwtGenerationFails() {
     var jwtError = new RuntimeException("JWT generation failed");
     when(userRepository.findDocumentByEmail(email)).thenReturn(Mono.just(userDocument));
-    when(verifyPasswordStep.apply(any(Tuple3.class))).thenReturn(Try.success(accountId));
-    when(generateJwtTokenStep.apply(any(User.class))).thenReturn(Try.failure(jwtError));
+    when(verifyPasswordStep.apply(any(PasswordInput.class))).thenReturn(accountId);
+    when(generateJwtTokenStep.apply(any(User.class))).thenThrow(jwtError);
 
     var resultMono = loginWorkflow.execute(email, rawPassword);
 
     StepVerifier.create(resultMono)
-        .assertNext(
-            tryResult -> {
-              assertThat(tryResult.isFailure()).isTrue();
-              assertThat(tryResult.getCause()).isEqualTo(jwtError);
-            })
-        .verifyComplete();
+        .expectErrorMatches(throwable -> throwable.equals(jwtError))
+        .verify();
   }
 }

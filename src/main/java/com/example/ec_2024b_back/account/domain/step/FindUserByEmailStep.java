@@ -1,8 +1,7 @@
 package com.example.ec_2024b_back.account.domain.step;
 
 import com.example.ec_2024b_back.user.domain.models.User;
-import io.vavr.control.Option;
-import io.vavr.control.Try;
+import java.util.Optional;
 import java.util.function.Function;
 import reactor.core.publisher.Mono;
 
@@ -11,9 +10,9 @@ import reactor.core.publisher.Mono;
  *
  * <p>Input: String (email)
  *
- * <p>Output: Mono<Try<Option<User>>> (検索結果)
+ * <p>Output: Mono<Optional<User>> (検索結果)
  */
 @FunctionalInterface
-public interface FindUserByEmailStep extends Function<String, Mono<Try<Option<User>>>> {
+public interface FindUserByEmailStep extends Function<String, Mono<Optional<User>>> {
   // applyメソッドはFunctionインターフェースによって定義される
 }
