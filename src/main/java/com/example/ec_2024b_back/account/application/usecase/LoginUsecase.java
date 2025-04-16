@@ -1,5 +1,6 @@
 package com.example.ec_2024b_back.account.application.usecase;
 
+import com.example.ec_2024b_back.account.domain.step.FindUserByEmailStep;
 import com.example.ec_2024b_back.account.domain.workflow.LoginWorkflow;
 import com.example.ec_2024b_back.model.LoginDto;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import reactor.core.publisher.Mono;
 public class LoginUsecase {
 
   private final LoginWorkflow loginWorkflow;
+  private final FindUserByEmailStep findUserByEmailStep;
 
   /** ログイン成功時のレスポンスDTO. */
   public record LoginSuccessDto(String token) {}
@@ -23,9 +25,18 @@ public class LoginUsecase {
    * @return ログイン結果を含むMono
    */
   public Mono<LoginSuccessDto> execute(LoginDto loginDto) {
-    return loginWorkflow
-        .execute(loginDto.getEmail(), loginDto.getPassword())
-        .map(token -> new LoginSuccessDto(token))
+    String email = loginDto.getEmail();
+    String password = loginDto.getPassword();
+
+    // アプリケーション層でユーザー検索を実行し、結果をドメイン層に渡す
+    return findUserByEmailStep
+        .apply(email)
+        .flatMap(
+            optionalUser ->
+                optionalUser
+                    .map(user -> loginWorkflow.execute(user, password))
+                    .orElseGet(() -> loginWorkflow.createUserNotFoundError(email)))
+        .map(LoginSuccessDto::new)
         .onErrorMap(AuthenticationFailedException::new);
   }
 
