@@ -85,7 +85,7 @@ classDiagram
 1.  **リクエスト受信:** ユーザーからログインリクエスト (メールアドレス, パスワード) を受け取ります (`AuthenticationController`)。
 2.  **ユースケース実行:** `LoginUsecase` を呼び出します。
 3.  **ワークフロー実行:** `LoginWorkflow` を実行します。
-    1.  **ユーザー検索:** メールアドレスを基に `user` モジュールにユーザー情報を問い合わせます (`FindUserByEmailStep`)。ユーザーが見つからない場合はエラー。
+    1.  **ユーザー検索:** メールアドレスを基に `UserRepository` （`MongoUserRepository`）を利用してユーザー情報を取得します。ユーザーが見つからない場合は `UserNotFoundException` が発生します。
     2.  **パスワード検証:** 提供されたパスワードと保存されているハッシュ化パスワードを比較検証します (`VerifyPasswordStep`)。一致しない場合はエラー。
     3.  **JWT生成:** 認証成功後、ユーザー情報に基づいて JWT (JSON Web Token) を生成します (`GenerateJwtTokenStep`)。
 4.  **レスポンス返却:** 生成された JWT をユーザーに返却します。
@@ -96,7 +96,6 @@ sequenceDiagram
     participant Controller as AuthenticationController
     participant Usecase as LoginUsecase
     participant Workflow as LoginWorkflow
-    participant FindStep as FindUserByEmailStep
     participant VerifyStep as VerifyPasswordStep
     participant GenerateStep as GenerateJwtTokenStep
     participant UserRepo as UserRepository (user module)
@@ -105,10 +104,8 @@ sequenceDiagram
     User->>+Controller: POST /login (email, password)
     Controller->>+Usecase: login(email, password)
     Usecase->>+Workflow: execute(email, password)
-    Workflow->>+FindStep: findUser(email)
-    FindStep->>+UserRepo: findByEmail(email)
-    UserRepo-->>-FindStep: User
-    FindStep-->>-Workflow: User
+    Workflow->>+UserRepo: findByEmail(email)
+    UserRepo-->>-Workflow: User
     Workflow->>+VerifyStep: verify(password, user.passwordHash)
     VerifyStep-->>-Workflow: (Verification Result)
     alt パスワード不一致
