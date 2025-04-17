@@ -5,29 +5,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.ec_2024b_back.account.application.usecase.LoginUsecase.LoginSuccessDto;
 import com.example.ec_2024b_back.model.LoginDto;
 import com.example.ec_2024b_back.share.domain.models.Address;
-import com.example.ec_2024b_back.share.infrastructure.security.JWTProperties;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
 import com.example.ec_2024b_back.utils.IntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers
 @IntegrationTest
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = "spring.config.location=classpath:/application.properties")
-@EnableConfigurationProperties(JWTProperties.class)
-@Disabled("まだコントローラーが実装されていないので無効化")
-class AuthenticationControllerIntegrationTest {
+public class AuthenticationControllerIntegrationTest {
+
+  @Container
+  static final MongoDBContainer mongoContainer =
+      new MongoDBContainer("mongo:5.0.13").withReuse(true);
+
+  @DynamicPropertySource
+  static void overrideProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.data.mongodb.uri", mongoContainer::getReplicaSetUrl);
+  }
 
   @Autowired private WebTestClient webTestClient;
 
@@ -35,9 +40,9 @@ class AuthenticationControllerIntegrationTest {
 
   @Autowired private PasswordEncoder passwordEncoder;
 
-  private String testUserId = "auth-test-user";
-  private String testEmail = "auth@example.com";
-  private String testRawPassword = "password123";
+  private final String testUserId = "auth-test-user";
+  private final String testEmail = "auth@example.com";
+  private final String testRawPassword = "password123";
   private String testHashedPassword;
 
   @BeforeEach

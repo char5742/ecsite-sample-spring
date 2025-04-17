@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.ec_2024b_back.share.domain.models.Address;
 import com.example.ec_2024b_back.user.infrastructure.repository.document.UserDocument;
-import com.example.ec_2024b_back.utils.IntegrationTest;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +18,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
-@IntegrationTest
 @DataMongoTest
 @Testcontainers
 class MongoUserRepositoryTest {

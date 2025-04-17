@@ -1,13 +1,26 @@
 package com.example.ec_2024b_back.utils;
 
+import com.example.ec_2024b_back.share.infrastructure.security.JWTProperties;
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.junit.jupiter.api.Tag;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
-/** 統合テストを示すためのカスタムアノテーション. JUnit 5の @Tag("IntegrationTest") をメタアノテーションとして使用します. */
-@Target({ElementType.TYPE, ElementType.METHOD}) // クラスとメソッドに適用可能
-@Retention(RetentionPolicy.RUNTIME) // 実行時にアノテーション情報を保持
-@Tag("IntegrationTest") // JUnit 5のタグ付け
+/**
+ * Meta-annotation for integration tests, sets up Spring Boot test context, auto-configures
+ * WebTestClient, and binds JWTProperties.
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = "spring.config.location=classpath:/application.properties")
+@AutoConfigureWebTestClient
+@EnableConfigurationProperties(JWTProperties.class)
 public @interface IntegrationTest {}
