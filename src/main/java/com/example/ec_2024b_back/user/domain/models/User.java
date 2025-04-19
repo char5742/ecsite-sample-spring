@@ -10,7 +10,8 @@ public record User(
     /** 苗字 */
     String lastName,
     Address address,
-    String telephone) {
+    String telephone,
+    String password) {
 
   /**
    * コンストラクタ
@@ -20,6 +21,7 @@ public record User(
    * @param lastName 姓
    * @param address 住所
    * @param telephone 電話番号
+   * @param password パスワードハッシュ
    */
   public User {
     if (firstName.isBlank()) {
@@ -30,6 +32,9 @@ public record User(
     }
     if (telephone.isBlank()) {
       throw new IllegalArgumentException("電話番号は空にできません");
+    }
+    if (password == null || password.isBlank()) {
+      throw new IllegalArgumentException("パスワードは空にできません");
     }
   }
 
