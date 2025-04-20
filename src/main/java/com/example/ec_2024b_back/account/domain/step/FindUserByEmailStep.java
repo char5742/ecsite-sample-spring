@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>Input: String (email)
  *
- * <p>Output: Mono<Optional<User>> (検索結果)
+ * <p>Output: {@code Mono<Optional<User>>} (検索結果)
  */
 @FunctionalInterface
 public interface FindUserByEmailStep extends Function<String, Mono<Optional<User>>> {

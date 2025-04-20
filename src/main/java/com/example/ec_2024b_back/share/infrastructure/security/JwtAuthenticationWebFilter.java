@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.share.infrastructure.security;
 
 import java.util.Collections;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -25,14 +26,14 @@ public class JwtAuthenticationWebFilter implements WebFilter {
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
     String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      String token = authHeader.substring(7);
+      var token = authHeader.substring(7);
       try {
         String userId = jwtProvider.extractUserId(token);
         return jwtProvider
             .validateToken(token, userId)
             .flatMap(
                 valid -> {
-                  if (Boolean.TRUE.equals(valid)) {
+                  if (Objects.equals(valid, Boolean.TRUE)) {
                     Authentication auth =
                         new UsernamePasswordAuthenticationToken(
                             userId, null, Collections.emptyList());
@@ -47,7 +48,7 @@ public class JwtAuthenticationWebFilter implements WebFilter {
                   log.warn("JWT検証に失敗しました: {}", e.getMessage());
                   return chain.filter(exchange);
                 });
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         log.warn("JWTからユーザーIDの抽出に失敗しました: {}", e.getMessage());
         // 認証失敗時は認証情報なしで続行
         return chain.filter(exchange);

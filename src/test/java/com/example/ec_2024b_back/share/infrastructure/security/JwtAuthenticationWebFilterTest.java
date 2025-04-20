@@ -27,9 +27,8 @@ class JwtAuthenticationWebFilterTest {
 
   @Test
   void filter_noAuthorizationHeader_continuesWithoutContext() {
-    MockServerWebExchange exchange =
-        MockServerWebExchange.from(MockServerHttpRequest.get("/test").build());
-    WebFilterChain chain = mock(WebFilterChain.class);
+    var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/test").build());
+    var chain = mock(WebFilterChain.class);
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
@@ -40,16 +39,16 @@ class JwtAuthenticationWebFilterTest {
 
   @Test
   void filter_invalidTokenExtraction_continuesWithoutContext() {
-    String token = "badtoken";
+    var token = "badtoken";
     when(jwtProvider.extractUserId(token)).thenThrow(new RuntimeException("extract fail"));
 
-    MockServerWebExchange exchange =
+    var exchange =
         MockServerWebExchange.from(
             MockServerHttpRequest.get("/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build());
 
-    WebFilterChain chain = mock(WebFilterChain.class);
+    var chain = mock(WebFilterChain.class);
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
@@ -60,18 +59,18 @@ class JwtAuthenticationWebFilterTest {
 
   @Test
   void filter_validateFails_continuesWithoutContext() {
-    String token = "valtoken";
-    String userId = "user123";
+    var token = "valtoken";
+    var userId = "user123";
     when(jwtProvider.extractUserId(token)).thenReturn(userId);
     when(jwtProvider.validateToken(token, userId)).thenReturn(Mono.just(false));
 
-    MockServerWebExchange exchange =
+    var exchange =
         MockServerWebExchange.from(
             MockServerHttpRequest.get("/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build());
 
-    WebFilterChain chain = mock(WebFilterChain.class);
+    var chain = mock(WebFilterChain.class);
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
@@ -82,18 +81,18 @@ class JwtAuthenticationWebFilterTest {
 
   @Test
   void filter_validToken_setsSecurityContext() {
-    String token = "goodtoken";
-    String userId = "user123";
+    var token = "goodtoken";
+    var userId = "user123";
     when(jwtProvider.extractUserId(token)).thenReturn(userId);
     when(jwtProvider.validateToken(token, userId)).thenReturn(Mono.just(true));
 
-    MockServerWebExchange exchange =
+    var exchange =
         MockServerWebExchange.from(
             MockServerHttpRequest.get("/secure")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build());
 
-    WebFilterChain chain = mock(WebFilterChain.class);
+    var chain = mock(WebFilterChain.class);
     when(chain.filter(any())).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
@@ -104,19 +103,19 @@ class JwtAuthenticationWebFilterTest {
 
   @Test
   void filter_validateError_continuesWithoutContext() {
-    String token = "errtoken";
-    String userId = "userXYZ";
+    var token = "errtoken";
+    var userId = "userXYZ";
     when(jwtProvider.extractUserId(token)).thenReturn(userId);
     when(jwtProvider.validateToken(token, userId))
         .thenReturn(Mono.error(new RuntimeException("validation error")));
 
-    MockServerWebExchange exchange =
+    var exchange =
         MockServerWebExchange.from(
             MockServerHttpRequest.get("/error")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build());
 
-    WebFilterChain chain = mock(WebFilterChain.class);
+    var chain = mock(WebFilterChain.class);
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();

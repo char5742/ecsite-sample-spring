@@ -13,6 +13,7 @@ import com.example.ec_2024b_back.model.UserInfo;
 import com.example.ec_2024b_back.model.UserRegistrationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
@@ -82,7 +83,7 @@ public class AppController implements DefaultApi {
                       result -> {
                         // 明示的にJSON Content-Typeを指定
                         return ResponseEntity.ok()
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                            .contentType(MediaType.APPLICATION_JSON)
                             .body((Object) result);
                       });
             })

@@ -23,8 +23,8 @@ public class LoginUsecase {
    * @return ログイン結果を含むMono
    */
   public Mono<LoginSuccessDto> execute(LoginDto loginDto) {
-    String email = loginDto.getEmail();
-    String password = loginDto.getPassword();
+    var email = loginDto.getEmail();
+    var password = loginDto.getPassword();
 
     // ドメイン層のワークフローを呼び出して認証とJWT生成を実行
     return loginWorkflow

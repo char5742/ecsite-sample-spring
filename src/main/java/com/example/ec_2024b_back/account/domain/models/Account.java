@@ -1,8 +1,8 @@
 package com.example.ec_2024b_back.account.domain.models;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
-public record Account(AccountId id, List<IAuthentication> authentications) {
+public record Account(AccountId id, ImmutableList<IAuthentication> authentications) {
   public record AccountId(String id) {
     public AccountId {
       if (id.isBlank()) {

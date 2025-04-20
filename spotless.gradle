@@ -2,6 +2,7 @@ spotless {
   java {
     target '**/*.java'
     targetExclude '**/generated/**'
+    cleanthat().sourceCompatibility(project.sourceCompatibility.toString()).clearMutators().addMutator('RSPEC-6212')
     googleJavaFormat()
   }
 }

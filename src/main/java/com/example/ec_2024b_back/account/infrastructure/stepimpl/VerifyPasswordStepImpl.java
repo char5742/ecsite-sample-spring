@@ -15,9 +15,9 @@ public class VerifyPasswordStepImpl implements VerifyPasswordStep {
 
   @Override
   public String apply(PasswordInput input) {
-    var accountId = input.accountId();
-    var hashedPassword = input.hashedPassword();
-    var rawPassword = input.rawPassword();
+    String accountId = input.accountId();
+    String hashedPassword = input.hashedPassword();
+    String rawPassword = input.rawPassword();
 
     var matches = passwordEncoder.matches(rawPassword, hashedPassword);
 

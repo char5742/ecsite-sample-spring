@@ -72,7 +72,7 @@ public class JsonWebTokenProvider {
    * @return 生成されたJWTトークン
    */
   public String generateToken(User user) {
-    Map<String, Object> claims = new HashMap<>();
+    var claims = new HashMap<String, Object>();
     return createToken(claims, user.id().id());
   }
 
@@ -84,8 +84,8 @@ public class JsonWebTokenProvider {
    * @return 作成されたJWTトークン
    */
   private String createToken(Map<String, Object> claims, String subject) {
-    Instant now = Instant.now();
-    Instant expiry = now.plus(properties.getExpirationMillis(), ChronoUnit.MILLIS);
+    var now = Instant.now();
+    var expiry = now.plus(properties.getExpirationMillis(), ChronoUnit.MILLIS);
 
     return JWT.create()
         .withPayload(claims)
@@ -104,10 +104,10 @@ public class JsonWebTokenProvider {
    */
   public Mono<Boolean> validateToken(String token, String userId) {
     try {
-      final var extractedUserId = extractUserId(token);
-      boolean valid = extractedUserId.equals(userId) && !isTokenExpired(token);
+      var extractedUserId = extractUserId(token);
+      var valid = extractedUserId.equals(userId) && !isTokenExpired(token);
       return Mono.just(valid);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error("Token validation failed: " + e.getMessage());
       return Mono.error(e);
     }
