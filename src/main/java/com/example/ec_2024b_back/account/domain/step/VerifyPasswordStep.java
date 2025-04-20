@@ -11,12 +11,10 @@ import java.util.function.Function;
  */
 @FunctionalInterface
 public interface VerifyPasswordStep extends Function<PasswordInput, String> {
-  // applyメソッドはFunctionインターフェースによって定義される
-
   /** パスワード不一致を表すカスタム例外. */
   class InvalidPasswordException extends RuntimeException {
     public InvalidPasswordException() {
-      super("Invalid password");
+      super("パスワードが一致しません");
     }
   }
 }
