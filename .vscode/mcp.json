@@ -1,0 +1,64 @@
+{
+    "inputs": [
+        {
+            "id": "brave-search",
+            "password": true,
+            "type": "promptString",
+            "description": "Enter your Brave Search API key",
+        },
+        {
+            "type": "promptString",
+            "id": "github_token",
+            "description": "GitHub Personal Access Token",
+            "password": true
+        }
+    ],
+    "servers": {
+        "brave-search": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "BRAVE_API_KEY",
+                "mcp/brave-search"
+            ],
+            "env": {
+                "BRAVE_API_KEY": "${input:brave-search}"
+            }
+        },
+        "github": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "GITHUB_PERSONAL_ACCESS_TOKEN",
+                "ghcr.io/github/github-mcp-server"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+            }
+        },
+        "git": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-git",
+            ]
+        },
+        "local-rule-docs": {
+            "command": "deno",
+            "args": [
+                "run",
+                "--allow-read",
+                "--allow-env",
+                "/Volumes/workspace/personal/ai/mcp/server/mcp-markdown-docs-server/main.ts",
+            ],
+            "env": {
+                "DOC_DIR": "/Volumes/workspace/personal/ai/mcp/server/mcp-markdown-docs-server/docs",
+            }
+        },
+    }
+}
