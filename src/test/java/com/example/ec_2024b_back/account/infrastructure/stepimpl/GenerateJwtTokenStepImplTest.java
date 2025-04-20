@@ -9,6 +9,7 @@ import com.example.ec_2024b_back.share.domain.models.Address;
 import com.example.ec_2024b_back.share.infrastructure.security.JsonWebTokenProvider;
 import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.utils.Fast;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +26,7 @@ class GenerateJwtTokenStepImplTest {
   @InjectMocks private GenerateJwtTokenStepImpl generateJwtTokenStep;
 
   private User user;
-  private String expectedToken = "dummy-jwt-token";
+  private static final String EXPECTED_TOKEN = "dummy-jwt-token";
 
   @BeforeEach
   void setUp() {
@@ -46,11 +47,11 @@ class GenerateJwtTokenStepImplTest {
 
   @Test
   void apply_shouldReturnSuccessWithToken_whenProviderSucceeds() {
-    when(jsonWebTokenProvider.generateToken(any(User.class))).thenReturn(expectedToken);
+    when(jsonWebTokenProvider.generateToken(any(User.class))).thenReturn(EXPECTED_TOKEN);
 
     var result = generateJwtTokenStep.apply(user);
 
-    assertThat(result).isEqualTo(expectedToken);
+    assertThat(result).isEqualTo(EXPECTED_TOKEN);
   }
 
   @Test
@@ -60,7 +61,7 @@ class GenerateJwtTokenStepImplTest {
 
     try {
       generateJwtTokenStep.apply(user);
-      org.junit.jupiter.api.Assertions.fail("Expected RuntimeException");
+      Assertions.fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e).isEqualTo(exception);
     }

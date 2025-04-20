@@ -19,13 +19,13 @@ class JsonWebTokenProviderTest {
   private JsonWebTokenProvider jsonWebTokenProvider;
   private JWTProperties jwtProperties;
   private User user;
-  private String userId = "user-test-id";
-  private String secret = "test-secret-key-longer-than-256-bits-for-hmac256-test";
-  private Long expirationMillis = 3600000L;
+  private static final String USER_ID = "user-test-id";
+  private static final String SECRET = "test-secret-key-longer-than-256-bits-for-hmac256-test";
+  private static final Long EXPIRATION_MILLIS = 3600000L;
 
   @BeforeEach
   void setUp() {
-    jwtProperties = new JWTProperties(secret, expirationMillis);
+    jwtProperties = new JWTProperties(SECRET, EXPIRATION_MILLIS);
     jsonWebTokenProvider = new JsonWebTokenProvider(jwtProperties);
 
     var zipcode = new Address.Zipcode("100-0000");
@@ -35,7 +35,7 @@ class JsonWebTokenProviderTest {
     var address = new Address(zipcode, prefecture, municipalities, detailAddress);
     user =
         new User(
-            new Account.AccountId(userId),
+            new Account.AccountId(USER_ID),
             "Test",
             "User",
             address,
@@ -48,20 +48,20 @@ class JsonWebTokenProviderTest {
     var token = jsonWebTokenProvider.generateToken(user);
 
     assertThat(token).isNotNull().isNotEmpty();
-    var validationResult = jsonWebTokenProvider.validateToken(token, userId);
+    var validationResult = jsonWebTokenProvider.validateToken(token, USER_ID);
     validationResult.subscribe(
         result -> assertThat(result).isTrue(),
         error -> {
           throw new AssertionError("Validation failed with error", error);
         });
-    assertThat(jsonWebTokenProvider.extractUserId(token)).isEqualTo(userId);
+    assertThat(jsonWebTokenProvider.extractUserId(token)).isEqualTo(USER_ID);
   }
 
   @Test
   void validateToken_shouldReturnSuccessTrue_forValidTokenAndCorrectUser() {
     var token = jsonWebTokenProvider.generateToken(user);
 
-    var result = jsonWebTokenProvider.validateToken(token, userId);
+    var result = jsonWebTokenProvider.validateToken(token, USER_ID);
 
     result.subscribe(
         r -> assertThat(r).isTrue(),
@@ -72,11 +72,11 @@ class JsonWebTokenProviderTest {
 
   @Test
   void validateToken_shouldReturnSuccessFalse_forExpiredToken() {
-    var expiredProps = new JWTProperties(secret, -3600000L);
+    var expiredProps = new JWTProperties(SECRET, -3600000L);
     var expiredProvider = new JsonWebTokenProvider(expiredProps);
     var expiredToken = expiredProvider.generateToken(user);
 
-    var result = jsonWebTokenProvider.validateToken(expiredToken, userId);
+    var result = jsonWebTokenProvider.validateToken(expiredToken, USER_ID);
 
     result
         .doOnError(
@@ -91,7 +91,7 @@ class JsonWebTokenProviderTest {
     var token = jsonWebTokenProvider.generateToken(user);
     var invalidToken = token.substring(0, token.lastIndexOf('.') + 1) + "invalidSignature";
 
-    var result = jsonWebTokenProvider.validateToken(invalidToken, userId);
+    var result = jsonWebTokenProvider.validateToken(invalidToken, USER_ID);
 
     result
         .doOnError(
@@ -121,7 +121,7 @@ class JsonWebTokenProviderTest {
 
     var extractedUserId = jsonWebTokenProvider.extractUserId(token);
 
-    assertThat(extractedUserId).isEqualTo(userId);
+    assertThat(extractedUserId).isEqualTo(USER_ID);
   }
 
   @Test
@@ -131,7 +131,7 @@ class JsonWebTokenProviderTest {
 
     var expiration = jsonWebTokenProvider.extractExpiration(token);
 
-    var expectedExpiration = now.plus(expirationMillis, ChronoUnit.MILLIS);
+    var expectedExpiration = now.plus(EXPIRATION_MILLIS, ChronoUnit.MILLIS);
     assertThat(expiration)
         .isBetween(expectedExpiration.minusSeconds(1), expectedExpiration.plusSeconds(1));
   }

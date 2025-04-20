@@ -34,8 +34,8 @@ class MongoUserRepositoryTest {
   @Autowired private MongoUserRepository userRepository;
 
   private UserDocument testUserDoc;
-  private String testEmail = "mongo@example.com";
-  private String nonExistentEmail = "notfound@example.com";
+  private static final String TEST_EMAIL = "mongo@example.com";
+  private static final String NON_EXISTENT_EMAIL = "notfound@example.com";
 
   @BeforeEach
   void setUpDatabase() {
@@ -49,7 +49,7 @@ class MongoUserRepositoryTest {
             "mongo-user-id",
             "Mongo",
             "Test",
-            testEmail,
+            TEST_EMAIL,
             "hashedMongoPass",
             address,
             "111-1111-1111");
@@ -64,14 +64,14 @@ class MongoUserRepositoryTest {
 
   @Test
   void findDocumentByEmail_shouldReturnUserDocument_whenEmailExists() {
-    var resultMono = userRepository.findDocumentByEmail(testEmail);
+    var resultMono = userRepository.findDocumentByEmail(TEST_EMAIL);
 
     StepVerifier.create(resultMono)
         .assertNext(
             doc -> {
               assertThat(doc).isNotNull();
               assertThat(doc.getId()).isEqualTo(testUserDoc.getId());
-              assertThat(doc.getEmail()).isEqualTo(testEmail);
+              assertThat(doc.getEmail()).isEqualTo(TEST_EMAIL);
               assertThat(doc.getFirstName()).isEqualTo(testUserDoc.getFirstName());
             })
         .verifyComplete();
@@ -79,14 +79,14 @@ class MongoUserRepositoryTest {
 
   @Test
   void findDocumentByEmail_shouldReturnEmptyMono_whenEmailDoesNotExist() {
-    var resultMono = userRepository.findDocumentByEmail(nonExistentEmail);
+    var resultMono = userRepository.findDocumentByEmail(NON_EXISTENT_EMAIL);
 
     StepVerifier.create(resultMono).verifyComplete();
   }
 
   @Test
   void findByEmail_shouldReturnSuccessWithUserOption_whenEmailExists() {
-    var resultMono = userRepository.findByEmail(testEmail);
+    var resultMono = userRepository.findByEmail(TEST_EMAIL);
 
     StepVerifier.create(resultMono)
         .assertNext(
@@ -103,7 +103,7 @@ class MongoUserRepositoryTest {
 
   @Test
   void findByEmail_shouldReturnSuccessWithEmptyOption_whenEmailDoesNotExist() {
-    var resultMono = userRepository.findByEmail(nonExistentEmail);
+    var resultMono = userRepository.findByEmail(NON_EXISTENT_EMAIL);
 
     StepVerifier.create(resultMono)
         .assertNext(

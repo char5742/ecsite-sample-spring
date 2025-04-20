@@ -40,14 +40,14 @@ public class AuthenticationControllerIntegrationTest {
 
   @Autowired private PasswordEncoder passwordEncoder;
 
-  private final String testUserId = "auth-test-user";
-  private final String testEmail = "auth@example.com";
-  private final String testRawPassword = "password123";
+  private static final String TEST_USER_ID = "auth-test-user";
+  private static final String TEST_EMAIL = "auth@example.com";
+  private static final String TEST_RAW_PASSWORD = "password123";
   private String testHashedPassword;
 
   @BeforeEach
   void setUpDatabase() {
-    testHashedPassword = passwordEncoder.encode(testRawPassword);
+    testHashedPassword = passwordEncoder.encode(TEST_RAW_PASSWORD);
 
     var zipcode = new Address.Zipcode("100-0002");
     var prefecture = Address.Prefecture.TOKYO;
@@ -56,7 +56,7 @@ public class AuthenticationControllerIntegrationTest {
     var address = new Address(zipcode, prefecture, municipalities, detailAddress);
     var testUserDoc =
         new UserDocument(
-            testUserId, "Auth", "Test", testEmail, testHashedPassword, address, "222-2222-2222");
+            TEST_USER_ID, "Auth", "Test", TEST_EMAIL, testHashedPassword, address, "222-2222-2222");
 
     mongoTemplate.save(testUserDoc).block();
   }
@@ -69,8 +69,8 @@ public class AuthenticationControllerIntegrationTest {
   @Test
   void login_shouldReturnOkAndToken_whenCredentialsAreValid() {
     var loginDto = new LoginDto();
-    loginDto.setEmail(testEmail);
-    loginDto.setPassword(testRawPassword);
+    loginDto.setEmail(TEST_EMAIL);
+    loginDto.setPassword(TEST_RAW_PASSWORD);
 
     webTestClient
         .post()
@@ -91,7 +91,7 @@ public class AuthenticationControllerIntegrationTest {
   @Test
   void login_shouldReturnUnauthorized_whenPasswordIsInvalid() {
     var loginDto = new LoginDto();
-    loginDto.setEmail(testEmail);
+    loginDto.setEmail(TEST_EMAIL);
     loginDto.setPassword("wrongPassword");
 
     webTestClient
@@ -108,7 +108,7 @@ public class AuthenticationControllerIntegrationTest {
   void login_shouldReturnUnauthorized_whenEmailDoesNotExist() {
     var loginDto = new LoginDto();
     loginDto.setEmail("nonexistent@example.com");
-    loginDto.setPassword(testRawPassword);
+    loginDto.setPassword(TEST_RAW_PASSWORD);
 
     webTestClient
         .post()
@@ -123,7 +123,7 @@ public class AuthenticationControllerIntegrationTest {
   @Test
   void login_shouldReturnBadRequest_whenRequestBodyIsInvalid() {
     var invalidLoginDto = new LoginDto();
-    invalidLoginDto.setPassword(testRawPassword);
+    invalidLoginDto.setPassword(TEST_RAW_PASSWORD);
 
     webTestClient
         .post()
