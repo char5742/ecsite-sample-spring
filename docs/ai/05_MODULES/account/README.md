@@ -29,131 +29,35 @@
     *   プロパティ: `id` (String)。空でないことが保証されます。
 *   **`IAuthentication` (Sealed Interface):**
     *   責務: 認証方法の共通インターフェース。現在は `EmailAuthentication` のみが許可されています (将来的に他の認証方法、例: OAuth を追加可能)。
-    *   メソッド: `id()` (認証方法の種類を示す `AuthenticationId` を返す)。
-*   **`AuthenticationId` (Record, Value Object):**
-    *   責務: 認証方法の種類を示す識別子 (例: "email")。
-    *   プロパティ: `id` (String)。null または空でないことが保証されます。
-*   **`EmailAuthentication` (Record):**
-    *   責務: メールアドレスとパスワードによる認証方法を表します。`IAuthentication` を実装します。
-    *   主要プロパティ:
-        *   `email`: メールアドレス (`com.example.ec_2024b_back.share.domain.models.Email` 値オブジェクト)。
-        *   `password`: ハッシュ化されたパスワード (String)。
-    *   `id()` は `"email"` を固定で返します。
 
-**クラス図 (簡易):**
+## 認証フロー
 
-```mermaid
-classDiagram
-    class Account {
-        +AccountId id
-        +List~IAuthentication~ authentications
-    }
-    class AccountId {
-        +String id
-    }
-    class IAuthentication {
-        <<sealed interface>>
-        +AuthenticationId id()
-    }
-    class AuthenticationId {
-        +String id
-    }
-    class EmailAuthentication {
-        +Email email
-        +String password
-        +AuthenticationId id()
-    }
-    class Email {
-      +String value
-    }
-
-    Account "1" *-- "1" AccountId
-    Account "1" *-- "*" IAuthentication
-    EmailAuthentication --|> IAuthentication
-    EmailAuthentication "1" *-- "1" Email
-    IAuthentication "1" *-- "1" AuthenticationId
-
-```
-*(注: `Email` は `share` モジュールの値オブジェクトです)*
-
-## 主要フロー
+`account` モジュールは以下の認証フローを実装しています：
 
 ### ログインフロー
 
-ユーザーがメールアドレスとパスワードでログインする際の主要なフローは以下の通りです。
+1. クライアントが `/api/authentication/login` エンドポイントにメールアドレスとパスワードを送信
+2. `AuthenticationService` がメールアドレスでユーザーを検索し、パスワードを検証
+3. 認証成功時に `JsonWebTokenProvider` がJWTトークンを生成
+4. ユーザー情報とトークンを含むレスポンスをクライアントに返却
 
-1.  **リクエスト受信:** ユーザーからログインリクエスト (メールアドレス, パスワード) を受け取ります (`AuthenticationController`)。
-2.  **ユースケース実行:** `LoginUsecase` を呼び出します。
-3.  **ワークフロー実行:** `LoginWorkflow` を実行します。
-    1.  **ユーザー検索:** メールアドレスを基に `UserRepository` （`MongoUserRepository`）を利用してユーザー情報を取得します。ユーザーが見つからない場合は `UserNotFoundException` が発生します。
-    2.  **パスワード検証:** 提供されたパスワードと保存されているハッシュ化パスワードを比較検証します (`VerifyPasswordStep`)。一致しない場合はエラー。
-    3.  **JWT生成:** 認証成功後、ユーザー情報に基づいて JWT (JSON Web Token) を生成します (`GenerateJwtTokenStep`)。
-4.  **レスポンス返却:** 生成された JWT をユーザーに返却します。
+### トークン認証フロー
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Controller as AuthenticationController
-    participant Usecase as LoginUsecase
-    participant Workflow as LoginWorkflow
-    participant VerifyStep as VerifyPasswordStep
-    participant GenerateStep as GenerateJwtTokenStep
-    participant UserRepo as UserRepository (user module)
-    participant TokenProvider as JsonWebTokenProvider (share module)
+1. 保護されたAPIにアクセスする際、クライアントはリクエストヘッダーにJWTトークンを設定
+   ```
+   Authorization: Bearer [jwt-token]
+   ```
+2. `JwtAuthenticationWebFilter` がリクエストから「Authorization」ヘッダーを抽出
+3. ヘッダーからトークンを取り出し、`JsonWebTokenProvider` を使用して検証
+4. トークンが有効な場合、`ReactiveSecurityContextHolder` に認証情報を設定
+5. Spring SecurityがAPIアクセス権限を確認し、認可を実施
 
-    User->>+Controller: POST /login (email, password)
-    Controller->>+Usecase: login(email, password)
-    Usecase->>+Workflow: execute(email, password)
-    Workflow->>+UserRepo: findByEmail(email)
-    UserRepo-->>-Workflow: User
-    Workflow->>+VerifyStep: verify(password, user.passwordHash)
-    VerifyStep-->>-Workflow: (Verification Result)
-    alt パスワード不一致
-        Workflow-->>-Usecase: AuthenticationException
-        Usecase-->>-Controller: AuthenticationException
-        Controller-->>-User: 401 Unauthorized
-    end
-    Workflow->>+GenerateStep: generateToken(user)
-    GenerateStep->>+TokenProvider: generate(user)
-    TokenProvider-->>-GenerateStep: JWT
-    GenerateStep-->>-Workflow: JWT
-    Workflow-->>-Usecase: JWT
-    Usecase-->>-Controller: JWT
-    Controller-->>-User: 200 OK (JWT)
+## 主要クラス
 
-```
-
-*(アカウント登録フローなどは将来追加予定)*
-
-## 主要クラス解説
-
-`account` モジュール内の主要なクラスとその役割は以下の通りです。
-
-*   **`LoginUsecase`:**
-    *   役割: ログイン機能のアプリケーションサービス層。外部（Controller）からのリクエストを受け付け、ドメインロジック（Workflow）を呼び出し、結果を返却します。
-*   **`LoginWorkflow`:**
-    *   役割: ログイン処理のドメインワークフロー。複数のドメインステップ（ユーザー検索、パスワード検証、JWT生成）を順に実行し、ログインプロセス全体を調整します。
-*   **`FindUserByEmailStep` (Interface) / `FindUserByEmailStepImpl` (Implementation):**
-    *   役割: メールアドレスに基づいてユーザー情報を取得するドメインステップ。実装クラス (`Impl`) は `user` モジュールの `UserRepository` を利用します。
-*   **`VerifyPasswordStep` (Interface) / `VerifyPasswordStepImpl` (Implementation):**
-    *   役割: 提供されたパスワードとハッシュ化されたパスワードを比較検証するドメインステップ。実装クラス (`Impl`) は Spring Security の `PasswordEncoder` を利用します。
-*   **`GenerateJwtTokenStep` (Interface) / `GenerateJwtTokenStepImpl` (Implementation):**
-    *   役割: 認証されたユーザー情報に基づいて JWT を生成するドメインステップ。実装クラス (`Impl`) は `share` モジュールの `JsonWebTokenProvider` を利用します。
-*   **`SecurityConfig`:**
-    *   役割: Spring Security の設定クラス。パスワードエンコーダーの Bean 定義や、認証を必要としないパス（例: `/login`）の設定などを行います。
-*   **`AuthenticationController` (interfaces.rest package):**
-    *   役割: ログイン API (`/login`) のエンドポイントを提供する REST Controller。`LoginUsecase` を呼び出します。
-
-*(他の Service, Repository, Delegate などは将来追加予定)*
-
-## 関連API
-
-*(このモジュールが公開するAPIエンドポイント一覧を記載予定)*
-
-## DBコレクション
-
-*(使用するMongoDBコレクションとフィールドを記載予定)*
-
-## 他モジュールとの連携
-
-*(依存している/されているモジュール、連携方法などを記載予定)*
+* **インフラストラクチャ層:**
+  * `SecurityConfig`: Spring Securityの設定クラス。URL単位のアクセス制御、認証フィルターの設定を担当
+  * `JwtAuthenticationWebFilter`: WebFlux用のJWT認証フィルター。トークンの抽出・検証・認証情報の設定を実行
+  
+* **共通基盤層 (share モジュール):**
+  * `JsonWebTokenProvider`: JWT (JSON Web Token) の生成と検証を担当
+  * `JWTProperties`: JWT署名キー、有効期限などの設定管理
