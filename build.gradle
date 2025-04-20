@@ -1,6 +1,5 @@
 plugins {
 	id 'java'
-	id 'java-library'
 	id 'jacoco'
 	id 'org.springframework.boot' version '3.4.3'
 	id 'io.spring.dependency-management' version '1.1.7'
@@ -54,14 +53,17 @@ dependencies {
 	implementation 'com.auth0:java-jwt:4.4.0'
 
 	// 性的解析ツール
-	api 'org.jspecify:jspecify:1.0.0'
+	implementation 'org.jspecify:jspecify:1.0.0'
 	errorprone "com.uber.nullaway:nullaway:0.12.6"
 	errorprone "com.google.errorprone:error_prone_core:2.37.0"
 
 
-	compileOnly 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok:1.18.38'
+	annotationProcessor 'org.projectlombok:lombok:1.18.38'
+	testCompileOnly 'org.projectlombok:lombok:1.18.38'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
