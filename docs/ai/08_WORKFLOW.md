@@ -71,6 +71,26 @@
     git branch -d feature/issue-XXX-your-feature-name
     ```
 
+## コミット前の自動チェック (Lefthook)
+
+当プロジェクトでは、コミット前にコードの品質を自動的にチェックし、整形するために [Lefthook](https://github.com/evilmartians/lefthook) を使用しています。
+
+*   **設定ファイル:** プロジェクトルートの `lefthook.yml` でフックの設定が行われています。
+*   **`pre-commit` フック:** 現在、コミット前に以下の処理が自動実行されます。
+    *   **Java コードの整形:** Spotless Gradle プラグイン (`./gradlew spotlessApply`) を使用して、Java ソースコードのフォーマットを自動的に修正します。
+*   **動作:** `git commit` を実行すると、Lefthook が `pre-commit` フックをトリガーし、設定されたコマンドを実行します。整形によってファイルが変更された場合、その変更をステージングに追加し直してからコミットする必要があります。
+    ```bash
+    # (整形によりファイルが変更された場合)
+    git add .
+    git commit --amend --no-edit # または再度コミットメッセージを入力
+    ```
+*   **スキップ:** 一時的にフックをスキップしたい場合は、`--no-verify` オプションを使用します (非推奨)。
+    ```bash
+    git commit -m "..." --no-verify
+    ```
+
+Lefthook により、コーディングスタイルの一貫性が保たれ、レビュープロセスでのフォーマットに関する指摘を減らすことができます。
+
 ## コミットメッセージ規約
 
 当プロジェクトでは [Conventional Commits](https://www.conventionalcommits.org/) に準拠したコミットメッセージを推奨します。

@@ -1,11 +1,10 @@
 pluginManagement {
 	repositories {
-		maven { url 'https://repo.spring.io/milestone' }
-		maven { url 'https://repo.spring.io/snapshot' }
 		gradlePluginPortal()
 	}
 }
-rootProject.name = 'ec-2024b-back'
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.9.0'
+}
 
-// サブプロジェクトを追加
-include 'api-model'
+rootProject.name = 'ec-2024b-back'

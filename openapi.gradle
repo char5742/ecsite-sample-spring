@@ -1,0 +1,20 @@
+// OpenAPI Generator設定
+openApiGenerate {
+    generatorName = "spring"
+    inputSpec = "$rootDir/docs/openapi/entry.yml"
+    outputDir = "$buildDir/generated"
+    apiPackage = "com.example.ec_2024b_back.api"
+    modelPackage = "com.example.ec_2024b_back.model"
+    configOptions = [
+        dateLibrary: "java8",
+        interfaceOnly: "true",
+        reactive: "true",
+        useSpringBoot3: "true",
+        useSwaggerUI: "false",
+        delegatePattern: "true",
+        useTags: "true"
+    ]
+}
+
+// コンパイル前にOpenAPI Generatorを実行
+compileJava.dependsOn('openApiGenerate')

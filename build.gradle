@@ -1,17 +1,23 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.0-SNAPSHOT'
+	id 'jacoco'
+	id 'org.springframework.boot' version '3.4.3'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'org.graalvm.buildtools.native' version '0.10.6'
 	id 'com.diffplug.spotless' version '7.0.3'
+	id 'org.openapi.generator' version '7.12.0'
+	id "net.ltgt.errorprone" version '4.1.0'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
+	sourceCompatibility = JavaVersion.VERSION_23
+	targetCompatibility = JavaVersion.VERSION_23
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(23)
+		vendor = JvmVendorSpec.GRAAL_VM
 	}
 }
 
@@ -19,6 +25,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	refaster
 }
 
 repositories {
@@ -38,19 +45,39 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
+	
+	
+    
+	// OpenAPI Generator関連の依存関係
+    implementation 'org.openapitools:openapi-generator-gradle-plugin:7.12.0'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+	// JWT Library - Auth0 java-jwt
+	implementation 'com.auth0:java-jwt:4.4.0'
+
+	// 静的解析ツール
 	implementation 'org.jspecify:jspecify:1.0.0'
-	
-	// api-modelモジュールへの依存関係
-	implementation project(':api-model')
-	
-	compileOnly 'org.projectlombok:lombok'
+	errorprone "com.uber.nullaway:nullaway:0.12.6"
+	errorprone "com.google.errorprone:error_prone_core:2.37.0"   
+
+
+	compileOnly 'org.projectlombok:lombok:1.18.38'
+	annotationProcessor 'org.projectlombok:lombok:1.18.38'
+	testCompileOnly 'org.projectlombok:lombok:1.18.38'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.testcontainers:junit-jupiter:1.20.6'
+	testImplementation 'org.testcontainers:mongodb:1.20.6'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations.all {
+	exclude group: 'org.slf4j', module: 'slf4j-simple' // SLF4J Simpleを除外
 }
 
 dependencyManagement {
@@ -59,8 +86,62 @@ dependencyManagement {
 	}
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/java', 'build/generated/src/main/java'
+		}
+	}
+	// Add generated sources to test classpath as well
+	test {
+		java {
+			srcDirs 'src/test/java', 'build/generated/src/main/java' // Include generated sources
+		}
+	}
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test 
+    reports {
+        xml.required = true
+		html.required = true
+    }
+	afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                // OpenAPI Generatorで生成されたコードを除外
+                '**/ec_2024b_back/api/**',
+				'**/ec_2024b_back/model/**',
+            ])
+        }))
+    }
 }
 
 apply from: "spotless.gradle"
+
+// OpenAPI Generator設定
+apply from: "openapi.gradle"
+
+// NullAway設定
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+tasks.withType(JavaCompile) {
+  options.errorprone {
+    check("NullAway", CheckSeverity.ERROR)
+    option("NullAway:AnnotatedPackages", "com.example.ec_2024b_back")
+	excludedPaths = ".*build/generated/.*"
+	disableWarningsInGeneratedCode = true
+	errorproneArgs.add("-XepPatchLocation:IN_PLACE")
+  }
+  // Include to disable NullAway on test code
+  if (name.toLowerCase().contains("test")) {
+    options.errorprone {
+      disable("NullAway")
+    }
+  }
+}
