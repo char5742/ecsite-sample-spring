@@ -15,5 +15,20 @@ public interface UserRepository {
    */
   Mono<Optional<User>> findByEmail(String email);
 
-  // 必要に応じて他のメソッド（save, findByIdなど）を追加
+  /**
+   * ユーザーを保存します.
+   *
+   * @param user 保存するユーザー
+   * @return 保存されたユーザー
+   */
+  Mono<User> save(User user);
+
+  /**
+   * メールアドレスを含めてユーザーを保存します. 新規ユーザー登録時に使用します。
+   *
+   * @param user 保存するユーザー
+   * @param email ユーザーのメールアドレス
+   * @return 保存されたユーザー
+   */
+  Mono<User> saveWithEmail(User user, String email);
 }

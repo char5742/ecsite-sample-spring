@@ -42,7 +42,7 @@ public class SecurityConfig {
         .authorizeExchange(
             exchanges ->
                 exchanges
-                    .pathMatchers("/api/authentication/login")
+                    .pathMatchers("/api/authentication/login", "/api/register")
                     .permitAll()
                     .pathMatchers("/api/**")
                     .authenticated()

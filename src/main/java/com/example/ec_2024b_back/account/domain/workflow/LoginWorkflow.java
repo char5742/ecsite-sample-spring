@@ -3,7 +3,7 @@ package com.example.ec_2024b_back.account.domain.workflow;
 import com.example.ec_2024b_back.account.domain.step.GenerateJwtTokenStep;
 import com.example.ec_2024b_back.account.domain.step.PasswordInput;
 import com.example.ec_2024b_back.account.domain.step.VerifyPasswordStep;
-import com.example.ec_2024b_back.user.infrastructure.repository.MongoUserRepository;
+import com.example.ec_2024b_back.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ public class LoginWorkflow {
 
   private final VerifyPasswordStep verifyPasswordStep;
   private final GenerateJwtTokenStep generateJwtTokenStep;
-  private final MongoUserRepository userRepository;
+  private final UserRepository userRepository;
 
   /**
    * ログイン処理を実行します.
