@@ -24,10 +24,95 @@
 
 ### ドメイン層とインフラ層の責務分離について
 
-本プロジェクトでは、MongoDBのDocument（UserDocument等）はインフラ層でのみ扱い、  
-ドメイン層やアプリケーション層では必ずドメインモデル（User等の集約）を利用する設計方針としています。  
-インフラ層のfindDocumentByEmail等のメソッドは外部に公開せず、  
-UserRepositoryのfindByEmailのようにドメインモデルを返すAPIを通じて利用してください。
+本プロジェクトでは、クリーンアーキテクチャの原則に基づき、ドメイン層とインフラ層の明確な責務分離を実践しています。
+
+#### 基本原則
+
+1. **技術的実装の隠蔽**: MongoDBのDocument（UserDocument等）はインフラ層でのみ扱い、ドメイン層やアプリケーション層では必ずドメインモデル（User等の集約）を利用します。
+
+2. **集約（Aggregate）の境界**: 各ドメインモデルは明確な集約境界を持ち、データの一貫性を保証します。例えば、`User`集約はユーザー関連のエンティティと値オブジェクトをカプセル化します。
+
+3. **リポジトリの抽象化**: リポジトリインターフェースはドメイン層に定義され、その実装はインフラ層にあります。これによりドメイン層はデータアクセス実装の詳細から保護されます。
+
+4. **ドメインモデルの独立性**: ドメインモデルは永続化技術やデータベースから独立しています。データベースの変更があっても、ドメインロジックへの影響を最小限に抑えられます。
+
+#### 実装パターン
+
+1. **リポジトリパターン**: ドメイン層にはリポジトリのインターフェースのみを定義し、実装はインフラ層に配置します。
+
+```java
+// ドメイン層のリポジトリインターフェース
+public interface UserRepository {
+    Mono<User> findByEmail(String email);
+    Mono<User> save(User user);
+}
+
+// インフラ層のリポジトリ実装
+@Repository
+public class MongoUserRepository implements UserRepository {
+    private final UserDocumentRepository documentRepository;
+    private final UserDocumentMapper mapper;
+    
+    // コンストラクタ...
+    
+    @Override
+    public Mono<User> findByEmail(String email) {
+        return documentRepository.findDocumentByEmail(email)
+            .map(mapper::toEntity);
+    }
+}
+```
+
+2. **Mapperパターン**: ドメインモデルとデータベースモデル間の変換を担当する専用クラスを用意します。
+
+```java
+// インフラ層のマッパークラス
+@Component
+public class UserDocumentMapper {
+    public User toEntity(UserDocument document) {
+        // ドキュメントからドメインモデルへの変換ロジック
+        return new User(
+            new UserId(document.getId()),
+            document.getName(),
+            document.getEmail(),
+            // ... その他のプロパティ
+        );
+    }
+    
+    public UserDocument toDocument(User user) {
+        // ドメインモデルからドキュメントへの変換ロジック
+        UserDocument document = new UserDocument();
+        document.setId(user.getId().getValue());
+        document.setName(user.getName());
+        document.setEmail(user.getEmail());
+        // ... その他のプロパティ
+        return document;
+    }
+}
+```
+
+#### 重要な実装規約
+
+1. **リポジトリメソッドの公開範囲**: インフラ層の`findDocumentByEmail`等のメソッドは外部に公開せず、`UserRepository`の`findByEmail`のようにドメインモデルを返すAPIを通じて利用してください。
+
+2. **トランザクション境界**: トランザクション境界はアプリケーション層（Usecase）に設定し、リポジトリ層では単純なデータアクセス操作のみを提供します。
+
+3. **値オブジェクトの不変性**: 値オブジェクト（メールアドレス、金額など）は不変（Immutable）にし、ビジネスルールをカプセル化します。
+
+#### メリット
+
+- **テスト可能性の向上**: モックリポジトリを使用してドメインロジックを単体テストできます
+- **技術的実装の変更容易性**: データベース技術を変更しても、ドメイン層は影響を受けません
+- **ビジネスルールの明確な表現**: ドメインモデルはビジネスルールを純粋に表現します
+- **並行開発の効率化**: インフラチームとドメインチームが並行して開発できます
+
+#### モジュール間の依存関係管理
+
+本プロジェクトでは10の主要ドメイン（Account, User, Cart, Catalog, Stock, Order, Payment, Promotion, Shipping, Notification）が定義されており、各ドメイン間の依存関係は明確に管理されています。詳細については [`docs/ai/04_ARCHITECTURE.md`](./04_ARCHITECTURE.md) を参照してください。
+
+#### モジュール間の依存関係管理
+
+本プロジェクトでは10の主要ドメイン（Account, User, Cart, Catalog, Stock, Order, Payment, Promotion, Shipping, Notification）が定義されており、各ドメイン間の依存関係は明確に管理されています。詳細については [`docs/ai/04_ARCHITECTURE.md`](./04_ARCHITECTURE.md) を参照してください。
 
 ---
 
