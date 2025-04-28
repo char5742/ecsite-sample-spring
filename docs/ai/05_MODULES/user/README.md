@@ -15,7 +15,7 @@
 *   **`User` (Record):**
     *   責務: ユーザーの基本情報（プロフィール情報）を表します。アカウント集約 (`account` モジュール) とは分離されています。
     *   主要プロパティ:
-        *   `id`: アカウントID (`com.example.ec_2024b_back.account.domain.models.Account.AccountId` 値オブジェクト)。`account` モジュールと共通のIDを使用します。
+        *   `id`: アカウントID (`com.example.ec_2024b_back.auth.domain.models.Account.AccountId` 値オブジェクト)。`account` モジュールと共通のIDを使用します。
         *   `firstName`: 名 (String)。
         *   `lastName`: 姓 (String)。
         *   `address`: 住所 (`com.example.ec_2024b_back.share.domain.models.Address` 値オブジェクト)。

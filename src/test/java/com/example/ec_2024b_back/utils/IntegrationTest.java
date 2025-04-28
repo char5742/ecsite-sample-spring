@@ -1,6 +1,6 @@
 package com.example.ec_2024b_back.utils;
 
-import com.example.ec_2024b_back.share.infrastructure.security.JWTProperties;
+import com.example.ec_2024b_back.auth.infrastructure.security.JWTProperties;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

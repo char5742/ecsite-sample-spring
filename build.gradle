@@ -21,12 +21,6 @@ java {
 	}
 }
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-	refaster
-}
 
 repositories {
 	mavenCentral()
@@ -45,6 +39,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
+	implementation 'com.google.guava:guava:33.4.8-jre'
 	
 	
     

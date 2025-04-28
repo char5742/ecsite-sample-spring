@@ -73,7 +73,7 @@ graph TD
 
 システムは機能的な関心事に基づいて以下のモジュールに分割されています：
 
-1. **Account**: アカウント管理、認証・認可
+1. **Auth**: ユーザー認証、アカウント管理
 2. **User**: ユーザープロファイル管理
 3. **Cart**: ショッピングカート機能
 4. **Catalog**: 商品カタログ管理
@@ -92,7 +92,7 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Account --> User
+    Auth --> User
     User --> Cart
     Cart --> Catalog
     Cart --> Stock

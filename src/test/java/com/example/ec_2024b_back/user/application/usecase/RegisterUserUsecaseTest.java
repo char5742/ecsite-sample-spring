@@ -3,7 +3,7 @@ package com.example.ec_2024b_back.user.application.usecase;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.example.ec_2024b_back.account.domain.models.Account.AccountId;
+import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
 import com.example.ec_2024b_back.share.domain.models.Address;
 import com.example.ec_2024b_back.user.domain.models.User;
 import com.example.ec_2024b_back.user.domain.workflow.RegisterUserWorkflow;

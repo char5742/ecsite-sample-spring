@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
+@SuppressWarnings({"FinalClass", "PrivateConstructorForUtilityClass"})
 public class Ec2024bBackApplication {
 
   public static void main(String[] args) {

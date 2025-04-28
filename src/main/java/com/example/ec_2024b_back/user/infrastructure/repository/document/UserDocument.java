@@ -1,6 +1,6 @@
 package com.example.ec_2024b_back.user.infrastructure.repository.document;
 
-import com.example.ec_2024b_back.account.domain.models.Account;
+import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.share.domain.models.Address;
 import com.example.ec_2024b_back.user.domain.models.User;
 import lombok.AllArgsConstructor;

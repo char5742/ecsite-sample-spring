@@ -17,13 +17,7 @@
 
 | コンテキスト名 | まとめるドメイン |
 | ------- | -------- |
-|         |          |
-
-|   |
-| - |
-
 | **Authentication Context**     | Account                   |
-| ------------------------------ | ------------------------- |
 | **User Profile Context**       | User                      |
 | **Product Management Context** | Catalog, Stock, Promotion |
 | **Shopping Context**           | Cart, Order, Payment      |
