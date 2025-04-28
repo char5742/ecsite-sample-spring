@@ -2,8 +2,10 @@
   "[java]": {
     "spotlessGradle.format.enable": true,
     "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle",
-    "editor.codeActionsOnSave": {
-      "source.fixAll.spotlessGradle": "explicit"
-    }
-  }   
+  },
+  "jdk.serverVmOptions": [
+    "-Xms1g",          // 初期ヒープ 1 GB
+    "-Xmx6g",          // 最大ヒープ 6 GB
+    "-XX:+AlwaysPreTouch"   // メモリ確保を起動時点で済ませ、GC 安定化
+  ]
 }
