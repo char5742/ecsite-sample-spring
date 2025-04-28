@@ -54,10 +54,7 @@ public class RegisterUserHandlerIntegrationTest {
 
   private Mono<Void> cleanupTestData() {
     return mongoTemplate
-        .remove(
-            Query.query(
-                Criteria.where("email").is(TEST_EMAIL)),
-            "users")
+        .remove(Query.query(Criteria.where("email").is(TEST_EMAIL)), "users")
         .then();
   }
 
