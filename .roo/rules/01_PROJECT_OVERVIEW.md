@@ -4,7 +4,7 @@
 
 ## 概要
 
-このプロジェクトは、Spring Boot 3.5.0ベースのECサイトのバックエンドアプリケーションで、以下の特徴があります：
+このプロジェクトは、Spring Boot 3.4.3 ベースのECサイトのバックエンドアプリケーションで、以下の特徴があります：
 
 - **Java 23** を使用
 - **Spring Modulith** によるモジュラー設計
@@ -19,52 +19,56 @@
 
 プロジェクトは以下のモジュールで構成されています：
 
-1. **ルートプロジェクト** : `ec-2024b-back` - メインアプリケーション
-2. **api-model** : OpenAPI定義から自動生成されるAPIモデルを含むサブモジュール
+1.  **ルートプロジェクト** : `ecsite-v2` - メインアプリケーション
 
 ### ディレクトリ構造
 
 ```
 ecsite-v2/
-├── api-model/               # APIモデルサブモジュール
-│   ├── build.gradle        # OpenAPI Generator設定を含む
-│   └── src/                # 自動生成されたコードの格納場所
 ├── docs/
 │   └── openapi/            # OpenAPI定義ファイル
 │       └── entry.yml       # メインのOpenAPI仕様ファイル
+├── gradle/                 # Gradle Wrapperファイル
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/example/ec_2024b_back/
 │   │   │       ├── Ec2024bBackApplication.java  # メインアプリケーションクラス
-│   │   │       ├── account/                     # アカウント管理モジュール
-│   │   │       ├── user/                        # ユーザー管理モジュール
+│   │   │       ├── auth/                        # 認証・認可モジュール
 │   │   │       └── share/                       # 共有コンポーネント
 │   │   └── resources/     # 設定ファイルやリソース
 │   └── test/              # テストコード
 ├── build.gradle           # メインのGradleビルド設定
-└── spotless.gradle        # コード整形ルール
+├── openapi.gradle         # OpenAPI Generator設定
+├── spotless.gradle        # コード整形ルール
+├── lefthook.yml           # Gitフック設定 (Lefthook)
+└── settings.gradle        # Gradleプロジェクト設定
 ```
 
 ## 技術スタック
 
 ### フレームワーク・ライブラリ
 
-- **Spring Boot 3.5.0** : アプリケーションフレームワーク
-- **Spring Modulith** : モジュラーモノリスアーキテクチャの実現
+- **Spring Boot 3.4.3** : アプリケーションフレームワーク
+- **Spring Modulith 1.4.0-M3** : モジュラーモノリスアーキテクチャの実現
 - **Spring WebFlux** : リアクティブWebスタック
 - **Spring Data MongoDB Reactive** : MongoDBのリアクティブドライバ
 - **Spring Security** : 認証・認可
-- **Lombok** : ボイラープレートコードの削減
-- **SpringDoc OpenAPI** : API ドキュメント生成
-- **JSpecify** : null許容性アノテーション
+- **Lombok 1.18.38** : ボイラープレートコードの削減
+- **SpringDoc OpenAPI 2.3.0** : API ドキュメント生成
+- **JSpecify 1.0.0** : null許容性アノテーション
+- **Guava 33.4.8-jre**: Google Core Libraries for Java
+- **jMolecules 1.10.0**: Architectural abstractions for Java
+- **Auth0 Java JWT 4.4.0**: JWTライブラリ
 
 ### ビルド・ツール
 
 - **Gradle** : ビルドツール
-- **OpenAPI Generator** : API定義からのコード生成
-- **GraalVM Native Build Tools** : ネイティブイメージ生成
-- **Spotless** : コード整形
+- **OpenAPI Generator 7.12.0** : API定義からのコード生成
+- **GraalVM Native Build Tools 0.10.6** : ネイティブイメージ生成
+- **Spotless 7.0.3** : コード整形
+- **Error Prone 2.37.0 / NullAway 0.12.6**: 静的解析ツール
+- **Lefthook**: Gitフック管理
 
 ## モジュール設計
 
@@ -72,14 +76,10 @@ ecsite-v2/
 
 ### モジュール
 
-1. **account** : アカウント管理に関する機能
-   - タイプ: OPEN（他のモジュールから参照可能）
-   - ドメインモデル、リポジトリ、サービスを含む
-
-2. **user** : ユーザー管理に関する機能
-   - ドメインモデルを含む
-
-3. **share** : 共有コンポーネントやユーティリティ
+1.  **auth** : 認証・認可に関する機能
+    - ドメインモデル、リポジトリ、ユースケース、インフラ実装を含む
+2.  **share** : 複数モジュールで共有されるコンポーネントやユーティリティ
+    - 共通のドメインモデル、例外、セキュリティ関連ユーティリティなど
 
 各モジュールは独自の責務を持ち、明確な境界を持っています。モジュール間の依存関係は`package-info.java`ファイルで定義されています。
 
@@ -87,11 +87,10 @@ ecsite-v2/
 
 APIは`docs/openapi/entry.yml`でOpenAPI形式で定義されており、以下の特徴があります：
 
-- OpenAPI Generator（version 7.12.0）によるコード自動生成
-- Spring WebFluxベースのリアクティブエンドポイント
-- インターフェースのみ生成（delegateパターン）
-- Java 8 DateTimeライブラリの使用
-- タグによるAPIのグループ化
+- OpenAPI Generator (version 7.12.0) によるコード自動生成 (`openapi.gradle` で設定)
+- Spring WebFluxベースのリアクティブエンドポイント (`reactive: true`)
+- インターフェースのみ生成し、実装はDelegateパターンを使用 (`interfaceOnly: true`, `delegatePattern: true`)
+- タグによるAPIのグループ化 (`useTags: true`)
 
 ## ビルドと実行
 
@@ -104,7 +103,8 @@ APIは`docs/openapi/entry.yml`でOpenAPI形式で定義されており、以下�
 
 ## 開発ガイドライン
 
-- **コーディングスタイル**: Spotlessを使用して一貫したコードスタイルを維持
-- **モジュール境界**: モジュール間の依存関係を明示的に定義
-- **リアクティブプログラミング**: ブロッキング操作を避け、Reactorのパターンに従う
-- **API開発**: APIの変更は常にOpenAPI定義ファイルから開始する
+- **コーディングスタイル**: Spotless (`spotless.gradle`) を使用して一貫したコードスタイルを維持。Lefthook (`lefthook.yml`) によりコミット前に自動整形。
+- **モジュール境界**: モジュール間の依存関係を`package-info.java`で明示的に定義。
+- **リアクティブプログラミング**: ブロッキング操作を避け、Project Reactorのパターンに従う。
+- **API開発**: APIの変更は常にOpenAPI定義ファイル (`docs/openapi/entry.yml`) から開始し、`./gradlew generateOpenApiCode` (または `./gradlew build`) でコードを再生成する。
+- **Null安全性**: JSpecify と NullAway を使用し、コンパイル時にNull安全性をチェック (`build.gradle` で設定)。

@@ -2,13 +2,15 @@
 
 このドキュメントでは、`ecsite-v2` プロジェクトが提供するAPIの利用方法について説明します。主に開発中の動作確認やテストを目的としています。
 
-*(現在執筆中です)*
-
 ## Swagger UI
 
-*   **概要:** 本プロジェクトでは [SpringDoc](https://springdoc.org/) を利用しており、アプリケーション起動時に OpenAPI 仕様に基づいたインタラクティブな API ドキュメント (Swagger UI) が自動的に生成・提供されます。API の仕様確認や簡単な動作テストに利用できます。
-*   **アクセスURL:** アプリケーションをローカルで起動後、Webブラウザで `http://localhost:8080/swagger-ui.html` にアクセスしてください。(ポート番号は環境によって異なる場合があります)
-*   **使い方:**
+*   **概要:** 本プロジェクトでは [SpringDoc](https://springdoc.org/) を利用しており、OpenAPI 仕様に基づいたインタラクティブな API ドキュメント (Swagger UI) を生成する機能が含まれています。
+*   **有効化:** デフォルトでは OpenAPI Generator の設定 (`openapi.gradle` の `useSwaggerUI: "false"`) により、Swagger UI は無効化されています。利用したい場合は、`src/main/resources/application.properties` に以下の設定を追加することで有効化できます。
+    ```properties
+    springdoc.swagger-ui.enabled=true
+    ```
+*   **アクセスURL (有効化した場合):** アプリケーションをローカルで起動後、Webブラウザで `http://localhost:8080/swagger-ui.html` にアクセスしてください。(ポート番号は環境によって異なる場合があります)
+*   **使い方 (有効化した場合):**
     *   画面上部に API のリストが表示されます。各 API をクリックすると詳細（説明、パラメータ、リクエストボディ、レスポンススキーマ、試行機能）が展開されます。
     *   **API の試行:**
         1.  試したい API を展開します。
@@ -25,9 +27,9 @@
 
 1.  **トークン取得 (ログイン API):**
     *   まず、`POST /api/authentication/login` エンドポイントを使用してログインします。リクエストボディには `email` と `password` を含めます。
-    *   認証に成功すると、レスポンスボディに JWT トークンが含まれます。
+    *   認証に成功すると、レスポンスボディに JWT トークンが含まれます (`LoginResponse` スキーマ参照)。
     *   このエンドポイントは認証が不要です。
-2.  **Swagger UI でのトークン設定:**
+2.  **Swagger UI でのトークン設定 (有効化した場合):**
     *   Swagger UI 右上の "Authorize" ボタンをクリックします。
     *   表示されたダイアログの "Value" フィールドに、取得した JWT トークンを `Bearer <token>` の形式で入力します (例: `Bearer eyJhbGciOiJIUzI1NiJ9...`)。
     *   "Authorize" ボタンをクリックし、ダイアログを閉じます。
@@ -35,11 +37,9 @@
 3.  **curl/Postman でのトークン設定:**
     *   リクエストヘッダーに `Authorization: Bearer <token>` を追加します。
 
-*(認証が不要な公開 API (例: ログイン、商品一覧など) についても明記予定)*
-
 ## 主要API利用例
 
-*(アカウント登録、ログイン、商品検索、注文など、代表的なAPIについて `curl` や Postman でのリクエスト/レスポンス例を記載予定)*
+現在実装されている主要な API の利用例を以下に示します。
 
 ### 例: ログイン (curl)
 
@@ -62,30 +62,14 @@ curl -X POST "http://localhost:8080/api/authentication/login" \
 #  "timestamp": "...",
 #  "status": 401,
 #  "error": "Unauthorized",
-#  "message": "Authentication failed",
+#  "message": "Authentication failed", # 実際のエラーメッセージは異なる場合があります
 #  "path": "/api/authentication/login"
 # }
 ```
 
-### 例: 商品一覧取得 (curl)
-
-```bash
-curl -X GET "http://localhost:8080/api/products?page=0&size=10" -H "accept: application/json"
-```
-
-### 例: アカウント登録 (curl)
-
-```bash
-curl -X POST "http://localhost:8080/api/accounts" \
- -H "accept: application/json" \
- -H "Content-Type: application/json" \
- -d '{ "email": "test@example.com", "password": "password123", "name": "Test User" }'
-```
+*(注意: サインアップ API は現在 OpenAPI 定義に含まれていません。実装されている場合は `SignupUsecase` を参照してください)*
 
 ## Postman
 
 *   **概要:** API開発・テストのための高機能なツールです。
-*   **コレクション:** (もし提供する場合) プロジェクトのAPIリクエストをまとめたPostmanコレクションファイル (`*.postman_collection.json`) のインポート方法を記載します。
-*   **環境変数:** (もし提供する場合) 認証トークンやベースURLなどを管理するためのPostman環境ファイル (`*.postman_environment.json`) の設定方法を記載します。
-
-*(Postmanの基本的な使い方、コレクション/環境の活用方法などを記載予定)*
+*   **コレクション/環境:** 現在、このプロジェクト用の Postman コレクションや環境ファイルは提供されていません。必要に応じて各自で作成してください。

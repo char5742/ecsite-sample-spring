@@ -1,19 +1,19 @@
 # 3. ビルド・実行・デバッグガイド
 
-このドキュメントでは、プロジェクトのビルド、ローカル環境での実行、およびデバッグ方法について説明します。コマンドはすべてプロジェクトのルートディレクトリ (`ecsite-v2`) で実行することを想定しています。
+このドキュメントでは、プロジェクトのビルド、ローカル環境での実行、およびデバッグ方法について説明します。コマンドはすべてプロジェクトのルートディレクトリ (`<プロジェクトディレクトリ名>`) で実行することを想定しています。
 
 ## Gradleタスク詳解
 
 このプロジェクトではビルドツールとしてGradleを使用しています。主要なGradleタスクは以下の通りです。
 
 *   `./gradlew build`
-    *   **説明:** プロジェクト全体のコンパイル、テスト実行、JARファイルの作成を行います。
-    *   **成果物:** `build/libs/` ディレクトリに実行可能なJARファイル (`ecsite-v2-*.jar`) が生成されます。テストレポートなども `build/reports/` 以下に生成されます。
+    *   **説明:** プロジェクト全体のコンパイル、テスト実行、JARファイルの作成を行います。OpenAPIコード生成 (`generateOpenApiCode`) も含まれます。
+    *   **成果物:** `build/libs/` ディレクトリに実行可能なJARファイル (`<プロジェクト名>-*.jar`) が生成されます。テストレポートなども `build/reports/` 以下に生成されます。
     *   **実行タイミング:** コード変更後、最終的な動作確認や配布物作成時に実行します。
 
 *   `./gradlew bootRun`
     *   **説明:** Spring Bootアプリケーションを開発モードで起動します。組み込みのWebサーバー (Netty) が起動し、リクエストを受け付けられる状態になります。
-    *   **特徴:** コード変更時の自動リロード（設定による）などが有効になる場合があります。開発中の動作確認に便利です。
+    *   **特徴:** `spring-boot-devtools` が導入されているため、クラスパス上のファイル変更時に自動リロードが有効になります。開発中の動作確認に便利です。
     *   **停止:** `Ctrl+C` で停止します。
 
 *   `./gradlew test`
@@ -22,22 +22,22 @@
 
 *   `./gradlew spotlessCheck`
     *   **説明:** ソースコードが Spotless で定義されたコーディング規約に準拠しているかチェックします。
-    *   **実行タイミング:** コミット前やCIで実行し、規約違反がないか確認します。
+    *   **実行タイミング:** コミット前やCIで実行し、規約違反がないか確認します。Lefthookによりコミット前に自動実行されます。
 
 *   `./gradlew spotlessApply`
     *   **説明:** Spotless の規約に従ってソースコードを自動フォーマットします。
-    *   **実行タイミング:** コード作成後、コミット前に実行してスタイルを統一します。
+    *   **実行タイミング:** コード作成後、コミット前に実行してスタイルを統一します。Lefthookによりコミット前に自動実行されます。
 
 *   `./gradlew generateOpenApiCode`
-    *   **説明:** `docs/openapi/entry.yml` のOpenAPI定義に基づいて、APIインターフェース (`*Api.java`)、Delegateインターフェース (`*Delegate.java`)、およびモデルクラスを `api-model` モジュールの `build/generated/` 以下に自動生成します。
-    *   **実行タイミング:** OpenAPI定義 (`entry.yml`) を変更した場合に実行します。通常、`build` タスクの一部として自動実行されるように設定されていることが多いです。
+    *   **説明:** `docs/openapi/entry.yml` のOpenAPI定義に基づいて、APIインターフェース (`*Api.java`)、Delegateインターフェース (`*Delegate.java`)、およびモデルクラスを `build/generated/src/main/java` 以下 (`com.example.ec_2024b_back.api`, `com.example.ec_2024b_back.model` パッケージ) に自動生成します。
+    *   **実行タイミング:** OpenAPI定義 (`entry.yml`) を変更した場合に実行します。`openapi.gradle` の設定により、`compileJava` タスクの前に自動的に実行されるため、通常は `./gradlew build` や `./gradlew bootRun` に含まれます。個別に実行することも可能です。
 
 *   `./gradlew clean`
     *   **説明:** `build` ディレクトリを削除し、ビルド成果物をクリーンアップします。
     *   **実行タイミング:** ビルドに関する問題が発生した場合や、完全にクリーンな状態からビルドし直したい場合に実行します。
 
 *   **その他カスタムタスク:**
-    *   プロジェクト固有のカスタムタスクがあれば、ここに追加します。（例: `loadInitialData`, `generateDocs` など）
+    *   現在、プロジェクト固有のカスタムタスクはありません。
 
 ## アプリケーションの実行方法
 
@@ -56,22 +56,23 @@
 `./gradlew build` で生成されたJARファイルを実行します。
 
 ```bash
-java -jar build/libs/ecsite-v2-*.jar
+# <プロジェクト名> と <バージョン> は実際の値に置き換えてください
+java -jar build/libs/<プロジェクト名>-<バージョン>.jar
 ```
-*(注意: `*` の部分は実際のバージョン番号に置き換えてください)*
+例: `java -jar build/libs/ecsite-sample-spring-0.0.1-SNAPSHOT.jar`
 
 ### プロファイル指定
 
 Spring Bootのプロファイル（例: `dev`, `prod`, `test`）を切り替えて実行する場合は、`-Dspring.profiles.active` オプションを使用します。
 
 ```bash
-# bootRun でプロファイル指定
+# bootRun でプロファイル指定 (例: dev プロファイル)
 ./gradlew bootRun -Dspring.profiles.active=dev
 
-# JAR実行でプロファイル指定
-java -Dspring.profiles.active=dev -jar build/libs/ecsite-v2-*.jar
+# JAR実行でプロファイル指定 (例: dev プロファイル)
+java -Dspring.profiles.active=dev -jar build/libs/<プロジェクト名>-<バージョン>.jar
 ```
-設定ファイル (`application-{profile}.properties` または `.yml`) でプロファイル固有の設定を管理します。
+設定ファイル (`application-{profile}.properties` または `.yml`) でプロファイル固有の設定を管理します。デフォルトでは `application.properties` が使用されます。
 
 ### 環境変数設定
 
@@ -119,11 +120,8 @@ $env:MY_VARIABLE="value"
 
 ### 3. リアクティブデバッグ
 
-Spring WebFlux (Project Reactor) を使用しているため、従来のデバッグ手法だけでは追跡が難しい場合があります。以下のツールや手法が役立ちます。
+Spring WebFlux (Project Reactor) を使用しているため、従来のデバッグ手法だけでは追跡が難しい場合があります。以下の手法が役立ちます。
 
-*   **Reactor Debug Agent:**
-    *   より詳細なスタックトレースを提供し、非同期処理の追跡を容易にします。
-    *   通常、`reactor-tools` 依存関係を追加し、特定のJVM引数を設定することで有効になります。（設定方法はプロジェクトの依存関係を確認してください）
 *   **`log()` オペレータ:**
     *   Reactorのパイプラインの途中に `.log()` を挿入することで、その時点でのシグナル（`onNext`, `onError`, `onComplete` など）をコンソールに出力できます。デバッグしたい箇所を特定するのに役立ちます。
     ```java
@@ -133,23 +131,24 @@ Spring WebFlux (Project Reactor) を使用しているため、従来のデバ�
         .filter(i -> i > 5)
         .subscribe();
     ```
-*   **BlockHound:**
-    *   リアクティブパイプライン内で意図せずブロッキング呼び出しを行っている箇所を検出するツールです。
-    *   通常、テスト実行時に有効化され、ブロッキング呼び出しがあるとテストが失敗します。（導入されているかはテスト設定を確認してください）
+*   **(注意)** `reactor-tools` (Reactor Debug Agent) や `BlockHound` は現在プロジェクトの依存関係に含まれていません。必要に応じて導入を検討してください。
 
 ## ログ
 
 アプリケーションの動作状況やエラー情報はログに出力されます。
 
 *   **ログ設定ファイル:**
-    *   通常、`src/main/resources/logback-spring.xml` や `application.properties`/`yml` 内の `logging.*` プロパティでログの設定（出力先、フォーマット、レベルなど）が行われます。
+    *   主に `src/main/resources/application.properties` 内の `logging.*` プロパティでログの設定（出力先、フォーマット、レベルなど）が行われます。`logback-spring.xml` は現在使用されていません。
 *   **ログ出力先:**
-    *   デフォルトではコンソールに出力されます。設定によってはファイル (`logs/app.log` など) にも出力される場合があります。
+    *   デフォルトではコンソールに出力されます。`application.properties` の `logging.file.name` や `logging.file.path` プロパティでファイル出力を設定できます。
 *   **ログレベル:**
     *   一般的なログレベルは `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` です（詳細度順）。
-    *   開発中は `DEBUG` や `TRACE` レベルに設定すると、より詳細な情報が得られます。ログレベルは通常、設定ファイルや実行時引数で変更可能です。
+    *   開発中は `DEBUG` や `TRACE` レベルに設定すると、より詳細な情報が得られます。ログレベルは `application.properties` や実行時引数で変更可能です。
     ```bash
-    # application.properties での例
+    # application.properties での例 (ルートロガーをDEBUGに)
+    # logging.level.root=DEBUG
+
+    # application.properties での例 (特定のパッケージをDEBUGに)
     # logging.level.com.example.ec_2024b_back=DEBUG
 
     # 実行時引数での例 (bootRun)

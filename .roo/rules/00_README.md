@@ -28,96 +28,141 @@
 
 #### 基本原則
 
-1. **技術的実装の隠蔽**: MongoDBのDocument（UserDocument等）はインフラ層でのみ扱い、ドメイン層やアプリケーション層では必ずドメインモデル（User等の集約）を利用します。
-
-2. **集約（Aggregate）の境界**: 各ドメインモデルは明確な集約境界を持ち、データの一貫性を保証します。例えば、`User`集約はユーザー関連のエンティティと値オブジェクトをカプセル化します。
-
-3. **リポジトリの抽象化**: リポジトリインターフェースはドメイン層に定義され、その実装はインフラ層にあります。これによりドメイン層はデータアクセス実装の詳細から保護されます。
-
-4. **ドメインモデルの独立性**: ドメインモデルは永続化技術やデータベースから独立しています。データベースの変更があっても、ドメインロジックへの影響を最小限に抑えられます。
+1.  **技術的実装の隠蔽**: MongoDBのDocument (`AccountDocument` 等) はインフラ層でのみ扱い、ドメイン層やアプリケーション層では必ずドメインモデル (`Account` 等の集約) を利用します。
+2.  **集約（Aggregate）の境界**: 各ドメインモデルは明確な集約境界を持ち、データの一貫性を保証します。例えば、`Account` 集約はアカウント関連のエンティティと値オブジェクトをカプセル化します。
+3.  **リポジトリの抽象化**: リポジトリインターフェース (`Accounts` 等) はドメイン層に定義され、その実装 (`MongoAccounts` 等) はインフラ層にあります。これによりドメイン層はデータアクセス実装の詳細から保護されます。
+4.  **ドメインモデルの独立性**: ドメインモデルは永続化技術やデータベースから独立しています。データベースの変更があっても、ドメインロジックへの影響を最小限に抑えられます。
 
 #### 実装パターン
 
-1. **リポジトリパターン**: ドメイン層にはリポジトリのインターフェースのみを定義し、実装はインフラ層に配置します。
+1.  **リポジトリパターン**: ドメイン層にはリポジトリのインターフェースのみを定義し、実装はインフラ層に配置します。
 
-```java
-// ドメイン層のリポジトリインターフェース
-public interface UserRepository {
-    Mono<User> findByEmail(String email);
-    Mono<User> save(User user);
-}
-
-// インフラ層のリポジトリ実装
-@Repository
-public class MongoUserRepository implements UserRepository {
-    private final UserDocumentRepository documentRepository;
-    private final UserDocumentMapper mapper;
-    
-    // コンストラクタ...
-    
-    @Override
-    public Mono<User> findByEmail(String email) {
-        return documentRepository.findDocumentByEmail(email)
-            .map(mapper::toEntity);
+    ```java
+    // ドメイン層のリポジトリインターフェース (例: auth モジュール)
+    package com.example.ec_2024b_back.auth.domain.repositories;
+    // ... imports ...
+    public interface Accounts {
+        Mono<Account> findByEmail(Email email);
+        Mono<Account> save(Account account);
+        // ... 他のメソッド
     }
-}
-```
 
-2. **Mapperパターン**: ドメインモデルとデータベースモデル間の変換を担当する専用クラスを用意します。
+    // インフラ層のリポジトリ実装 (例: auth モジュール)
+    package com.example.ec_2024b_back.auth.infrastructure.repository;
+    // ... imports ...
+    @Repository
+    @RequiredArgsConstructor
+    public class MongoAccounts implements Accounts {
+        private final ReactiveMongoRepository<AccountDocument, String> repository; // Spring Data Reactive Repository
 
-```java
-// インフラ層のマッパークラス
-@Component
-public class UserDocumentMapper {
-    public User toEntity(UserDocument document) {
-        // ドキュメントからドメインモデルへの変換ロジック
-        return new User(
-            new UserId(document.getId()),
-            document.getName(),
-            document.getEmail(),
-            // ... その他のプロパティ
-        );
+        @Override
+        public Mono<Account> findByEmail(Email email) {
+            return repository.findAccountDocumentByAuthenticationsEmail(email.value())
+                .map(AccountDocument::toDomain); // ドキュメントからドメインへ変換
+        }
+
+        @Override
+        public Mono<Account> save(Account account) {
+            return repository.save(AccountDocument.fromDomain(account)) // ドメインからドキュメントへ変換
+                .map(AccountDocument::toDomain);
+        }
+        // ... 他の実装
     }
-    
-    public UserDocument toDocument(User user) {
-        // ドメインモデルからドキュメントへの変換ロジック
-        UserDocument document = new UserDocument();
-        document.setId(user.getId().getValue());
-        document.setName(user.getName());
-        document.setEmail(user.getEmail());
-        // ... その他のプロパティ
-        return document;
+    ```
+
+2.  **ドメインモデルとドキュメントモデルの変換**: インフラ層のドキュメントモデル (`AccountDocument`) やリポジトリ実装 (`MongoAccounts`) 内で、ドメインモデルとの相互変換を行います。
+
+    ```java
+    // インフラ層のドキュメントクラス (例: auth モジュール)
+    package com.example.ec_2024b_back.auth.infrastructure.repository;
+    // ... imports ...
+    @Document(collection = "accounts")
+    @Data
+    @NullUnmarked // NullAway: このクラスではnull許容を前提とする
+    public class AccountDocument {
+        @Id private String id;
+        private List<AuthenticationDocument> authentications;
+        // ... 他のフィールド
+
+        // ドキュメントからドメインモデルへの変換
+        public Account toDomain() {
+            var domainAuthentications = Optional.ofNullable(this.authentications)
+                .orElseGet(List::of)
+                .stream()
+                .map(AuthenticationDocument::toDomain) // ネストしたドキュメントも変換
+                .collect(ImmutableList.toImmutableList());
+            return new Account(new AccountId(this.id), domainAuthentications);
+        }
+
+        // ドメインモデルからドキュメントへの変換 (static factory method)
+        public static AccountDocument fromDomain(Account account) {
+            var doc = new AccountDocument();
+            doc.setId(account.id().value());
+            doc.setAuthentications(
+                account.authentications().stream()
+                    .map(AuthenticationDocument::fromDomain) // ネストしたドメインも変換
+                    .toList()
+            );
+            return doc;
+        }
     }
-}
-```
+
+    // ネストした認証情報のドキュメントモデル (抜粋)
+    @Data
+    @NullUnmarked
+    static class AuthenticationDocument {
+        private String type;
+        private String email;
+        private String password;
+
+        public Authentication toDomain() {
+            // 実際の型に応じて適切なドメインモデルを生成
+            if ("email".equals(this.type)) {
+                return new EmailAuthentication(new Email(this.email), this.password);
+            }
+            // 他の認証タイプがあれば追加
+            throw new IllegalStateException("Unknown authentication type: " + this.type);
+        }
+
+        public static AuthenticationDocument fromDomain(Authentication auth) {
+            var doc = new AuthenticationDocument();
+            if (auth instanceof EmailAuthentication emailAuth) {
+                doc.setType("email");
+                doc.setEmail(emailAuth.email().value());
+                doc.setPassword(emailAuth.password()); // 注意: パスワードの扱い
+            }
+            // 他の認証タイプがあれば追加
+            return doc;
+        }
+    }
+    ```
 
 #### 重要な実装規約
 
-1. **リポジトリメソッドの公開範囲**: インフラ層の`findDocumentByEmail`等のメソッドは外部に公開せず、`UserRepository`の`findByEmail`のようにドメインモデルを返すAPIを通じて利用してください。
-
-2. **トランザクション境界**: トランザクション境界はアプリケーション層（Usecase）に設定し、リポジトリ層では単純なデータアクセス操作のみを提供します。
-
-3. **値オブジェクトの不変性**: 値オブジェクト（メールアドレス、金額など）は不変（Immutable）にし、ビジネスルールをカプセル化します。
+1.  **リポジトリメソッドの公開範囲**: インフラ層の `ReactiveMongoRepository` のメソッド (例: `findAccountDocumentByAuthenticationsEmail`) は直接外部に公開せず、ドメイン層のリポジトリインターフェース (`Accounts` の `findByEmail` など) を通じて利用してください。
+2.  **トランザクション境界**: トランザクション境界はアプリケーション層（Usecase）に設定し、リポジトリ層では単純なデータアクセス操作のみを提供します。（MongoDBのトランザクションサポートは限定的なため、設計に注意が必要です）
+3.  **値オブジェクトの不変性**: 値オブジェクト (`Email`, `AccountId` など) は不変 (`Immutable`, Java Record を活用) にし、ビジネスルールをカプセル化します。
 
 #### メリット
 
-- **テスト可能性の向上**: モックリポジトリを使用してドメインロジックを単体テストできます
-- **技術的実装の変更容易性**: データベース技術を変更しても、ドメイン層は影響を受けません
-- **ビジネスルールの明確な表現**: ドメインモデルはビジネスルールを純粋に表現します
-- **並行開発の効率化**: インフラチームとドメインチームが並行して開発できます
+*   **テスト可能性の向上**: モックリポジトリを使用してドメインロジックを単体テストできます。
+*   **技術的実装の変更容易性**: データベース技術を変更しても、ドメイン層は影響を受けません。
+*   **ビジネスルールの明確な表現**: ドメインモデルはビジネスルールを純粋に表現します。
+*   **並行開発の効率化**: インフラチームとドメインチームが並行して開発できます。
 
 #### モジュール間の依存関係管理
 
-本プロジェクトでは10の主要ドメイン（Account, User, Cart, Catalog, Stock, Order, Payment, Promotion, Shipping, Notification）が定義されており、各ドメイン間の依存関係は明確に管理されています。詳細については [`docs/ai/04_ARCHITECTURE.md`](./04_ARCHITECTURE.md) を参照してください。
+本プロジェクトでは現在、主に以下のモジュールが定義されています。
 
-#### モジュール間の依存関係管理
+*   **auth**: 認証・認可関連
+*   **share**: 複数モジュールで共有されるコンポーネント
 
-本プロジェクトでは10の主要ドメイン（Account, User, Cart, Catalog, Stock, Order, Payment, Promotion, Shipping, Notification）が定義されており、各ドメイン間の依存関係は明確に管理されています。詳細については [`docs/ai/04_ARCHITECTURE.md`](./04_ARCHITECTURE.md) を参照してください。
+各モジュール間の依存関係は明確に管理されています。詳細については [`docs/ai/04_ARCHITECTURE.md`](./04_ARCHITECTURE.md) を参照してください。
 
 ---
 
 *   **[04_ARCHITECTURE.md](./04_ARCHITECTURE.md):** システムアーキテクチャの詳細（Modulith, リアクティブ, API設計など）。
-*   **[05_MODULES/](./05_MODULES/):** 各機能モジュール（`account`, `user` など）の詳細な説明。
+*   **[05_MODULES/](./05_MODULES/):** 各機能モジュール（`auth`, `share` など）の詳細な説明。
 *   **[06_CODING_STANDARDS.md](./06_CODING_STANDARDS.md):** コーディング規約とベストプラクティス。
 *   **[07_TESTING.md](./07_TESTING.md):** テスト戦略とテストコードの実装方法。
 *   **[09_DATABASE.md](./09_DATABASE.md):** データベース（MongoDB）のスキーマ設計とマイグレーションについて。
@@ -127,13 +172,13 @@ public class UserDocumentMapper {
 
 ## AIアシスタント (Cline) 利用時の注意
 
-プロジェクトルートにある `.clinerules` ファイルには、AIアシスタント (Cline) に対する基本的な指示が記述されています。
+プロジェクトルートの `.roo/rules/instruction.md` ファイルには、AIアシスタント (Cline) に対する基本的な指示が記述されています。
 
 *   **ドキュメントの参照:** Cline は作業開始前にこの `docs/ai/00_README.md` を確認するように指示されています。
 *   **ドキュメントの更新:** 作業完了後、関連ドキュメントの更新を忘れないように指示されています。
 *   **不明点の確認:** 不明な点があれば、作業担当者に質問するように指示されています。
 
-Cline を利用する際は、これらの指示が前提となっていることを念頭に置いてください。必要に応じて `.clinerules` を更新することも検討してください。
+Cline を利用する際は、これらの指示が前提となっていることを念頭に置いてください。必要に応じて `.roo/rules/instruction.md` を更新することも検討してください。
 
 ## 貢献
 

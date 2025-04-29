@@ -1,6 +1,6 @@
 # 99. オンボーディング資料への貢献ガイド
 
-このドキュメントは、`docs/ai/` 配下にあるオンボーディング資料群を更新・改善するためのガイドラインです。
+このドキュメントは、`.roo/rules/` 配下にあるオンボーディング資料群を更新・改善するためのガイドラインです。
 
 ## なぜ貢献が必要か？
 
@@ -11,7 +11,7 @@
 
 ## 対象ドキュメント
 
-*   このガイドを含む、`docs/ai/` ディレクトリ配下のすべての Markdown ファイル (`.md`) が対象です。
+*   このガイドを含む、`.roo/rules/` ディレクトリ配下のすべての Markdown ファイル (`.md`) が対象です。
 
 ## 貢献方法
 
@@ -20,7 +20,7 @@
 1.  **機能/修正ブランチでの作業:**
     *   通常通り、`feature/` や `hotfix/` ブランチでコードの変更作業を行います ([08_WORKFLOW.md](./08_WORKFLOW.md) 参照)。
 2.  **関連ドキュメントの特定と編集:**
-    *   行ったコード変更に関連するオンボーディング資料 (`docs/ai/` 配下のファイル) を特定します。
+    *   行ったコード変更に関連するオンボーディング資料 (`.roo/rules/` 配下のファイル) を特定します。
     *   変更内容に合わせて、ドキュメントを修正・追記します。
     *   後述の「執筆ガイドライン」に従ってください。
 3.  **コードとドキュメントのコミット:**
@@ -28,14 +28,14 @@
     *   コミットメッセージには、コード変更の内容を示すタイプ (`feat:`, `fix:` など) を使用します。ドキュメント更新が含まれることをメッセージ本文で触れるとより丁寧です。
     *   例:
         ```
-        feat(user): Add user profile editing feature
+        feat(auth): 🎸 Add password reset functionality
 
-        - Implement API endpoint for updating user profile.
-        - Add corresponding service and repository logic.
-        - Update user module documentation (05_MODULES/user/README.md)
+        - Implement API endpoint for password reset request.
+        - Add corresponding usecase and workflow logic.
+        - Update auth module documentation (05_MODULES/auth/README.md)
           and API usage guide (11_API_USAGE.md).
 
-        Refs #123
+        Refs #456
         ```
 4.  **Pull Request (PR) の作成:**
     *   コード変更とドキュメント更新を含むブランチから `develop` (または `main`) へのPull Requestを作成します。
@@ -49,8 +49,8 @@
 
 *   誤字脱字の修正、既存内容の明確化、構成変更など、コード変更を伴わないドキュメント改善の場合は、ドキュメント専用のブランチ (`docs/` プレフィックス推奨) を作成し、PRを作成しても構いません。
 *   コミットメッセージには `docs:` タイプを使用します。
-    *   例: `docs: Fix typo in contributing guide`
-    *   例: `docs: Improve clarity of environment setup steps`
+    *   例: `docs: ✏️ Fix typo in contributing guide`
+    *   例: `docs: ✏️ Improve clarity of environment setup steps`
 
 ## 執筆ガイドライン
 
@@ -71,7 +71,7 @@
 
 ## 目次ファイルの更新
 
-*   新しいドキュメントファイルを追加した場合や、既存のファイルを削除・リネームした場合は、必ず目次ファイル (`docs/ai/00_README.md`) の「このガイドの歩き方」セクションを更新し、リンク切れや情報の不整合がないようにしてください。
+*   新しいドキュメントファイルを追加した場合や、既存のファイルを削除・リネームした場合は、必ず目次ファイル (`.roo/rules/00_README.md`) の「このガイドの歩き方」セクションを更新し、リンク切れや情報の不整合がないようにしてください。
 
 ---
 

@@ -9,24 +9,28 @@
 - **クリーンアーキテクチャ/ヘキサゴナルアーキテクチャ**: ビジネスロジックと技術的詳細の分離
 - **モジュラーモノリス**: Spring Modulithを利用した境界づけられたコンテクスト
 - **リアクティブプログラミング**: Spring WebFluxによる非同期処理
-- **イベント駆動型アーキテクチャ**: システムの状態変更をイベントとして表現
+- **イベント駆動型アーキテクチャ**: （将来的な拡張ポイント）システムの状態変更をイベントとして表現
 
 ## アーキテクチャの全体像
 
 ```mermaid
 graph TD
-    A[Client] --> B(Interfaces: Controller);
+    A[Client] --> B(Interfaces: Controller/Handler);
     B --> C{Application: Usecase};
     C --> E{Domain: Workflow/Step};
-    E --> F[Domain: Model];
-    C --> G[Infrastructure: Repository];
-    G --> H[(Database)];
-    C --> I[Infrastructure: Security];
+    E --> F[Domain: Model (Entity/VO)];
+    C --> G[Infrastructure: Repository Impl];
+    G --> H[(Database: MongoDB)];
+    E --> RepIF[Domain: Repository Interface];
+    C --> SecIF[Domain: Security Interface (e.g., PasswordEncoder)];
+    C --> SecImpl[Infrastructure: Security Impl];
     J[Infrastructure: Configuration] -- configures --> B;
     J -- configures --> C;
     J -- configures --> G;
-    J -- configures --> I;
+    J -- configures --> SecImpl;
     B --> K[DTO (Generated)];
+    RepIF -- implemented by --> G;
+    SecIF -- implemented by --> SecImpl;
 ```
 *(図は簡略化されています)*
 
@@ -38,51 +42,45 @@ graph TD
 
 外部システムとのインターフェースを担当します。
 
-- **REST APIコントローラー**: クライアントからのHTTPリクエストを受け取り、レスポンスを返す
-- **DTOオブジェクト**: APIとの通信に使用されるデータ構造（OpenAPIから自動生成）
-- **バリデーション**: 入力データの検証
+- **REST API ハンドラー/コントローラー**: クライアントからのHTTPリクエストを受け取り、レスポンスを返す (例: `LoginWithEmailHandler`)。OpenAPI Generator で生成されたインターフェースを実装します。
+- **DTOオブジェクト**: APIとの通信に使用されるデータ構造（OpenAPIから自動生成された `model` パッケージ内のクラス）。
+- **バリデーション**: 入力データの検証 (`jakarta.validation` アノテーションなど)。
 
 ### 2. Application レイヤー
 
 アプリケーションのユースケースを実装します。
 
-- **Usecaseクラス**: 各機能のビジネスロジックを調整・実行
-- **トランザクション境界**: データの一貫性を保証
-- **ドメインサービスの連携**: 複雑なビジネスロジックの実行
+- **Usecaseクラス**: 各機能のビジネスロジックを調整・実行 (例: `LoginUsecase`, `SignupUsecase`)。
+- **トランザクション境界**: (MongoDBの限定的なトランザクション機能を利用する場合) データの一貫性を保証。
+- **ドメインワークフロー/ステップの連携**: ドメイン層のビジネスプロセスフローを呼び出す。
 
 ### 3. Domain レイヤー
 
 ビジネスロジックの中核を担います。
 
-- **エンティティ**: ビジネスオブジェクトとそのライフサイクル
-- **値オブジェクト**: 変更不可能なビジネス値
-- **集約**: 一貫性境界を持つエンティティと値オブジェクトのクラスター
-- **ドメインイベント**: ドメインの状態変更を表すイベント
-- **Workflow/Step**: ビジネスプロセスのフロー制御
+- **エンティティ/集約**: ビジネスオブジェクトとそのライフサイクル (例: `Account`)。
+- **値オブジェクト**: 変更不可能なビジネス値 (例: `Email`, `JsonWebToken`, `AccountId`)。
+- **リポジトリインターフェース**: データ永続化の抽象化 (例: `Accounts`)。
+- **ドメインイベント**: （将来的な拡張ポイント）ドメインの状態変更を表すイベント。
+- **Workflow/Step**: ビジネスプロセスのフロー制御 (例: `LoginWorkflow`, `FindAccountByEmailStep`)。
 
 ### 4. Infrastructure レイヤー
 
 技術的な詳細を実装します。
 
-- **リポジトリ実装**: データアクセスロジック
-- **セキュリティ実装**: 認証・認可のメカニズム
-- **外部サービス連携**: 決済サービスなどの外部APIとの連携
-- **設定**: アプリケーション全体の設定
+- **リポジトリ実装**: データアクセスロジック (例: `MongoAccounts`)。Spring Data MongoDB Reactive を利用。
+- **ドキュメントモデル**: データベースのスキーマに対応するクラス (例: `AccountDocument`)。
+- **ステップ実装**: ドメイン層のステップインターフェースの実装 (例: `FindAccountByEmailStepImpl`)。
+- **セキュリティ実装**: 認証・認可のメカニズム (例: `JsonWebTokenProvider`, `VerifyWithPasswordStepImpl` での `PasswordEncoder` 利用)。
+- **外部サービス連携**: （将来的な拡張ポイント）決済サービスなどの外部APIとの連携。
+- **設定**: アプリケーション全体の設定 (`JWTProperties` など)。
 
 ## モジュール構成
 
 システムは機能的な関心事に基づいて以下のモジュールに分割されています：
 
-1. **Auth**: ユーザー認証、アカウント管理
-2. **User**: ユーザープロファイル管理
-3. **Cart**: ショッピングカート機能
-4. **Catalog**: 商品カタログ管理
-5. **Stock**: 在庫管理
-6. **Order**: 注文処理
-7. **Payment**: 決済処理
-8. **Promotion**: キャンペーン・割引管理
-9. **Shipping**: 配送管理
-10. **Notification**: 通知管理
+1.  **auth**: ユーザー認証、アカウント管理
+2.  **share**: 複数モジュールで共有されるコンポーネントやユーティリティ
 
 各モジュールは独自の責務を持ち、明確に定義された境界を持っています。モジュール間の依存関係は`package-info.java`ファイルで定義され、循環依存を避けるように設計されています。
 
@@ -92,39 +90,29 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Auth --> User
-    User --> Cart
-    Cart --> Catalog
-    Cart --> Stock
-    Cart --> Promotion
-    Cart --> Order
-    Order --> Payment
-    Order --> Shipping
-    Order --> Notification
-    Shipping --> Notification
-    Payment --> Notification
-    Promotion --> Catalog
-    User --> Notification
+    auth --> share;
 ```
+*   `auth` モジュールは `share` モジュールで定義された共通コンポーネント（例: `Email`, `DomainException`, `JsonWebTokenProvider`）を利用します。
+*   `share` モジュールは他のモジュールに依存しません。
 
 ## リアクティブプログラミングモデル
 
 本システムはSpring WebFluxを採用し、以下の特徴を持つリアクティブプログラミングモデルを実装しています：
 
-- **非ブロッキングI/O**: スレッドリソースの効率的な利用
-- **バックプレッシャー**: データ処理のフロー制御
-- **宣言的プログラミング**: データフローの宣言的な表現
-- **リアクティブストリーム**: `Mono`と`Flux`を用いた非同期データストリーム
+- **非ブロッキングI/O**: Netty を利用し、スレッドリソースを効率的に利用。
+- **バックプレッシャー**: データ処理のフロー制御。
+- **宣言的プログラミング**: データフローの宣言的な表現。
+- **リアクティブストリーム**: Project Reactor の `Mono` と `Flux` を用いた非同期データストリーム。リポジトリ層からコントローラー層まで一貫してリアクティブ型を使用。
 
 ## セキュリティモデル
 
 システムのセキュリティは以下の要素で構成されています：
 
-- **認証**: JWT (JSON Web Token) ベースの認証
-- **認可**: ロールベースのアクセス制御（RBAC）
-- **セキュアなパスワードハンドリング**: BCryptによるハッシュ化
-- **CSRFトークン**: クロスサイトリクエストフォージェリ対策
+- **認証**: JWT (JSON Web Token) ベースの認証。`JsonWebTokenProvider` で生成・検証。
+- **認可**: （基本的な設定のみ、詳細なRBACは未実装）Spring Security によるリクエストパスごとのアクセス制御。
+- **セキュアなパスワードハンドリング**: `PasswordEncoder` (デフォルトでは BCrypt) によるパスワードのハッシュ化と比較 (`VerifyWithPasswordStepImpl` で使用)。
+- **CSRFトークン**: （Stateless JWT認証のため、通常は不要）WebFlux のデフォルト設定では有効になっている可能性があるが、明示的な利用はしていない。
 
 ## まとめ
 
-本アーキテクチャは、ビジネスロジックの独立性を確保しつつ、高いスケーラビリティと保守性を実現するために設計されています。ドメイン駆動設計の考え方を取り入れ、ビジネスの複雑さを効果的にモデル化しながら、技術的な実装の詳細との結合を最小限に抑えています。
+本アーキテクチャは、クリーンアーキテクチャとモジュラーモノリスの原則に基づき、ビジネスロジックの独立性を確保しつつ、リアクティブプログラミングによるスケーラビリティと保守性を実現するために設計されています。ドメイン駆動設計の考え方を取り入れ、ビジネスの複雑さを効果的にモデル化しながら、技術的な実装の詳細との結合を最小限に抑えています。
