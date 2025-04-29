@@ -1,16 +1,19 @@
 package com.example.ec_2024b_back.auth.infrastructure.repository;
 
 import com.example.ec_2024b_back.auth.domain.models.Account;
-import com.example.ec_2024b_back.auth.domain.repositories.AccountRepository;
 import com.example.ec_2024b_back.share.domain.models.Email;
+
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
+
+import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
+
 import reactor.core.publisher.Mono;
 
 /** Spring Data MongoDB Reactiveを使用したUserRepositoryの実装. */
 @Repository
-public interface MongoAccountRepository
-    extends ReactiveMongoRepository<AccountDocument, String>, AccountRepository {
+public interface MongoAccounts
+    extends ReactiveMongoRepository<AccountDocument, String>, Accounts {
 
   /**
    * EmailでUserDocumentを検索するメソッド (Spring Dataが自動実装). ReactiveMongoRepositoryが提供するfindByXXXメソッドを利用.

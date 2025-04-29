@@ -21,9 +21,9 @@ public class VerifyWithPasswordStepImpl implements VerifyWithPasswordStep {
     return getEmailAuthentication(input.account())
         .map(EmailAuthentication::password)
         .switchIfEmpty(Mono.error(NoEmailAuthenticationException::new))
-        .map(hashedPassword -> passwordEncoder.matches(input.rawPassword(), hashedPassword))
+        .map(hashedPassword -> passwordEncoder.matches(input.rawPassword(), hashedPassword.value()))
         .flatMap(
-            matches -> {
+            (var matches) -> {
               if (matches) {
                 return Mono.just(input.account());
               } else {
@@ -34,7 +34,7 @@ public class VerifyWithPasswordStepImpl implements VerifyWithPasswordStep {
 
   private static Mono<EmailAuthentication> getEmailAuthentication(Account account) {
 
-    return account.authentications().stream()
+    return account.getAuthentications().stream()
         .filter(auth -> auth instanceof EmailAuthentication)
         .map(EmailAuthentication.class::cast)
         .findFirst()

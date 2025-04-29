@@ -73,7 +73,7 @@ public class JsonWebTokenProvider {
    */
   public String generateToken(Account user) {
     var claims = new HashMap<String, Object>();
-    return createToken(claims, user.id().id());
+    return createToken(claims, user.getId().id().toString());
   }
 
   /**
