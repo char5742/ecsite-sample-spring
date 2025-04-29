@@ -25,6 +25,10 @@
     *   主要プロパティ:
         *   `id`: アカウントID (`AccountId` 値オブジェクト)。
         *   `authentications`: このアカウントに関連付けられた認証方法のリスト (`ImmutableList<Authentication>`)。
+        *   `domainEvents`: アカウントに関連するドメインイベントのリスト (`ImmutableList<DomainEvent>`)。
+    *   ファクトリメソッド:
+        *   `create`: 新しいアカウントを作成し、`AccountCreated`イベントを発行。
+        *   `reconstruct`: 永続化されたアカウントを再構築（イベントなし）。
 
 *   **`AccountId` (Record, Value Object):**
     *   責務: アカウントの一意な識別子。
@@ -78,12 +82,14 @@
 
 ### サインアップフロー
 
-1.  クライアントが `/api/authentication/signup` (仮) エンドポイントにメールアドレスとパスワードを送信。
-2.  (対応する Handler - 未実装) がリクエストを受け取り、`SignupUsecase` (Application レイヤー) を呼び出す。
+1.  クライアントが `/api/authentication/signup` エンドポイントにメールアドレスとパスワードを送信。
+2.  `SignupWithEmailHandler` (Interfaces レイヤー) がリクエストを受け取り、`SignupUsecase` (Application レイヤー) を呼び出す。
 3.  `SignupUsecase` が `SignupWorkflow` (Domain レイヤー) を実行。
 4.  `SignupWorkflow` が以下のステップ (Domain レイヤーのインターフェース) を実行:
     1.  `CreateAccountWithEmailStep`: 新しいアカウントエンティティを作成し、リポジトリ (`Accounts`) を通じて保存 (Infrastructure レイヤーの `CreateAccountWithEmailStepImpl` が実行される)。
-5.  成功レスポンス (例: 作成されたアカウント情報の一部や成功メッセージ) をクライアントに返却。
+       - `AccountFactory`を使用してアカウントを作成し、ドメインイベント (`AccountCreated`) を発行。
+       - `IdGenerator` (share モジュール) を使用して一意なIDを生成。
+5.  成功レスポンス (サインアップ成功メッセージ) をクライアントに返却。
 
 ### トークン認証フロー (Spring Security連携)
 
@@ -97,13 +103,14 @@
 
 *   **Interfaces レイヤー:**
     *   `LoginWithEmailHandler`: ログインAPIのリクエストハンドラー。
-    *   (Signup Handler - 未実装): サインアップAPIのリクエストハンドラー。
+    *   `SignupWithEmailHandler`: サインアップAPIのリクエストハンドラー。
 *   **Application レイヤー:**
     *   `LoginUsecase`: ログイン処理を統括するユースケースクラス。
     *   `SignupUsecase`: サインアップ処理を統括するユースケースクラス。
 *   **Domain レイヤー:**
     *   `Account`, `AccountId`, `Authentication`, `EmailAuthentication`, `JsonWebToken`: ドメインモデル。
     *   `Accounts`: リポジトリインターフェース。
+    *   `AccountFactory`: アカウント作成を担当するドメインサービス。
     *   `LoginWorkflow`: ログイン処理の各ステップを調整するワークフロークラス。
     *   `SignupWorkflow`: サインアップ処理のステップを調整するワークフロークラス。
     *   `FindAccountByEmailStep`, `VerifyWithPasswordStep`, `GenerateJWTStep`, `CreateAccountWithEmailStep`: 各処理ステップのインターフェース。
