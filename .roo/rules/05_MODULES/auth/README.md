@@ -72,21 +72,21 @@
 ### ログインフロー
 
 1.  クライアントが `/api/authentication/login` エンドポイントにメールアドレスとパスワードを送信。
-2.  `LoginWithEmailHandler` (Interfaces レイヤー) がリクエストを受け取り、`LoginUsecase` (Application レイヤー) を呼び出す。
-3.  `LoginUsecase` が `LoginWorkflow` (Domain レイヤー) を実行。
-4.  `LoginWorkflow` が以下のステップ (Domain レイヤーのインターフェース) を順に実行:
-    1.  `FindAccountByEmailStep`: メールアドレスでアカウントを検索 (Infrastructure レイヤーの `FindAccountByEmailStepImpl` が実行される)。
-    2.  `VerifyWithPasswordStep`: 提供されたパスワードと保存されているハッシュ化パスワードを検証 (Infrastructure レイヤーの `VerifyWithPasswordStepImpl` が実行される)。
-    3.  `GenerateJWTStep`: 認証成功時にJWTトークンを生成 (Infrastructure レイヤーの `GenerateJWTStepImpl` が実行される)。
+2.  `LoginWithEmailHandler` (Infrastructure リング) がリクエストを受け取り、`LoginUsecase` (Application リング) を呼び出す。
+3.  `LoginUsecase` が `LoginWorkflow` (Domain リング) を実行。
+4.  `LoginWorkflow` が以下のステップ (Domain リングのインターフェース) を順に実行:
+    1.  `FindAccountByEmailStep`: メールアドレスでアカウントを検索 (Infrastructure リングの `FindAccountByEmailStepImpl` が実行される)。
+    2.  `VerifyWithPasswordStep`: 提供されたパスワードと保存されているハッシュ化パスワードを検証 (Infrastructure リングの `VerifyWithPasswordStepImpl` が実行される)。
+    3.  `GenerateJWTStep`: 認証成功時にJWTトークンを生成 (Infrastructure リングの `GenerateJWTStepImpl` が実行される)。
 5.  生成された `JsonWebToken` をクライアントに返却。
 
 ### サインアップフロー
 
 1.  クライアントが `/api/authentication/signup` エンドポイントにメールアドレスとパスワードを送信。
-2.  `SignupWithEmailHandler` (Interfaces レイヤー) がリクエストを受け取り、`SignupUsecase` (Application レイヤー) を呼び出す。
-3.  `SignupUsecase` が `SignupWorkflow` (Domain レイヤー) を実行。
-4.  `SignupWorkflow` が以下のステップ (Domain レイヤーのインターフェース) を実行:
-    1.  `CreateAccountWithEmailStep`: 新しいアカウントエンティティを作成し、リポジトリ (`Accounts`) を通じて保存 (Infrastructure レイヤーの `CreateAccountWithEmailStepImpl` が実行される)。
+2.  `SignupWithEmailHandler` (Infrastructure リング) がリクエストを受け取り、`SignupUsecase` (Application リング) を呼び出す。
+3.  `SignupUsecase` が `SignupWorkflow` (Domain リング) を実行。
+4.  `SignupWorkflow` が以下のステップ (Domain リングのインターフェース) を実行:
+    1.  `CreateAccountWithEmailStep`: 新しいアカウントエンティティを作成し、リポジトリ (`Accounts`) を通じて保存 (Infrastructure リングの `CreateAccountWithEmailStepImpl` が実行される)。
        - `AccountFactory`を使用してアカウントを作成し、ドメインイベント (`AccountCreated`) を発行。
        - `IdGenerator` (share モジュール) を使用して一意なIDを生成。
 5.  成功レスポンス (サインアップ成功メッセージ) をクライアントに返却。
@@ -95,26 +95,25 @@
 
 1.  保護されたAPIにアクセスする際、クライアントはリクエストヘッダーにJWTトークンを設定 (`Authorization: Bearer <token>`)。
 2.  Spring Security のフィルタチェーン (設定が必要) がリクエストからトークンを抽出。
-3.  `JsonWebTokenProvider` (Infrastructure レイヤー) を使用してトークンを検証。
+3.  `JsonWebTokenProvider` (Infrastructure リング) を使用してトークンを検証。
 4.  トークンが有効な場合、認証情報 (`Authentication` オブジェクト) を `SecurityContext` に設定。
 5.  Spring Security が後続の処理で API アクセス権限を確認し、認可を実施。
 
 ## 主要コンポーネント
 
-*   **Interfaces レイヤー:**
-    *   `LoginWithEmailHandler`: ログインAPIのリクエストハンドラー。
-    *   `SignupWithEmailHandler`: サインアップAPIのリクエストハンドラー。
-*   **Application レイヤー:**
-    *   `LoginUsecase`: ログイン処理を統括するユースケースクラス。
-    *   `SignupUsecase`: サインアップ処理を統括するユースケースクラス。
-*   **Domain レイヤー:**
+*   **Domain リング:**
     *   `Account`, `AccountId`, `Authentication`, `EmailAuthentication`, `JsonWebToken`: ドメインモデル。
     *   `Accounts`: リポジトリインターフェース。
     *   `AccountFactory`: アカウント作成を担当するドメインサービス。
     *   `LoginWorkflow`: ログイン処理の各ステップを調整するワークフロークラス。
     *   `SignupWorkflow`: サインアップ処理のステップを調整するワークフロークラス。
     *   `FindAccountByEmailStep`, `VerifyWithPasswordStep`, `GenerateJWTStep`, `CreateAccountWithEmailStep`: 各処理ステップのインターフェース。
-*   **Infrastructure レイヤー:**
+*   **Application リング:**
+    *   `LoginUsecase`: ログイン処理を統括するユースケースクラス。
+    *   `SignupUsecase`: サインアップ処理を統括するユースケースクラス。
+*   **Infrastructure リング:**
+    *   `LoginWithEmailHandler`: ログインAPIのリクエストハンドラー。
+    *   `SignupWithEmailHandler`: サインアップAPIのリクエストハンドラー。
     *   `MongoAccounts`: `Accounts` リポジトリの実装。
     *   `AccountDocument`: MongoDBドキュメントモデル。
     *   `FindAccountByEmailStepImpl`, `VerifyWithPasswordStepImpl`, `GenerateJWTStepImpl`, `CreateAccountWithEmailStepImpl`: 各ステップインターフェースの実装。
@@ -123,9 +122,10 @@
 
 ## 設計上のポイント
 
-1.  **クリーンアーキテクチャの採用:**
-    *   ドメイン層はインフラ層やアプリケーション層に依存しない。
-    *   リポジトリやステップのインターフェースはドメイン層で定義し、実装はインフラ層に配置。
+1.  **オニオンアーキテクチャの採用:**
+    *   ドメインリングを中心に置き、外側のリングが内側のリングに依存する構造。
+    *   ドメインリングはアプリケーションリングやインフラストラクチャリングに依存しない。
+    *   リポジトリやステップのインターフェースはドメインリングで定義し、実装はインフラストラクチャリングに配置。
 2.  **値オブジェクトの活用:**
     *   `AccountId`, `JsonWebToken`, `Email` (share) など、不変で自己検証ロジックを持つ値オブジェクトとして Java Record を活用。
 3.  **責務の分離 (ステップパターン):**

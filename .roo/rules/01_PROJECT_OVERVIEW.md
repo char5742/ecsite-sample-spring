@@ -58,7 +58,7 @@ ecsite-v2/
 - **SpringDoc OpenAPI 2.3.0** : API ドキュメント生成
 - **JSpecify 1.0.0** : null許容性アノテーション
 - **Guava 33.4.8-jre**: Google Core Libraries for Java
-- **jMolecules 1.10.0**: Architectural abstractions for Java
+- **jMolecules 1.10.0**: Architectural abstractions for Java（オニオンアーキテクチャのサポート）
 - **Auth0 Java JWT 4.4.0**: JWTライブラリ
 
 ### ビルド・ツール
@@ -72,7 +72,7 @@ ecsite-v2/
 
 ## モジュール設計
 
-プロジェクトはSpring Modulithを使用したモジュラーモノリスアーキテクチャを採用しています。
+プロジェクトはSpring Modulithを使用したモジュラーモノリスアーキテクチャとオニオンアーキテクチャを組み合わせて採用しています。
 
 ### モジュール
 
