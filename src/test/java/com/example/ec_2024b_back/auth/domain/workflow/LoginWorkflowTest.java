@@ -1,7 +1,5 @@
 package com.example.ec_2024b_back.auth.domain.workflow;
 
-import java.util.UUID;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,10 +12,9 @@ import com.example.ec_2024b_back.auth.domain.step.VerifyWithPasswordStep;
 import com.example.ec_2024b_back.auth.domain.step.VerifyWithPasswordStep.PasswordInput;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.google.common.collect.ImmutableList;
-
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,7 +38,7 @@ class LoginWorkflowTest {
     var email = "test@example.com";
     var password = "pass";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account =  Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
     var jwt = new JsonWebToken("jwt-token");
     when(findAccountByEmailStep.apply(new Email(email))).thenReturn(Mono.just(account));
     when(verifyWithPasswordStep.apply(any(PasswordInput.class))).thenReturn(Mono.just(account));
@@ -63,7 +60,7 @@ class LoginWorkflowTest {
   void execute_shouldThrowInvalidPasswordException_whenPasswordMismatch() {
     var email = "test@example.com";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account =  Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
     when(findAccountByEmailStep.apply(new Email(email))).thenReturn(Mono.just(account));
     when(verifyWithPasswordStep.apply(any(PasswordInput.class)))
         .thenReturn(Mono.error(new VerifyWithPasswordStep.InvalidPasswordException()));
@@ -77,7 +74,7 @@ class LoginWorkflowTest {
   void execute_shouldThrowNoEmailAuthenticationException_whenNoEmailAuthExists() {
     var email = "test@example.com";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account =  Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
     when(findAccountByEmailStep.apply(new Email(email))).thenReturn(Mono.just(account));
     when(verifyWithPasswordStep.apply(any(PasswordInput.class)))
         .thenReturn(Mono.error(new VerifyWithPasswordStep.NoEmailAuthenticationException()));

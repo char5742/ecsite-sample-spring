@@ -19,7 +19,7 @@ public class CreateAccountWithEmailStepImpl implements CreateAccountWithEmailSte
 
   @Override
   public Mono<Account> apply(EmailWithPasswordInput input) {
-    
+
     var hashedPassord = new HashedPassword(passwordEncoder.encode(input.rawPassword()));
     var emailAuthentication = new EmailAuthentication(input.account(), hashedPassord);
     return Mono.just(Account.create(ImmutableList.of(emailAuthentication)));

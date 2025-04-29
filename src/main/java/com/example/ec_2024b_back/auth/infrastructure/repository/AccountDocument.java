@@ -4,14 +4,11 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
 import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import org.jspecify.annotations.NullUnmarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

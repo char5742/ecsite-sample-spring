@@ -9,16 +9,16 @@ import org.junit.jupiter.api.Test;
 @Fast
 class JsonWebTokenTest {
 
-    @Test
-    void constructor_shouldCreateInstance_whenValidTokenProvided() {
-        var token = new JsonWebToken("valid-token");
-        assertThat(token.value()).isEqualTo("valid-token");
-    }
+  @Test
+  void constructor_shouldCreateInstance_whenValidTokenProvided() {
+    var token = new JsonWebToken("valid-token");
+    assertThat(token.value()).isEqualTo("valid-token");
+  }
 
-    @Test
-    void constructor_shouldThrowException_whenEmptyTokenProvided() {
-        assertThatThrownBy(() -> new JsonWebToken(""))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("JWTトークンはnullまたは空であってはいけません");
-    }
+  @Test
+  void constructor_shouldThrowException_whenEmptyTokenProvided() {
+    assertThatThrownBy(() -> new JsonWebToken(""))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("JWTトークンはnullまたは空であってはいけません");
+  }
 }
