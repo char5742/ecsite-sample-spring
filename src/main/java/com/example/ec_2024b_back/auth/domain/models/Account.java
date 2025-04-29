@@ -17,8 +17,7 @@ public class Account implements AggregateRoot<Account, AccountId> {
   private final ImmutableList<Authentication> authentications;
   private final ImmutableList<DomainEvent> domainEvents;
 
-  public static Account create(ImmutableList<Authentication> authentications) {
-    var accountId = UUID.randomUUID();
+  public static Account create(UUID accountId, ImmutableList<Authentication> authentications) {
     return new Account(
         new AccountId(accountId),
         authentications,
