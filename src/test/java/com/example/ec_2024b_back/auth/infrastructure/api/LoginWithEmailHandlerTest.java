@@ -1,14 +1,14 @@
-package com.example.ec_2024b_back.auth.api;
+package com.example.ec_2024b_back.auth.infrastructure.api;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.example.ec_2024b_back.auth.api.LoginWithEmailHandler.LoginRequest;
-import com.example.ec_2024b_back.auth.api.LoginWithEmailHandler.LoginResponse;
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase;
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase.AuthenticationFailedException;
 import com.example.ec_2024b_back.auth.domain.models.JsonWebToken;
 import com.example.ec_2024b_back.auth.domain.workflow.LoginWorkflow.UserNotFoundException;
+import com.example.ec_2024b_back.auth.infrastructure.api.LoginWithEmailHandler.LoginRequest;
+import com.example.ec_2024b_back.auth.infrastructure.api.LoginWithEmailHandler.LoginResponse;
 import com.example.ec_2024b_back.utils.Fast;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

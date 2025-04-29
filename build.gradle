@@ -41,7 +41,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
 	implementation 'com.google.guava:guava:33.4.8-jre'
 	implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
-	implementation 'org.jmolecules:jmolecules-layered-architecture:1.10.0'
+	implementation 'org.jmolecules:jmolecules-onion-architecture:1.10.0'
 	
     
 	// OpenAPI Generator関連の依存関係
@@ -70,6 +70,8 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter:1.20.6'
 	testImplementation 'org.testcontainers:mongodb:1.20.6'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.jmolecules.integrations:jmolecules-archunit:0.26.0'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.0'
 }
 
 configurations.all {

@@ -1,13 +1,13 @@
-package com.example.ec_2024b_back.auth.api;
+package com.example.ec_2024b_back.auth.infrastructure.api;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.example.ec_2024b_back.auth.api.SignupWithEmailHandler.SignupRequest;
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
 import com.example.ec_2024b_back.auth.domain.workflow.SignupWorkflow.EmailAlreadyExistsException;
+import com.example.ec_2024b_back.auth.infrastructure.api.SignupWithEmailHandler.SignupRequest;
 import com.example.ec_2024b_back.utils.Fast;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
