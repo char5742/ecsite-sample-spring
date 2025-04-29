@@ -1,0 +1,115 @@
+package com.example.ec_2024b_back.auth.api;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+import com.example.ec_2024b_back.auth.api.SignupWithEmailHandler.SignupRequest;
+import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
+import com.example.ec_2024b_back.auth.domain.models.Account;
+import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
+import com.example.ec_2024b_back.auth.domain.workflow.SignupWorkflow.EmailAlreadyExistsException;
+import com.example.ec_2024b_back.utils.Fast;
+import com.google.common.collect.ImmutableList;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+@Fast
+@ExtendWith(MockitoExtension.class)
+class SignupWithEmailHandlerTest {
+
+  @Mock private SignupUsecase signupUsecase;
+  private SignupWithEmailHandler signupWithEmailHandler;
+  private WebTestClient webTestClient;
+
+  @BeforeEach
+  void setUp() {
+    signupWithEmailHandler = new SignupWithEmailHandler(signupUsecase);
+    RouterFunction<ServerResponse> routerFunction =
+        RouterFunctions.route()
+            .POST("/api/authentication/signup", signupWithEmailHandler::login)
+            .build();
+    webTestClient = WebTestClient.bindToRouterFunction(routerFunction).build();
+  }
+
+  @Test
+  void login_shouldReturnOk_whenSignupSucceeds() {
+    // Given
+    var email = "test@example.com";
+    var password = "password";
+    var uuid = UUID.randomUUID();
+    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
+
+    when(signupUsecase.execute(anyString(), anyString())).thenReturn(Mono.just(account));
+
+    // When & Then
+    webTestClient
+        .post()
+        .uri("/api/authentication/signup")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(new SignupRequest(email, password))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody(String.class)
+        .isEqualTo("signup success");
+  }
+
+  @Test
+  void login_shouldReturnUnauthorized_whenEmailAlreadyExists() {
+    // Given
+    var email = "existing@example.com";
+    var password = "password";
+    var errorMessage = "メールアドレス: " + email + " は既に登録されています";
+
+    when(signupUsecase.execute(anyString(), anyString()))
+        .thenReturn(Mono.error(new EmailAlreadyExistsException(email)));
+
+    // When & Then
+    webTestClient
+        .post()
+        .uri("/api/authentication/signup")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(new SignupRequest(email, password))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized()
+        .expectBody(String.class)
+        .isEqualTo(errorMessage);
+  }
+
+  @Test
+  void login_shouldReturnUnauthorized_whenSignupFails() {
+    // Given
+    var email = "test@example.com";
+    var password = "password";
+    var errorMessage = "Authentication failed: Some error";
+
+    when(signupUsecase.execute(anyString(), anyString()))
+        .thenReturn(
+            Mono.error(
+                new SignupUsecase.AuthenticationFailedException(
+                    new RuntimeException("Some error"))));
+
+    // When & Then
+    webTestClient
+        .post()
+        .uri("/api/authentication/signup")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(new SignupRequest(email, password))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized()
+        .expectBody(String.class)
+        .isEqualTo(errorMessage);
+  }
+}
