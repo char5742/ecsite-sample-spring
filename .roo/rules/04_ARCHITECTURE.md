@@ -28,7 +28,7 @@ graph TD
     J -- configures --> C;
     J -- configures --> G;
     J -- configures --> SecImpl;
-    B --> K[DTO (Generated)];
+    B --> K[DTO];
     RepIF -- implemented by --> G;
     SecIF -- implemented by --> SecImpl;
 ```
