@@ -13,7 +13,6 @@
 *   **Auth0 Java JWT:** JWT (JSON Web Token) の生成・検証を行うための Java ライブラリ。
 *   **CI (Continuous Integration):** 継続的インテグレーション。コード変更を頻繁にリポジトリにマージし、自動ビルド・テストを実行すること。
 *   **CD (Continuous Delivery/Deployment):** 継続的デリバリー/デプロイ。CIに加えて、ビルドされたコードを自動的にテスト環境や本番環境にリリースすること。
-*   **Delegateパターン:** OpenAPI Generatorで生成されるインターフェースの実装を委譲する設計パターン。
 *   **Docker:** コンテナ化技術。アプリケーションとその依存関係をパッケージ化し、独立した環境で実行する。
 *   **Domain Model:** ビジネス領域の概念やルールを表現するオブジェクトモデル。
 *   **Error Prone:** Google が開発した Java コードの静的解析ツール。コンパイル時に一般的なエラーを検出する。
@@ -32,7 +31,6 @@
 *   **NoSQL:** Not Only SQL。リレーショナルデータベース以外のデータベース管理システムの総称。
 *   **NullAway:** Error Prone プラグイン。コンパイル時に NullPointerException の可能性を検出する。
 *   **OpenAPI Specification:** RESTful APIを記述するための標準仕様。以前はSwagger Specificationと呼ばれていた。
-*   **OpenAPI Generator:** OpenAPI 仕様から API クライアントやサーバーコードを自動生成するツール。
 *   **Project Reactor:** Spring WebFluxで使用される、ノンブロッキングなリアクティブプログラミングライブラリ。
 *   **Pull Request (PR):** Gitリポジトリにおいて、あるブランチから別のブランチへのコード変更のマージを提案・レビューする仕組み。
 *   **Reactive Programming:** 非同期なデータストリームを扱うプログラミングパラダイム。

@@ -60,8 +60,7 @@ graph TD
 
 技術的な詳細を実装します。
 
-- **REST API ハンドラー/コントローラー**: クライアントからのHTTPリクエストを受け取り、レスポンスを返す (例: `LoginWithEmailHandler`)。OpenAPI Generator で生成されたインターフェースを実装します。
-- **DTOオブジェクト**: APIとの通信に使用されるデータ構造（OpenAPIから自動生成された `model` パッケージ内のクラス）。
+- **REST API ハンドラー/コントローラー**: クライアントからのHTTPリクエストを受け取り、レスポンスを返す (例: `LoginWithEmailHandler`)
 - **バリデーション**: 入力データの検証 (`jakarta.validation` アノテーションなど)。
 - **リポジトリ実装**: データアクセスロジック (例: `MongoAccounts`)。Spring Data MongoDB Reactive を利用。
 - **ドキュメントモデル**: データベースのスキーマに対応するクラス (例: `AccountDocument`)。

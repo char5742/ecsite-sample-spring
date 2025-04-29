@@ -7,7 +7,7 @@
 このプロジェクトではビルドツールとしてGradleを使用しています。主要なGradleタスクは以下の通りです。
 
 *   `./gradlew build`
-    *   **説明:** プロジェクト全体のコンパイル、テスト実行、JARファイルの作成を行います。OpenAPIコード生成 (`generateOpenApiCode`) も含まれます。
+    *   **説明:** プロジェクト全体のコンパイル、テスト実行、JARファイルの作成を行います。
     *   **成果物:** `build/libs/` ディレクトリに実行可能なJARファイル (`<プロジェクト名>-*.jar`) が生成されます。テストレポートなども `build/reports/` 以下に生成されます。
     *   **実行タイミング:** コード変更後、最終的な動作確認や配布物作成時に実行します。
 
@@ -27,10 +27,6 @@
 *   `./gradlew spotlessApply`
     *   **説明:** Spotless の規約に従ってソースコードを自動フォーマットします。
     *   **実行タイミング:** コード作成後、コミット前に実行してスタイルを統一します。Lefthookによりコミット前に自動実行されます。
-
-*   `./gradlew generateOpenApiCode`
-    *   **説明:** `docs/openapi/entry.yml` のOpenAPI定義に基づいて、APIインターフェース (`*Api.java`)、Delegateインターフェース (`*Delegate.java`)、およびモデルクラスを `build/generated/src/main/java` 以下 (`com.example.ec_2024b_back.api`, `com.example.ec_2024b_back.model` パッケージ) に自動生成します。
-    *   **実行タイミング:** OpenAPI定義 (`entry.yml`) を変更した場合に実行します。`openapi.gradle` の設定により、`compileJava` タスクの前に自動的に実行されるため、通常は `./gradlew build` や `./gradlew bootRun` に含まれます。個別に実行することも可能です。
 
 *   `./gradlew clean`
     *   **説明:** `build` ディレクトリを削除し、ビルド成果物をクリーンアップします。

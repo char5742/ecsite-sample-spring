@@ -11,7 +11,6 @@
 - **Spring WebFlux** によるリアクティブプログラミング
 - **MongoDB Reactive** によるデータストア
 - **Spring Security** による認証・認可
-- **OpenAPI/Swagger** によるAPI定義と自動生成
 
 ## プロジェクト構成
 
@@ -39,7 +38,6 @@ ecsite-v2/
 │   │   └── resources/     # 設定ファイルやリソース
 │   └── test/              # テストコード
 ├── build.gradle           # メインのGradleビルド設定
-├── openapi.gradle         # OpenAPI Generator設定
 ├── spotless.gradle        # コード整形ルール
 ├── lefthook.yml           # Gitフック設定 (Lefthook)
 └── settings.gradle        # Gradleプロジェクト設定
@@ -64,7 +62,6 @@ ecsite-v2/
 ### ビルド・ツール
 
 - **Gradle** : ビルドツール
-- **OpenAPI Generator 7.12.0** : API定義からのコード生成
 - **GraalVM Native Build Tools 0.10.6** : ネイティブイメージ生成
 - **Spotless 7.0.3** : コード整形
 - **Error Prone 2.37.0 / NullAway 0.12.6**: 静的解析ツール
@@ -83,15 +80,6 @@ ecsite-v2/
 
 各モジュールは独自の責務を持ち、明確な境界を持っています。モジュール間の依存関係は`package-info.java`ファイルで定義されています。
 
-## API設計
-
-APIは`docs/openapi/entry.yml`でOpenAPI形式で定義されており、以下の特徴があります：
-
-- OpenAPI Generator (version 7.12.0) によるコード自動生成 (`openapi.gradle` で設定)
-- Spring WebFluxベースのリアクティブエンドポイント (`reactive: true`)
-- インターフェースのみ生成し、実装はDelegateパターンを使用 (`interfaceOnly: true`, `delegatePattern: true`)
-- タグによるAPIのグループ化 (`useTags: true`)
-
 ## ビルドと実行
 
 プロジェクトはGradleでビルドされ、以下のコマンドで実行できます：
@@ -106,5 +94,4 @@ APIは`docs/openapi/entry.yml`でOpenAPI形式で定義されており、以下�
 - **コーディングスタイル**: Spotless (`spotless.gradle`) を使用して一貫したコードスタイルを維持。Lefthook (`lefthook.yml`) によりコミット前に自動整形。
 - **モジュール境界**: モジュール間の依存関係を`package-info.java`で明示的に定義。
 - **リアクティブプログラミング**: ブロッキング操作を避け、Project Reactorのパターンに従う。
-- **API開発**: APIの変更は常にOpenAPI定義ファイル (`docs/openapi/entry.yml`) から開始し、`./gradlew generateOpenApiCode` (または `./gradlew build`) でコードを再生成する。
 - **Null安全性**: JSpecify と NullAway を使用し、コンパイル時にNull安全性をチェック (`build.gradle` で設定)。

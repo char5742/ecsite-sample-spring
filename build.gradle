@@ -5,7 +5,6 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'org.graalvm.buildtools.native' version '0.10.6'
 	id 'com.diffplug.spotless' version '7.0.3'
-	id 'org.openapi.generator' version '7.12.0'
 	id "net.ltgt.errorprone" version '4.1.0'
 }
 
@@ -43,10 +42,6 @@ dependencies {
 	implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
 	implementation 'org.jmolecules:jmolecules-onion-architecture:1.10.0'
 	
-    
-	// OpenAPI Generator関連の依存関係
-    implementation 'org.openapitools:openapi-generator-gradle-plugin:7.12.0'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
 	// JWT Library - Auth0 java-jwt
 	implementation 'com.auth0:java-jwt:4.4.0'
@@ -84,20 +79,6 @@ dependencyManagement {
 	}
 }
 
-sourceSets {
-	main {
-		java {
-			srcDirs 'src/main/java', 'build/generated/src/main/java'
-		}
-	}
-	// Add generated sources to test classpath as well
-	test {
-		java {
-			srcDirs 'src/test/java', 'build/generated/src/main/java' // Include generated sources
-		}
-	}
-}
-
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
@@ -109,21 +90,9 @@ jacocoTestReport {
         xml.required = true
 		html.required = true
     }
-	afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                // OpenAPI Generatorで生成されたコードを除外
-                '**/ec_2024b_back/api/**',
-				'**/ec_2024b_back/model/**',
-            ])
-        }))
-    }
 }
 
 apply from: "spotless.gradle"
-
-// OpenAPI Generator設定
-apply from: "openapi.gradle"
 
 // NullAway設定
 import net.ltgt.gradle.errorprone.CheckSeverity

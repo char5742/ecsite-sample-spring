@@ -158,7 +158,6 @@ Javaの型推論キーワード `var` は以下のガイドラインに従って
 *   **設定概要**:
     *   `build.gradle` 内で Error Prone のチェックとして有効化 (`check("NullAway", CheckSeverity.ERROR)`) されています。
     *   検査対象パッケージは `com.example.ec_2024b_back` (`option("NullAway:AnnotatedPackages", ...)` で指定) です。
-    *   OpenAPI Generator で生成されたコード (`build/generated/`) は検査から除外 (`excludedPaths = ...`) されています。
     *   テストコード (`src/test/java`) では NullAway は無効化 (`disable("NullAway")`) されています。
 *   **パッケージレベルのnull安全性設定**:
     *   プロジェクトのルートパッケージ (`com.example.ec_2024b_back`) および各サブパッケージ (`auth`, `share` など) の `package-info.java` ファイルで `@NullMarked` (JSpecify アノテーション) を適用しています。
