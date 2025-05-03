@@ -12,10 +12,10 @@ group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_23
-	targetCompatibility = JavaVersion.VERSION_23
+	sourceCompatibility = JavaVersion.VERSION_24
+	targetCompatibility = JavaVersion.VERSION_24
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(23)
+		languageVersion = JavaLanguageVersion.of(24)
 		vendor = JvmVendorSpec.GRAAL_VM
 	}
 }
@@ -41,7 +41,7 @@ dependencies {
 	implementation 'com.google.guava:guava:33.4.8-jre'
 	implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
 	implementation 'org.jmolecules:jmolecules-onion-architecture:1.10.0'
-	
+
 
 	// JWT Library - Auth0 java-jwt
 	implementation 'com.auth0:java-jwt:4.4.0'
