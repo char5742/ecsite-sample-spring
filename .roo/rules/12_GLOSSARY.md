@@ -53,6 +53,8 @@
 | モジュール | 責務 | 主要コンポーネント |
 |-----------|------|------------------|
 | `auth` | 認証・ユーザーアカウント管理 | `Account`, `Authentication`, `LoginWorkflow`, `SignupWorkflow` |
+| `userprofile` | ユーザー情報・住所管理 | `UserProfile`, `Address`, `CreateUserProfileWorkflow` |
+| `product` | 商品・カテゴリ・在庫・プロモーション管理 | `Product`, `Category`, `Inventory`, `Promotion` |
 | `share` | 複数モジュールで共有されるコンポーネント | `Email`, `IdGenerator`, `DomainException` |
 
 ## 重要な略語

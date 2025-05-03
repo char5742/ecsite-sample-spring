@@ -80,15 +80,24 @@ graph TD
 ```mermaid
 flowchart TD
     auth[auth: 認証・認可モジュール]
+    userprofile[userprofile: ユーザー情報モジュール]
+    product[product: 商品管理モジュール]
     share[share: 共有コンポーネント]
     
     auth --> share
+    userprofile --> share
+    userprofile --> auth
+    product --> share
     
     style auth fill:#f9f,stroke:#333,stroke-width:2px
+    style userprofile fill:#f9f,stroke:#333,stroke-width:2px
+    style product fill:#f9f,stroke:#333,stroke-width:2px
     style share fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 - **auth**: ユーザー認証、アカウント管理
+- **userprofile**: ユーザー情報・住所管理
+- **product**: 商品・カテゴリ・在庫・プロモーション管理
 - **share**: 複数モジュールで共有されるコンポーネント
 
 各モジュールは独自の責務を持ち、明確に定義された境界を持っています。モジュール間の依存関係は`package-info.java`ファイルで定義され、循環依存を避けるように設計されています。
