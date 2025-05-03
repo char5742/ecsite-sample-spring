@@ -17,6 +17,7 @@
 - **Workflow** (`LoginWorkflow` など): 依存するStepをモック化し、ステップ呼び出し順序やロジックフローを検証
 - **Usecase** (`LoginUsecase` など): 依存するWorkflowやRepositoryをモック化し、アプリケーション層のロジックを検証
 - **Stepインターフェース**: 振る舞いを定義通りに呼び出すかの検証
+- **ファクトリークラス** (`ProductFactory`, `CategoryFactory` など): IdGeneratorをモック化し、生成したオブジェクトの属性を検証
 - **ユーティリティクラス**
 
 **ツール:** JUnit 5, Mockito (モック化), AssertJ (アサーション)
@@ -138,6 +139,37 @@ class ExampleTest {
         
         // Assert
         assertThat(result).isEqualTo(expectedValue);
+    }
+}
+```
+
+### ファクトリーパターンのテスト例
+```java
+@ExtendWith(MockitoExtension.class)
+class ProductFactoryTest {
+    @Mock
+    private IdGenerator idGenerator;
+    
+    @InjectMocks
+    private ProductFactory productFactory;
+    
+    @Test
+    void shouldCreateProduct_withGeneratedId() {
+        // Arrange
+        var uuid = UUID.randomUUID();
+        when(idGenerator.newId()).thenReturn(uuid);
+        
+        var name = "テスト商品";
+        var description = "テスト商品の説明";
+        
+        // Act
+        var product = productFactory.create(name, description, ...);
+        
+        // Assert
+        assertThat(product).isNotNull();
+        assertThat(product.getId()).isEqualTo(new ProductId(uuid));
+        assertThat(product.getName()).isEqualTo(name);
+        assertThat(product.getDescription()).isEqualTo(description);
     }
 }
 ```

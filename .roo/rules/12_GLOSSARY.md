@@ -17,8 +17,9 @@
 | モジュラーモノリス | 単一のアプリケーションとしてデプロイされるが、内部的には明確な境界を持つモジュールに分割されたアーキテクチャ。 | `auth`, `share` モジュールの分離と明確なインターフェース |
 | リアクティブプログラミング | 非同期データストリームを使用したプログラミングパラダイム。イベント駆動型でバックプレッシャーを処理できる。 | `Mono<T>`, `Flux<T>`を使用した非同期処理 |
 | ドメインモデル | ビジネス領域の概念やルールを表現するオブジェクトモデル。 | `Account`, `Authentication`など |
-| Value Object (VO) | 同一性ではなく属性値によって識別される不変なオブジェクト。 | `Email`, `AccountId`, `JsonWebToken` |
+| Value Object (VO) | 同一性ではなく属性値によって識別される不変なオブジェクト。 | `Email`, `AccountId`, `ProductId` |
 | Entity (エンティティ) | 同一性を持ち、ライフサイクルを通じて変化する可能性のあるオブジェクト。 | `Account` (ID による同一性) |
+| Factory Pattern (ファクトリーパターン) | オブジェクト生成のロジックを専用のクラスに集約する設計パターン。 | `ProductFactory`, `CategoryFactory` |
 | Aggregate (集約) | 一貫性の境界を形成するエンティティと値オブジェクトのクラスター。 | `Account` と関連する `Authentication` |
 | Repository (リポジトリ) | 集約の永続化と取得を抽象化するインターフェース。 | `Accounts` インターフェース |
 | Application Service (アプリケーションサービス) | ユースケースを実装し、ドメインオブジェクトを調整するサービス。 | `LoginUsecase`, `SignupUsecase` |
@@ -53,8 +54,8 @@
 | モジュール | 責務 | 主要コンポーネント |
 |-----------|------|------------------|
 | `auth` | 認証・ユーザーアカウント管理 | `Account`, `Authentication`, `LoginWorkflow`, `SignupWorkflow` |
-| `userprofile` | ユーザー情報・住所管理 | `UserProfile`, `Address`, `CreateUserProfileWorkflow` |
-| `product` | 商品・カテゴリ・在庫・プロモーション管理 | `Product`, `Category`, `Inventory`, `Promotion` |
+| `userprofile` | ユーザー情報・住所管理 | `UserProfile`, `Address`, `AddressFactory`, `CreateUserProfileWorkflow` |
+| `product` | 商品・カテゴリ・在庫・プロモーション管理 | `Product`, `Category`, `Inventory`, `Promotion`, `ProductFactory`, `CategoryFactory` |
 | `share` | 複数モジュールで共有されるコンポーネント | `Email`, `IdGenerator`, `DomainException` |
 
 ## 重要な略語

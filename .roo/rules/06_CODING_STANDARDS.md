@@ -25,6 +25,8 @@
 - **Stream API**: 積極的に活用、過度に複雑な場合はメソッド抽出
 - **Optional**: 戻り値のみ、フィールド・引数には非推奨
 - **Lombok**: ボイラープレート削減 (`@Getter`, `@RequiredArgsConstructor`等)
+- **値オブジェクト**: IDなどの識別子は不変のrecordとして実装 (`record ProductId(UUID value)`)
+- **ファクトリーパターン**: オブジェクト生成の責務は専用のファクトリークラスに委譲
 
 ### 設定・プロパティ
 - **推奨**: `@ConfigurationProperties`による型安全なクラス

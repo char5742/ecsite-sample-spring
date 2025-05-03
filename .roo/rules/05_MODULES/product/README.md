@@ -16,10 +16,16 @@
 - `Promotion`: 商品プロモーションを表すモデル
 
 ### 値オブジェクト
-- `ProductId`: 商品ID
-- `CategoryId`: カテゴリID
-- `InventoryId`: 在庫ID
-- `PromotionId`: プロモーションID
+- `ProductId`: 商品ID（UUIDベースの不変値オブジェクト）
+- `CategoryId`: カテゴリID（UUIDベースの不変値オブジェクト）
+- `InventoryId`: 在庫ID（UUIDベースの不変値オブジェクト）
+- `PromotionId`: プロモーションID（UUIDベースの不変値オブジェクト）
+
+### ファクトリー
+- `ProductFactory`: 商品の生成を担当（IDの生成含む）
+- `CategoryFactory`: カテゴリの生成を担当（IDの生成含む）
+- `InventoryFactory`: 在庫の生成を担当（IDの生成含む）
+- `PromotionFactory`: プロモーションの生成を担当（IDの生成含む）
 
 ### リポジトリ
 - `Products`: 商品の検索・保存
