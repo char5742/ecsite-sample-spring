@@ -1,13 +1,19 @@
 package com.example.ec_2024b_back.auth.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase.AuthenticationFailedException;
+import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow;
+import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.Context.AccountWithJwt;
+import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.JsonWebToken;
-import com.example.ec_2024b_back.auth.domain.workflow.LoginWorkflow;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
+import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,27 +28,30 @@ import reactor.test.StepVerifier;
 class LoginUsecaseTest {
 
   @Mock private LoginWorkflow loginWorkflow;
+
   @InjectMocks private LoginUsecase loginUsecase;
 
-  private String email;
+  private Email email;
   private String password;
 
   @BeforeEach
   void setUp() {
-    email = "test@example.com";
+    email = new Email("test@example.com");
     password = "password";
   }
 
   @Test
   void execute_shouldReturnJsonWebToken_whenWorkflowSucceeds() {
-    var expectedToken = new JsonWebToken("dummy-jwt-token");
-    when(loginWorkflow.execute(anyString(), anyString())).thenReturn(Mono.just(expectedToken));
+    var account = mock(Account.class);
+    when(account.getDomainEvents()).thenReturn(ImmutableList.of());
+    var expectedToken = new AccountWithJwt(account, new JsonWebToken("dummy-jwt-token"));
+    when(loginWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.just(expectedToken));
     var resultMono = loginUsecase.execute(email, password);
     StepVerifier.create(resultMono)
         .assertNext(
             token -> {
               assertThat(token).isNotNull();
-              assertThat(token.value()).isEqualTo(expectedToken.value());
+              assertThat(token.value()).isEqualTo(expectedToken.jwt().value());
             })
         .verifyComplete();
   }
@@ -50,7 +59,7 @@ class LoginUsecaseTest {
   @Test
   void execute_shouldThrowAuthenticationFailedException_whenWorkflowFails() {
     var cause = new RuntimeException("Workflow error");
-    when(loginWorkflow.execute(anyString(), anyString())).thenReturn(Mono.error(cause));
+    when(loginWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.error(cause));
     var resultMono = loginUsecase.execute(email, password);
     StepVerifier.create(resultMono)
         .expectErrorMatches(

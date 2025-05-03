@@ -10,11 +10,12 @@ public sealed interface Authentication permits EmailAuthentication {
   static Authentication of(String type, Map<String, String> credential) {
     return switch (type) {
       case EmailAuthentication.TYPE -> {
-        if (!credential.containsKey("email") || !credential.containsKey("password")) {
+        var email = credential.get("email");
+        var password = credential.get("password");
+        if (email == null || password == null) {
           throw new IllegalArgumentException("Email認証は email と password の両方のフィールドを必要とします");
         }
-        yield new EmailAuthentication(
-            new Email(credential.get("email")), new HashedPassword(credential.get("password")));
+        yield new EmailAuthentication(new Email(email), new HashedPassword(password));
       }
       default -> throw new IllegalArgumentException("不明な認証方法のタイプ: " + type);
     };

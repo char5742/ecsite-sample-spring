@@ -1,13 +1,15 @@
 package com.example.ec_2024b_back.auth.infrastructure.api;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
+import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.EmailAlreadyExistsException;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
-import com.example.ec_2024b_back.auth.domain.workflow.SignupWorkflow.EmailAlreadyExistsException;
 import com.example.ec_2024b_back.auth.infrastructure.api.SignupWithEmailHandler.SignupRequest;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
@@ -44,19 +46,19 @@ class SignupWithEmailHandlerTest {
   @Test
   void login_shouldReturnOk_whenSignupSucceeds() {
     // Given
-    var email = "test@example.com";
+    var emailStr = "test@example.com";
     var password = "password";
     var uuid = UUID.randomUUID();
     var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
 
-    when(signupUsecase.execute(anyString(), anyString())).thenReturn(Mono.just(account));
+    when(signupUsecase.execute(any(Email.class), anyString())).thenReturn(Mono.just(account));
 
     // When & Then
     webTestClient
         .post()
         .uri("/api/authentication/signup")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new SignupRequest(email, password))
+        .bodyValue(new SignupRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isOk()
@@ -67,11 +69,12 @@ class SignupWithEmailHandlerTest {
   @Test
   void login_shouldReturnUnauthorized_whenEmailAlreadyExists() {
     // Given
-    var email = "existing@example.com";
+    var emailStr = "existing@example.com";
+    var email = new Email(emailStr);
     var password = "password";
-    var errorMessage = "メールアドレス: " + email + " は既に登録されています";
+    var errorMessage = "メールアドレス: " + emailStr + " は既に登録されています";
 
-    when(signupUsecase.execute(anyString(), anyString()))
+    when(signupUsecase.execute(any(Email.class), anyString()))
         .thenReturn(Mono.error(new EmailAlreadyExistsException(email)));
 
     // When & Then
@@ -79,7 +82,7 @@ class SignupWithEmailHandlerTest {
         .post()
         .uri("/api/authentication/signup")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new SignupRequest(email, password))
+        .bodyValue(new SignupRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isUnauthorized()
@@ -90,11 +93,11 @@ class SignupWithEmailHandlerTest {
   @Test
   void login_shouldReturnUnauthorized_whenSignupFails() {
     // Given
-    var email = "test@example.com";
+    var emailStr = "test@example.com";
     var password = "password";
     var errorMessage = "Authentication failed: Some error";
 
-    when(signupUsecase.execute(anyString(), anyString()))
+    when(signupUsecase.execute(any(Email.class), anyString()))
         .thenReturn(
             Mono.error(
                 new SignupUsecase.AuthenticationFailedException(
@@ -105,7 +108,7 @@ class SignupWithEmailHandlerTest {
         .post()
         .uri("/api/authentication/signup")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new SignupRequest(email, password))
+        .bodyValue(new SignupRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isUnauthorized()

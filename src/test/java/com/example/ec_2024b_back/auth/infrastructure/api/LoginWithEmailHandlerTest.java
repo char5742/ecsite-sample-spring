@@ -1,14 +1,16 @@
 package com.example.ec_2024b_back.auth.infrastructure.api;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase;
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase.AuthenticationFailedException;
+import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.UserNotFoundException;
 import com.example.ec_2024b_back.auth.domain.models.JsonWebToken;
-import com.example.ec_2024b_back.auth.domain.workflow.LoginWorkflow.UserNotFoundException;
 import com.example.ec_2024b_back.auth.infrastructure.api.LoginWithEmailHandler.LoginRequest;
 import com.example.ec_2024b_back.auth.infrastructure.api.LoginWithEmailHandler.LoginResponse;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,18 +45,18 @@ class LoginWithEmailHandlerTest {
   @Test
   void login_shouldReturnToken_whenLoginSucceeds() {
     // Given
-    var email = "test@example.com";
+    var emailStr = "test@example.com";
     var password = "password";
     var token = new JsonWebToken("test-jwt-token");
 
-    when(loginUsecase.execute(anyString(), anyString())).thenReturn(Mono.just(token));
+    when(loginUsecase.execute(any(Email.class), anyString())).thenReturn(Mono.just(token));
 
     // When & Then
     webTestClient
         .post()
         .uri("/api/authentication/login")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new LoginRequest(email, password))
+        .bodyValue(new LoginRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isOk()
@@ -65,20 +67,20 @@ class LoginWithEmailHandlerTest {
   @Test
   void login_shouldReturnUnauthorized_whenUserNotFound() {
     // Given
-    var email = "nonexistent@example.com";
+    var emailStr = "nonexistent@example.com";
     var password = "password";
-    var errorMessage = "メールアドレス: " + email + " のユーザーが見つかりません";
+    var errorMessage = "メールアドレス: " + emailStr + " のユーザーが見つかりません";
 
-    when(loginUsecase.execute(anyString(), anyString()))
+    when(loginUsecase.execute(any(Email.class), anyString()))
         .thenReturn(
-            Mono.error(new AuthenticationFailedException(new UserNotFoundException(email))));
+            Mono.error(new AuthenticationFailedException(new UserNotFoundException(emailStr))));
 
     // When & Then
     webTestClient
         .post()
         .uri("/api/authentication/login")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new LoginRequest(email, password))
+        .bodyValue(new LoginRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isUnauthorized()
@@ -89,11 +91,11 @@ class LoginWithEmailHandlerTest {
   @Test
   void login_shouldReturnUnauthorized_whenPasswordIsInvalid() {
     // Given
-    var email = "test@example.com";
+    var emailStr = "test@example.com";
     var password = "wrong-password";
     var errorMessage = "パスワードが一致しません";
 
-    when(loginUsecase.execute(anyString(), anyString()))
+    when(loginUsecase.execute(any(Email.class), anyString()))
         .thenReturn(
             Mono.error(new AuthenticationFailedException(new RuntimeException(errorMessage))));
 
@@ -102,7 +104,7 @@ class LoginWithEmailHandlerTest {
         .post()
         .uri("/api/authentication/login")
         .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(new LoginRequest(email, password))
+        .bodyValue(new LoginRequest(emailStr, password))
         .exchange()
         .expectStatus()
         .isUnauthorized()

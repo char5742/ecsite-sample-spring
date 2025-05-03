@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.auth.infrastructure.api;
 
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -17,9 +18,8 @@ public class LoginWithEmailHandler {
 
   public Mono<ServerResponse> login(ServerRequest request) {
     return request
-        .bodyToFlux(LoginRequest.class)
-        .single()
-        .flatMap(login -> loginUsecase.execute(login.email(), login.password()))
+        .bodyToMono(LoginRequest.class)
+        .flatMap(login -> loginUsecase.execute(new Email(login.email()), login.password()))
         .flatMap(token -> ServerResponse.ok().bodyValue(new LoginResponse(token.value())))
         .onErrorResume(
             e -> ServerResponse.status(HttpStatus.UNAUTHORIZED).bodyValue(e.getMessage()));

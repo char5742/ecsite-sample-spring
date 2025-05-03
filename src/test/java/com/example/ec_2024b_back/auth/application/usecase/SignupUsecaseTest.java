@@ -7,10 +7,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase.AuthenticationFailedException;
+import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
-import com.example.ec_2024b_back.auth.domain.workflow.SignupWorkflow;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
@@ -35,13 +36,13 @@ class SignupUsecaseTest {
 
   @InjectMocks private SignupUsecase signupUsecase;
 
-  private String email;
+  private Email email;
   private String password;
   private Account testAccount;
 
   @BeforeEach
   void setUp() {
-    email = "test@example.com";
+    email = new Email("test@example.com");
     password = "password";
     testAccount = Account.reconstruct(new AccountId(UUID.randomUUID()), ImmutableList.of());
   }
@@ -49,7 +50,7 @@ class SignupUsecaseTest {
   @Test
   void execute_shouldReturnAccount_whenWorkflowSucceeds() {
     // Given
-    when(signupWorkflow.execute(anyString(), anyString())).thenReturn(Mono.just(testAccount));
+    when(signupWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.just(testAccount));
     when(accounts.save(any(Account.class))).thenReturn(Mono.just(testAccount));
     // eventフィールドが使用されていることを確認するためのダミー処理
     verify(event, Mockito.never()).publishEvent(any());
@@ -72,7 +73,7 @@ class SignupUsecaseTest {
   void execute_shouldThrowAuthenticationFailedException_whenWorkflowFails() {
     // Given
     var cause = new RuntimeException("Workflow error");
-    when(signupWorkflow.execute(anyString(), anyString())).thenReturn(Mono.error(cause));
+    when(signupWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.error(cause));
 
     // When
     var resultMono = signupUsecase.execute(email, password);

@@ -1,9 +1,8 @@
 package com.example.ec_2024b_back.auth.infrastructure.stepimpl;
 
-import com.example.ec_2024b_back.auth.domain.models.Account;
+import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow;
+import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.FindAccountByEmailStep;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
-import com.example.ec_2024b_back.auth.domain.step.FindAccountByEmailStep;
-import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -16,7 +15,11 @@ public class FindAccountByEmailStepImpl implements FindAccountByEmailStep {
   private final Accounts accounts;
 
   @Override
-  public Mono<Account> apply(Email email) {
-    return accounts.findByEmail(email);
+  public Mono<LoginWorkflow.Context.Founded> apply(LoginWorkflow.Context.Input i) {
+    return accounts
+        .findByEmail(i.email())
+        .map(a -> new LoginWorkflow.Context.Founded(a, i.rawPassword()))
+        .switchIfEmpty(Mono.error(new LoginWorkflow.UserNotFoundException(i.email().value())))
+        .onErrorMap(e -> new LoginWorkflow.UserNotFoundException(i.email().value()));
   }
 }

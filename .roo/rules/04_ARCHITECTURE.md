@@ -17,7 +17,7 @@
 graph TD
     A[Client] --> B(Interfaces: Controller/Handler);
     B --> C{Application: Usecase};
-    C --> E{Domain: Workflow/Step};
+    C --> E{Application: Workflow};
     E --> F[Domain: Model (Entity/VO)];
     C --> G[Infrastructure: Repository Impl];
     G --> H[(Database: MongoDB)];
@@ -46,15 +46,15 @@ graph TD
 - **値オブジェクト**: 変更不可能なビジネス値 (例: `Email`, `JsonWebToken`, `AccountId`)。
 - **リポジトリインターフェース**: データ永続化の抽象化 (例: `Accounts`)。
 - **ドメインイベント**: （将来的な拡張ポイント）ドメインの状態変更を表すイベント。
-- **Workflow/Step**: ビジネスプロセスのフロー制御 (例: `LoginWorkflow`, `FindAccountByEmailStep`)。
 
 ### 2. Application リング (中間)
 
-アプリケーションのユースケースを実装します。
+アプリケーションのユースケースとワークフローを実装します。
 
 - **Usecaseクラス**: 各機能のビジネスロジックを調整・実行 (例: `LoginUsecase`, `SignupUsecase`)。
+- **Workflowインターフェース**: ビジネスプロセスのフロー定義 (例: `LoginWorkflow`, `SignupWorkflow`)。
+- **ステップ定義**: 各ワークフローで実行される個別ステップのインターフェース (例: `FindAccountByEmailStep`, `VerifyWithPasswordStep`)。
 - **トランザクション境界**: (MongoDBの限定的なトランザクション機能を利用する場合) データの一貫性を保証。
-- **ドメインワークフロー/ステップの連携**: ドメイン層のビジネスプロセスフローを呼び出す。
 
 ### 3. Infrastructure リング (外側)
 
@@ -64,7 +64,8 @@ graph TD
 - **バリデーション**: 入力データの検証 (`jakarta.validation` アノテーションなど)。
 - **リポジトリ実装**: データアクセスロジック (例: `MongoAccounts`)。Spring Data MongoDB Reactive を利用。
 - **ドキュメントモデル**: データベースのスキーマに対応するクラス (例: `AccountDocument`)。
-- **ステップ実装**: ドメイン層のステップインターフェースの実装 (例: `FindAccountByEmailStepImpl`)。
+- **ワークフロー実装**: アプリケーション層のワークフローインターフェースの実装 (例: `LoginWorkflowImpl`, `SignupWorkflowImpl`)。
+- **ステップ実装**: ワークフロー内の各ステップインターフェースの実装 (例: `FindAccountByEmailStepImpl`)。
 - **セキュリティ実装**: 認証・認可のメカニズム (例: `JsonWebTokenProvider`, `VerifyWithPasswordStepImpl` での `PasswordEncoder` 利用)。
 - **外部サービス連携**: （将来的な拡張ポイント）決済サービスなどの外部APIとの連携。
 - **設定**: アプリケーション全体の設定 (`JWTProperties` など)。

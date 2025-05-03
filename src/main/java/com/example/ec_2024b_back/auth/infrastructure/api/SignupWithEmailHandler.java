@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.auth.infrastructure.api;
 
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ public class SignupWithEmailHandler {
     return request
         .bodyToFlux(SignupRequest.class)
         .single()
-        .flatMap(login -> signupUsecase.execute(login.email(), login.password()))
+        .flatMap(login -> signupUsecase.execute(new Email(login.email()), login.password()))
         .flatMap(token -> ServerResponse.ok().bodyValue("signup success"))
         .onErrorResume(
             e -> ServerResponse.status(HttpStatus.UNAUTHORIZED).bodyValue(e.getMessage()));

@@ -1,8 +1,9 @@
 package com.example.ec_2024b_back.auth.application.usecase;
 
+import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
-import com.example.ec_2024b_back.auth.domain.workflow.SignupWorkflow;
+import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class SignupUsecase {
    * @return　新しいアカウントを含むMono
    */
   @Transactional
-  public Mono<Account> execute(String email, String password) {
+  public Mono<Account> execute(Email email, String password) {
 
     return signupWorkflow
         .execute(email, password)
