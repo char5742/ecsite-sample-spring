@@ -21,7 +21,7 @@ public class Account implements AggregateRoot<Account, AccountId> {
     return new Account(
         new AccountId(accountId),
         authentications,
-        ImmutableList.of(new AccountCreated(accountId.toString())));
+        ImmutableList.of(new AccountRegistered(accountId.toString())));
   }
 
   public static Account reconstruct(AccountId id, ImmutableList<Authentication> authentications) {
@@ -34,5 +34,5 @@ public class Account implements AggregateRoot<Account, AccountId> {
     }
   }
 
-  public record AccountCreated(String accountId) implements DomainEvent {}
+  public record AccountRegistered(String accountId) implements DomainEvent {}
 }

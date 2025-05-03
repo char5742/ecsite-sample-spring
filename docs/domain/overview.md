@@ -70,8 +70,7 @@ User --> Notification
 
 ### Authentication Context – Account
 
-- **Commands**: `RegisterAccount`, `ChangePassword`, `AssignRole`
-- **Events**: `AccountRegistered`, `PasswordChanged`, `RoleAssigned`
+- **Events**: `AccountRegistered`
 
 ### User Profile Context – User
 
