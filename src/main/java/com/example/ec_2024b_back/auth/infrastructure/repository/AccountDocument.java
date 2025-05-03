@@ -1,5 +1,6 @@
 package com.example.ec_2024b_back.auth.infrastructure.repository;
 
+import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +35,7 @@ public class AccountDocument {
    */
   public Account toDomain() {
     return Account.reconstruct(
-        new Account.AccountId(UUID.fromString(this.id)),
+        new AccountId(UUID.fromString(this.id)),
         this.authenticationInfos.stream()
             .map(i -> Authentication.of(i.type, i.credential))
             .collect(ImmutableList.toImmutableList()));

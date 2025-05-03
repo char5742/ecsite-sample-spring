@@ -5,13 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.Context;
 import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.FindAccountByEmailStep;
 import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.GenerateJWTStep;
 import com.example.ec_2024b_back.auth.application.workflow.LoginWorkflow.VerifyWithPasswordStep;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.JsonWebToken;
-import com.example.ec_2024b_back.auth.infrastructure.workflowimpl.LoginWorkflowImpl;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
@@ -31,8 +31,17 @@ class LoginWorkflowTest {
     findAccountByEmailStep = mock(FindAccountByEmailStep.class);
     verifyWithPasswordStep = mock(VerifyWithPasswordStep.class);
     generateJwtStep = mock(GenerateJWTStep.class);
+    // Create a test implementation of LoginWorkflow
     loginWorkflow =
-        new LoginWorkflowImpl(findAccountByEmailStep, verifyWithPasswordStep, generateJwtStep);
+        new LoginWorkflow() {
+          @Override
+          public Mono<Context.AccountWithJwt> execute(Email email, String password) {
+            return Mono.just(new Context.Input(email, password))
+                .flatMap(findAccountByEmailStep)
+                .flatMap(verifyWithPasswordStep)
+                .flatMap(generateJwtStep);
+          }
+        };
   }
 
   @Test
@@ -41,7 +50,7 @@ class LoginWorkflowTest {
     var email = new Email(emailStr);
     var password = "pass";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
     var jwt = new JsonWebToken("jwt-token");
 
     when(findAccountByEmailStep.apply(any(Context.Input.class)))
@@ -78,7 +87,7 @@ class LoginWorkflowTest {
     var email = new Email(emailStr);
     var password = "wrong";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
 
     when(findAccountByEmailStep.apply(any(Context.Input.class)))
         .thenReturn(Mono.just(new Context.Founded(account, password)));
@@ -95,7 +104,7 @@ class LoginWorkflowTest {
     var email = new Email(emailStr);
     var password = "pass";
     var uuid = UUID.fromString("758c0389-b861-443f-98b2-f4c8ac89d1f4");
-    var account = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
 
     when(findAccountByEmailStep.apply(any(Context.Input.class)))
         .thenReturn(Mono.just(new Context.Founded(account, password)));

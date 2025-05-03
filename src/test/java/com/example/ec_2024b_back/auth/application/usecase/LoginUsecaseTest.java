@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -46,6 +47,11 @@ class LoginUsecaseTest {
     when(account.getDomainEvents()).thenReturn(ImmutableList.of());
     var expectedToken = new AccountWithJwt(account, new JsonWebToken("dummy-jwt-token"));
     when(loginWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.just(expectedToken));
+
+    // ApplicationEventPublisher mock
+    ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+    loginUsecase = new LoginUsecase(loginWorkflow, eventPublisher);
+
     var resultMono = loginUsecase.execute(email, password);
     StepVerifier.create(resultMono)
         .assertNext(
@@ -60,6 +66,11 @@ class LoginUsecaseTest {
   void execute_shouldThrowAuthenticationFailedException_whenWorkflowFails() {
     var cause = new RuntimeException("Workflow error");
     when(loginWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.error(cause));
+
+    // ApplicationEventPublisher mock
+    ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+    loginUsecase = new LoginUsecase(loginWorkflow, eventPublisher);
+
     var resultMono = loginUsecase.execute(email, password);
     StepVerifier.create(resultMono)
         .expectErrorMatches(

@@ -1,4 +1,4 @@
-package com.example.ec_2024b_back.utils;
+package com.example.ec_2024b_back.arch;
 
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;

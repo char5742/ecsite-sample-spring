@@ -75,7 +75,8 @@ graph TD
 システムは機能的な関心事に基づいて以下のモジュールに分割されています：
 
 1.  **auth**: ユーザー認証、アカウント管理
-2.  **share**: 複数モジュールで共有されるコンポーネントやユーティリティ
+2.  **userprofile**: ユーザープロファイル、住所管理
+3.  **share**: 複数モジュールで共有されるコンポーネントやユーティリティ
 
 各モジュールは独自の責務を持ち、明確に定義された境界を持っています。モジュール間の依存関係は`package-info.java`ファイルで定義され、循環依存を避けるように設計されています。
 
@@ -86,8 +87,11 @@ graph TD
 ```mermaid
 flowchart TD
     auth --> share;
+    userprofile --> share;
+    userprofile --> auth;
 ```
 *   `auth` モジュールは `share` モジュールで定義された共通コンポーネント（例: `Email`, `DomainException`, `JsonWebTokenProvider`）を利用します。
+*   `userprofile` モジュールは `share` モジュールの共通コンポーネントと `auth` モジュールの `AccountId` を利用します。
 *   `share` モジュールは他のモジュールに依存しません。
 
 ## リアクティブプログラミングモデル

@@ -4,10 +4,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
 import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.EmailAlreadyExistsException;
 import com.example.ec_2024b_back.auth.domain.models.Account;
-import com.example.ec_2024b_back.auth.domain.models.Account.AccountId;
 import com.example.ec_2024b_back.auth.infrastructure.api.SignupWithEmailHandler.SignupRequest;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;

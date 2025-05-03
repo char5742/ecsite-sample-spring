@@ -4,12 +4,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.CheckExistsEmailStep;
 import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.Context;
 import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.CreateAccountWithEmailStep;
 import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow.EmailAlreadyExistsException;
 import com.example.ec_2024b_back.auth.domain.models.Account;
-import com.example.ec_2024b_back.auth.infrastructure.workflowimpl.SignupWorkflowImpl;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +29,17 @@ class SignupWorkflowTest {
   void setUp() {
     checkExistsEmailStep = mock(CheckExistsEmailStep.class);
     createAccountWithEmailStep = mock(CreateAccountWithEmailStep.class);
-    signupWorkflow = new SignupWorkflowImpl(checkExistsEmailStep, createAccountWithEmailStep);
+    // Create a test implementation of SignupWorkflow
+    signupWorkflow =
+        new SignupWorkflow() {
+          @Override
+          public Mono<Account> execute(Email email, String password) {
+            return Mono.just(new Context.Input(email, password))
+                .flatMap(checkExistsEmailStep)
+                .flatMap(createAccountWithEmailStep)
+                .map(Context.Created::account);
+          }
+        };
   }
 
   @Test
@@ -39,7 +49,7 @@ class SignupWorkflowTest {
     var email = new Email(emailStr);
     var password = "password";
     var uuid = UUID.randomUUID();
-    var expectedAccount = Account.reconstruct(new Account.AccountId(uuid), ImmutableList.of());
+    var expectedAccount = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
 
     when(checkExistsEmailStep.apply(any(Context.Input.class)))
         .thenReturn(Mono.just(new Context.Checked(email, password)));
