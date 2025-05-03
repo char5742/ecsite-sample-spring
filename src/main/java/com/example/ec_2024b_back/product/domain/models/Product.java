@@ -61,8 +61,9 @@ public class Product implements AggregateRoot<Product, ProductId> {
       Set<CategoryId> categories,
       List<ProductImage> images) {
 
+    var id = new ProductId(productId);
     return new Product(
-        ProductId.fromUUID(productId),
+        id,
         name,
         description,
         basePrice,
@@ -70,7 +71,7 @@ public class Product implements AggregateRoot<Product, ProductId> {
         ImmutableSet.copyOf(categories),
         ProductStatus.DRAFT,
         ImmutableList.copyOf(images),
-        ImmutableList.of(new ProductCreated(productId, name, sku)));
+        ImmutableList.of(new ProductCreated(id, name, sku)));
   }
 
   /**
@@ -133,7 +134,7 @@ public class Product implements AggregateRoot<Product, ProductId> {
         ImmutableSet.copyOf(categories),
         this.status,
         ImmutableList.copyOf(images),
-        ImmutableList.of(new ProductInfoUpdated(this.id.getValue(), name)));
+        ImmutableList.of(new ProductInfoUpdated(this.id, name)));
   }
 
   /**
@@ -150,9 +151,9 @@ public class Product implements AggregateRoot<Product, ProductId> {
     @Var var events = ImmutableList.<DomainEvent>of();
 
     if (newStatus == ProductStatus.ACTIVE) {
-      events = ImmutableList.of(new ProductActivated(this.id.getValue()));
+      events = ImmutableList.of(new ProductActivated(this.id));
     } else if (newStatus == ProductStatus.RETIRED) {
-      events = ImmutableList.of(new ProductRetired(this.id.getValue()));
+      events = ImmutableList.of(new ProductRetired(this.id));
     }
 
     return new Product(
@@ -168,14 +169,15 @@ public class Product implements AggregateRoot<Product, ProductId> {
   }
 
   /** 商品が作成されたことを示すドメインイベント */
-  public record ProductCreated(UUID productId, String name, String sku) implements DomainEvent {}
+  public record ProductCreated(ProductId productId, String name, String sku)
+      implements DomainEvent {}
 
   /** 商品情報が更新されたことを示すドメインイベント */
-  public record ProductInfoUpdated(UUID productId, String name) implements DomainEvent {}
+  public record ProductInfoUpdated(ProductId productId, String name) implements DomainEvent {}
 
   /** 商品が有効化されたことを示すドメインイベント */
-  public record ProductActivated(UUID productId) implements DomainEvent {}
+  public record ProductActivated(ProductId productId) implements DomainEvent {}
 
   /** 商品が廃止されたことを示すドメインイベント */
-  public record ProductRetired(UUID productId) implements DomainEvent {}
+  public record ProductRetired(ProductId productId) implements DomainEvent {}
 }

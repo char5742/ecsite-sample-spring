@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Set;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +49,7 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
    * @return 作成されたプロモーション
    */
   public static Promotion create(
-      UUID promotionId,
+      PromotionId promotionId,
       String name,
       String description,
       DiscountType discountType,
@@ -67,7 +66,7 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
 
     // 初期状態では非アクティブ
     return new Promotion(
-        PromotionId.fromUUID(promotionId),
+        promotionId,
         name,
         description,
         discountType,
@@ -129,7 +128,7 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
         this.endDateTime,
         /* isActive= */ true,
         this.applicableProducts,
-        ImmutableList.of(new PromotionActivated(this.id.getValue(), this.name)));
+        ImmutableList.of(new PromotionActivated(this.id, this.name)));
   }
 
   /**
@@ -152,7 +151,7 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
         this.endDateTime,
         /* isActive= */ false,
         this.applicableProducts,
-        ImmutableList.of(new PromotionDeactivated(this.id.getValue(), this.name)));
+        ImmutableList.of(new PromotionDeactivated(this.id, this.name)));
   }
 
   /**
@@ -200,11 +199,11 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
   }
 
   /** プロモーションが作成されたことを示すドメインイベント */
-  public record PromotionCreated(UUID promotionId, String name) implements DomainEvent {}
+  public record PromotionCreated(PromotionId promotionId, String name) implements DomainEvent {}
 
   /** プロモーションがアクティブになったことを示すドメインイベント */
-  public record PromotionActivated(UUID promotionId, String name) implements DomainEvent {}
+  public record PromotionActivated(PromotionId promotionId, String name) implements DomainEvent {}
 
   /** プロモーションが非アクティブになったことを示すドメインイベント */
-  public record PromotionDeactivated(UUID promotionId, String name) implements DomainEvent {}
+  public record PromotionDeactivated(PromotionId promotionId, String name) implements DomainEvent {}
 }

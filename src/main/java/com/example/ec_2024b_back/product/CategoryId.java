@@ -6,36 +6,17 @@ import org.jmolecules.ddd.types.Identifier;
 /**
  * カテゴリを一意に識別するID
  *
- * @param value IDの文字列表現（UUID）
+ * @param value IDの値（UUID）
  */
 public record CategoryId(UUID value) implements Identifier {
-  public UUID getValue() {
-    return value;
-  }
-
-  public CategoryId {
-    if (value == null) {
-      throw new IllegalArgumentException("CategoryIdはnullであってはなりません");
-    }
-  }
-
   /**
-   * ランダムなCategoryIdを生成します
+   * 文字列からCategoryIdを生成します
    *
-   * @return 新しいCategoryId
+   * @param id UUID形式の文字列
+   * @return 文字列から変換されたCategoryId
    */
-  public static CategoryId generate() {
-    return new CategoryId(UUID.randomUUID());
-  }
-
-  /**
-   * 既存のUUIDからCategoryIdを生成します
-   *
-   * @param uuid 既存のUUID
-   * @return UUIDに基づくCategoryId
-   */
-  public static CategoryId fromUUID(UUID uuid) {
-    return new CategoryId(uuid);
+  public static CategoryId of(String id) {
+    return new CategoryId(UUID.fromString(id));
   }
 
   @Override

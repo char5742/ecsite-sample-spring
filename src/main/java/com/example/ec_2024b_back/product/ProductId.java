@@ -6,36 +6,17 @@ import org.jmolecules.ddd.types.Identifier;
 /**
  * 商品を一意に識別するID
  *
- * @param value IDの文字列表現（UUID）
+ * @param value IDの値（UUID）
  */
 public record ProductId(UUID value) implements Identifier {
-  public UUID getValue() {
-    return value;
-  }
-
-  public ProductId {
-    if (value == null) {
-      throw new IllegalArgumentException("ProductIdはnullであってはなりません");
-    }
-  }
-
   /**
-   * ランダムなProductIdを生成します
+   * 文字列からProductIdを生成します
    *
-   * @return 新しいProductId
+   * @param id UUID形式の文字列
+   * @return 文字列から変換されたProductId
    */
-  public static ProductId generate() {
-    return new ProductId(UUID.randomUUID());
-  }
-
-  /**
-   * 既存のUUIDからProductIdを生成します
-   *
-   * @param uuid 既存のUUID
-   * @return UUIDに基づくProductId
-   */
-  public static ProductId fromUUID(UUID uuid) {
-    return new ProductId(uuid);
+  public static ProductId of(String id) {
+    return new ProductId(UUID.fromString(id));
   }
 
   @Override

@@ -4,7 +4,6 @@ import com.example.ec_2024b_back.product.InventoryId;
 import com.example.ec_2024b_back.product.ProductId;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Var;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,17 +28,18 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
    * @param initialQuantity 初期在庫数
    * @return 作成された在庫
    */
-  public static Inventory create(UUID inventoryId, ProductId productId, int initialQuantity) {
+  public static Inventory create(
+      InventoryId inventoryId, ProductId productId, int initialQuantity) {
     if (initialQuantity < 0) {
       throw new IllegalArgumentException("初期在庫数は0以上である必要があります");
     }
 
     return new Inventory(
-        InventoryId.fromUUID(inventoryId),
+        inventoryId,
         productId,
         initialQuantity,
         0,
-        ImmutableList.of(new InventoryCreated(inventoryId, productId.getValue(), initialQuantity)));
+        ImmutableList.of(new InventoryCreated(inventoryId, productId, initialQuantity)));
   }
 
   /**
@@ -70,8 +70,7 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
     }
 
     DomainEvent event =
-        new InventoryAdjusted(
-            this.id.getValue(), this.productId.getValue(), quantityDelta, newAvailableQuantity);
+        new InventoryAdjusted(this.id, this.productId, quantityDelta, newAvailableQuantity);
 
     @Var var events = ImmutableList.<DomainEvent>of(event);
 
@@ -80,7 +79,7 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
       events =
           ImmutableList.<DomainEvent>builder()
               .addAll(events)
-              .add(new StockDepleted(this.id.getValue(), this.productId.getValue()))
+              .add(new StockDepleted(this.id, this.productId))
               .build();
     }
 
@@ -114,11 +113,7 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
         newReservedQuantity,
         ImmutableList.of(
             new StockReserved(
-                this.id.getValue(),
-                this.productId.getValue(),
-                quantity,
-                newAvailableQuantity,
-                newReservedQuantity)));
+                this.id, this.productId, quantity, newAvailableQuantity, newReservedQuantity)));
   }
 
   /**
@@ -147,11 +142,7 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
         newReservedQuantity,
         ImmutableList.of(
             new StockReleased(
-                this.id.getValue(),
-                this.productId.getValue(),
-                quantity,
-                newAvailableQuantity,
-                newReservedQuantity)));
+                this.id, this.productId, quantity, newAvailableQuantity, newReservedQuantity)));
   }
 
   /** 在庫が不足している場合に発生する例外 */
@@ -162,23 +153,33 @@ public class Inventory implements AggregateRoot<Inventory, InventoryId> {
   }
 
   /** 在庫が作成されたことを示すドメインイベント */
-  public record InventoryCreated(UUID inventoryId, UUID productId, int initialQuantity)
+  public record InventoryCreated(InventoryId inventoryId, ProductId productId, int initialQuantity)
       implements DomainEvent {}
 
   /** 在庫数が調整されたことを示すドメインイベント */
-  public record InventoryAdjusted(UUID inventoryId, UUID productId, int adjustment, int newQuantity)
+  public record InventoryAdjusted(
+      InventoryId inventoryId, ProductId productId, int adjustment, int newQuantity)
       implements DomainEvent {}
 
   /** 在庫が予約されたことを示すドメインイベント */
   public record StockReserved(
-      UUID inventoryId, UUID productId, int quantity, int remainingAvailable, int totalReserved)
+      InventoryId inventoryId,
+      ProductId productId,
+      int quantity,
+      int remainingAvailable,
+      int totalReserved)
       implements DomainEvent {}
 
   /** 在庫予約が解除されたことを示すドメインイベント */
   public record StockReleased(
-      UUID inventoryId, UUID productId, int quantity, int newAvailable, int remainingReserved)
+      InventoryId inventoryId,
+      ProductId productId,
+      int quantity,
+      int newAvailable,
+      int remainingReserved)
       implements DomainEvent {}
 
   /** 在庫切れが発生したことを示すドメインイベント */
-  public record StockDepleted(UUID inventoryId, UUID productId) implements DomainEvent {}
+  public record StockDepleted(InventoryId inventoryId, ProductId productId)
+      implements DomainEvent {}
 }

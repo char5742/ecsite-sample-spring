@@ -6,36 +6,17 @@ import org.jmolecules.ddd.types.Identifier;
 /**
  * プロモーションを一意に識別するID
  *
- * @param value IDの文字列表現（UUID）
+ * @param value IDの値（UUID）
  */
 public record PromotionId(UUID value) implements Identifier {
-  public UUID getValue() {
-    return value;
-  }
-
-  public PromotionId {
-    if (value == null) {
-      throw new IllegalArgumentException("PromotionIdはnullであってはなりません");
-    }
-  }
-
   /**
-   * ランダムなPromotionIdを生成します
+   * 文字列からPromotionIdを生成します
    *
-   * @return 新しいPromotionId
+   * @param id UUID形式の文字列
+   * @return 文字列から変換されたPromotionId
    */
-  public static PromotionId generate() {
-    return new PromotionId(UUID.randomUUID());
-  }
-
-  /**
-   * 既存のUUIDからPromotionIdを生成します
-   *
-   * @param uuid 既存のUUID
-   * @return UUIDに基づくPromotionId
-   */
-  public static PromotionId fromUUID(UUID uuid) {
-    return new PromotionId(uuid);
+  public static PromotionId of(String id) {
+    return new PromotionId(UUID.fromString(id));
   }
 
   @Override

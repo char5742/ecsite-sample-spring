@@ -2,12 +2,12 @@ package com.example.ec_2024b_back.product.domain.models;
 
 import com.example.ec_2024b_back.product.CategoryId;
 import com.google.common.collect.ImmutableSet;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jmolecules.ddd.types.Entity;
 import org.jmolecules.event.types.DomainEvent;
+import org.jspecify.annotations.Nullable;
 
 /** 商品カテゴリ */
 @Getter
@@ -16,7 +16,7 @@ public class Category implements Entity<Product, CategoryId> {
   private final CategoryId id;
   private final String name;
   private final String description;
-  private final CategoryId parentCategoryId; // null可（ルートカテゴリの場合）
+  private final @Nullable CategoryId parentCategoryId; // null可（ルートカテゴリの場合）
   private final ImmutableSet<DomainEvent> domainEvents;
 
   /**
@@ -29,9 +29,12 @@ public class Category implements Entity<Product, CategoryId> {
    * @return 作成されたカテゴリ
    */
   public static Category create(
-      UUID categoryId, String name, String description, CategoryId parentCategoryId) {
+      CategoryId categoryId,
+      String name,
+      String description,
+      @Nullable CategoryId parentCategoryId) {
     return new Category(
-        CategoryId.fromUUID(categoryId),
+        categoryId,
         name,
         description,
         parentCategoryId,
@@ -53,5 +56,5 @@ public class Category implements Entity<Product, CategoryId> {
   }
 
   /** カテゴリが作成されたことを示すドメインイベント */
-  public record CategoryCreated(UUID categoryId, String name) implements DomainEvent {}
+  public record CategoryCreated(CategoryId categoryId, String name) implements DomainEvent {}
 }

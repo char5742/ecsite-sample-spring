@@ -6,36 +6,17 @@ import org.jmolecules.ddd.types.Identifier;
 /**
  * 在庫を一意に識別するID
  *
- * @param value IDの文字列表現（UUID）
+ * @param value IDの値（UUID）
  */
 public record InventoryId(UUID value) implements Identifier {
-  public UUID getValue() {
-    return value;
-  }
-
-  public InventoryId {
-    if (value == null) {
-      throw new IllegalArgumentException("InventoryIdはnullであってはなりません");
-    }
-  }
-
   /**
-   * ランダムなInventoryIdを生成します
+   * 文字列からInventoryIdを生成します
    *
-   * @return 新しいInventoryId
+   * @param id UUID形式の文字列
+   * @return 文字列から変換されたInventoryId
    */
-  public static InventoryId generate() {
-    return new InventoryId(UUID.randomUUID());
-  }
-
-  /**
-   * 既存のUUIDからInventoryIdを生成します
-   *
-   * @param uuid 既存のUUID
-   * @return UUIDに基づくInventoryId
-   */
-  public static InventoryId fromUUID(UUID uuid) {
-    return new InventoryId(uuid);
+  public static InventoryId of(String id) {
+    return new InventoryId(UUID.fromString(id));
   }
 
   @Override
