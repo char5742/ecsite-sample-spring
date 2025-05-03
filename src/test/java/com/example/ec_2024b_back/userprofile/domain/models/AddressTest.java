@@ -1,9 +1,9 @@
 package com.example.ec_2024b_back.userprofile.domain.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.ec_2024b_back.utils.Fast;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 @Fast
@@ -12,7 +12,9 @@ class AddressTest {
   @Test
   void shouldCreateAddress_whenValidParameters() {
     // Given
-    var id = "test-id";
+    var uuid = UUID.randomUUID();
+    var id = new AddressId(uuid);
+
     var name = "Test Name";
     var postalCode = "123-4567";
     var prefecture = "東京都";
@@ -42,7 +44,9 @@ class AddressTest {
   @Test
   void shouldCreateAddress_whenBuildingIsNull() {
     // Given
-    var id = "test-id";
+    var uuid = UUID.randomUUID();
+    var id = new AddressId(uuid);
+
     var name = "Test Name";
     var postalCode = "123-4567";
     var prefecture = "東京都";
@@ -60,48 +64,14 @@ class AddressTest {
   }
 
   @Test
-  void shouldThrowException_whenRequiredFieldsAreBlank() {
-    // When/Then - ID
-    assertThatThrownBy(
-            () ->
-                new Address(
-                    "",
-                    "Test Name",
-                    "123-4567",
-                    "東京都",
-                    "渋谷区",
-                    "代々木1-1-1",
-                    "マンション101",
-                    "03-1234-5678",
-                    /* isDefault= */ true))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("住所IDは空であってはなりません");
-
-    // When/Then - Name
-    assertThatThrownBy(
-            () ->
-                new Address(
-                    "test-id",
-                    "",
-                    "123-4567",
-                    "東京都",
-                    "渋谷区",
-                    "代々木1-1-1",
-                    "マンション101",
-                    "03-1234-5678",
-                    /* isDefault= */ true))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("氏名は空であってはなりません");
-
-    // 他のバリデーションも同様に検証
-  }
-
-  @Test
   void shouldChangeDefaultFlag_whenWithDefaultCalled() {
     // Given
+    var uuid = UUID.randomUUID();
+    var id = new AddressId(uuid);
+
     var address =
         new Address(
-            "test-id",
+            id,
             "Test Name",
             "123-4567",
             "東京都",
@@ -119,5 +89,18 @@ class AddressTest {
     // その他のフィールドは変わっていないことを確認
     assertThat(updatedAddress.id()).isEqualTo(address.id());
     assertThat(updatedAddress.name()).isEqualTo(address.name());
+  }
+
+  @Test
+  void shouldCreateAddressId_whenValidString() {
+    // Given
+    var uuidString = "550e8400-e29b-41d4-a716-446655440000";
+
+    // When
+    var addressId = AddressId.of(uuidString);
+
+    // Then
+    assertThat(addressId.id()).isEqualTo(UUID.fromString(uuidString));
+    assertThat(addressId.toString()).isEqualTo(uuidString);
   }
 }

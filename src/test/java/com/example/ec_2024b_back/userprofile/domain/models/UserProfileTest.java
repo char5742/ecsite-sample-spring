@@ -55,9 +55,12 @@ class UserProfileTest {
     var name = "Test User";
     var userProfile = UserProfile.create(uuid, name);
 
+    var addressUuid = UUID.randomUUID();
+    var addressId = new AddressId(addressUuid);
+
     var address =
         new Address(
-            "addr-1",
+            addressId,
             "Test Name",
             "123-4567",
             "東京都",
@@ -84,9 +87,12 @@ class UserProfileTest {
     var uuid = UUID.randomUUID();
     var name = "Test User";
 
+    var addressUuid = UUID.randomUUID();
+    var addressId = new AddressId(addressUuid);
+
     var address =
         new Address(
-            "addr-1",
+            addressId,
             "Test Name",
             "123-4567",
             "東京都",
@@ -101,7 +107,7 @@ class UserProfileTest {
             new UserProfile.UserProfileId(uuid), name, ImmutableList.of(address));
 
     // When
-    var updatedUserProfile = userProfile.removeAddress("addr-1");
+    var updatedUserProfile = userProfile.removeAddress(addressId);
 
     // Then
     assertThat(updatedUserProfile.getAddresses()).isEmpty();
@@ -117,9 +123,62 @@ class UserProfileTest {
     var name = "Test User";
     var userProfile = UserProfile.create(uuid, name);
 
+    var nonExistentUuid = UUID.randomUUID();
+    var nonExistentAddressId = new AddressId(nonExistentUuid);
+
     // When/Then
-    assertThatThrownBy(() -> userProfile.removeAddress("non-existent"))
+    assertThatThrownBy(() -> userProfile.removeAddress(nonExistentAddressId))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("見つかりません");
+  }
+
+  @Test
+  void shouldFindAddressById_whenAddressExists() {
+    // Given
+    var uuid = UUID.randomUUID();
+    var name = "Test User";
+
+    var addressUuid = UUID.randomUUID();
+    var addressId = new AddressId(addressUuid);
+
+    var address =
+        new Address(
+            addressId,
+            "Test Name",
+            "123-4567",
+            "東京都",
+            "渋谷区",
+            "代々木1-1-1",
+            "マンション101",
+            "03-1234-5678",
+            /* isDefault= */ true);
+
+    var userProfile =
+        UserProfile.reconstruct(
+            new UserProfile.UserProfileId(uuid), name, ImmutableList.of(address));
+
+    // When
+    var foundAddress = userProfile.findAddressById(addressId);
+
+    // Then
+    assertThat(foundAddress).isNotNull();
+    assertThat(foundAddress).isEqualTo(address);
+  }
+
+  @Test
+  void shouldReturnNull_whenFindingNonExistentAddress() {
+    // Given
+    var uuid = UUID.randomUUID();
+    var name = "Test User";
+    var userProfile = UserProfile.create(uuid, name);
+
+    var nonExistentUuid = UUID.randomUUID();
+    var nonExistentAddressId = new AddressId(nonExistentUuid);
+
+    // When
+    var foundAddress = userProfile.findAddressById(nonExistentAddressId);
+
+    // Then
+    assertThat(foundAddress).isNull();
   }
 }

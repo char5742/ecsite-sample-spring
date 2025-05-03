@@ -3,7 +3,7 @@ package com.example.ec_2024b_back.userprofile.domain.models;
 import org.jspecify.annotations.Nullable;
 
 public record Address(
-    String id,
+    AddressId id,
     String name,
     String postalCode,
     String prefecture,
@@ -14,9 +14,6 @@ public record Address(
     boolean isDefault) {
 
   public Address {
-    if (id.isBlank()) {
-      throw new IllegalArgumentException("住所IDは空であってはなりません");
-    }
     if (name.isBlank()) {
       throw new IllegalArgumentException("氏名は空であってはなりません");
     }

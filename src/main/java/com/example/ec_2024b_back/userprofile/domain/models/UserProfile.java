@@ -82,11 +82,11 @@ public class UserProfile implements AggregateRoot<UserProfile, UserProfileId> {
         ImmutableList.<Address>builder().addAll(updatedAddresses).add(address).build(),
         ImmutableList.<DomainEvent>builder()
             .addAll(domainEvents)
-            .add(new AddressAdded(id.id.toString(), address.id()))
+            .add(new AddressAdded(id.id.toString(), address.id().toString()))
             .build());
   }
 
-  public UserProfile removeAddress(String addressId) {
+  public UserProfile removeAddress(AddressId addressId) {
     // 指定されたIDの住所が存在するか確認
     var addressFound = addresses.stream().anyMatch(a -> a.id().equals(addressId));
 
@@ -102,7 +102,7 @@ public class UserProfile implements AggregateRoot<UserProfile, UserProfileId> {
             .collect(ImmutableList.toImmutableList()),
         ImmutableList.<DomainEvent>builder()
             .addAll(domainEvents)
-            .add(new AddressRemoved(id.id.toString(), addressId))
+            .add(new AddressRemoved(id.id.toString(), addressId.toString()))
             .build());
   }
 
@@ -110,7 +110,7 @@ public class UserProfile implements AggregateRoot<UserProfile, UserProfileId> {
     return addresses.stream().filter(Address::isDefault).findFirst().orElse(null);
   }
 
-  public @Nullable Address findAddressById(String addressId) {
+  public @Nullable Address findAddressById(AddressId addressId) {
     return addresses.stream().filter(a -> a.id().equals(addressId)).findFirst().orElse(null);
   }
 
