@@ -1,140 +1,34 @@
 # Auth モジュール
 
-このドキュメントでは、`auth` モジュールの責務、ドメインモデル、主要な機能について説明します。
+認証・認可機能とアカウント管理を担当します。
 
 ## 責務
-
-`auth` モジュールは、ユーザー認証とアカウント作成に関連する以下の主要な責務を担当します。
-
-*   **認証 (ログイン):**
-    *   ユーザーの本人確認を行います。現在はメールアドレスとパスワードによる認証をサポートしています。
-    *   認証成功時には、後続のリクエストで使用するための認証情報（JWT）を発行します。
-*   **アカウント作成 (サインアップ):**
-    *   メールアドレスとパスワードを使用して新しいアカウントを作成します。
-*   **アカウント管理 (一部未実装):**
-    *   アカウント情報の参照・更新 (将来実装予定)
-    *   パスワード変更・リセット (将来実装予定)
-    *   退会処理 (将来実装予定)
-
-## ドメインモデル
-
-`auth` モジュールの主要なドメインモデルは以下の通りです。
-
-*   **`Account` (Record):**
-    *   責務: ユーザーアカウント全体を表す集約ルート。
-    *   主要プロパティ:
-        *   `id`: アカウントID (`AccountId` 値オブジェクト)。
-        *   `authentications`: このアカウントに関連付けられた認証方法のリスト (`ImmutableList<Authentication>`)。
-        *   `domainEvents`: アカウントに関連するドメインイベントのリスト (`ImmutableList<DomainEvent>`)。
-    *   ファクトリメソッド:
-        *   `create`: 新しいアカウントを作成し、`AccountCreated`イベントを発行。
-        *   `reconstruct`: 永続化されたアカウントを再構築（イベントなし）。
-
-*   **`AccountId` (Record, Value Object):**
-    *   責務: アカウントの一意な識別子。
-    *   プロパティ: `value` (String)。空でないことが保証されます。
-
-*   **`Authentication` (Sealed Interface):**
-    *   責務: 認証方法の共通インターフェース。現在は `EmailAuthentication` のみが許可されています（将来的に他の認証方法、例: OAuth を追加可能）。
-
-*   **`EmailAuthentication` (Record):**
-    *   責務: メールアドレスとパスワードによる認証方法を表現。
-    *   主要プロパティ:
-        *   `email`: ユーザーのメールアドレス (`Email` 値オブジェクト、`share` モジュールで定義)
-        *   `password`: パスワード（ハッシュ化されたもの）
-
-*   **`JsonWebToken` (Record, Value Object):**
-    *   責務: JWT トークンを表す値オブジェクト。
-    *   プロパティ: `value` (String)。空でないことが保証されます。
-
-## リポジトリ
-
-`auth` モジュールは、クリーンアーキテクチャの原則に従ってリポジトリを設計しています。
-
-*   **`Accounts` (Interface):**
-    *   責務: ドメイン層で定義されたリポジトリインターフェース。アカウント集約の永続化を抽象化します。
-    *   主要メソッド:
-        *   `findByEmail(Email email)`: メールアドレスでアカウントを検索
-        *   `save(Account account)`: アカウントを保存 (新規作成または更新)
-
-*   **`MongoAccounts` (Class):**
-    *   責務: インフラ層で実装されたリポジトリ。`Accounts` インターフェースを実装し、Spring Data MongoDB Reactive を内部で利用してデータアクセスを行います。
-    *   ドメインモデル (`Account`) とドキュメントモデル (`AccountDocument`) の相互変換を担当します。
-
-*   **`AccountDocument` (Class):**
-    *   責務: MongoDB の `accounts` コレクションに対応するドキュメントモデル。
-    *   メソッド: `toDomain()` でドメインモデルに変換、`fromDomain(Account account)` static ファクトリメソッドでドキュメントモデルを生成。
-
-## 主要フロー
-
-`auth` モジュールは以下の主要なフローを実装しています：
-
-### ログインフロー
-
-1.  クライアントが `/api/authentication/login` エンドポイントにメールアドレスとパスワードを送信。
-2.  `LoginWithEmailHandler` (Infrastructure リング) がリクエストを受け取り、`LoginUsecase` (Application リング) を呼び出す。
-3.  `LoginUsecase` が `LoginWorkflow` (Application リング) を実行。
-4.  `LoginWorkflow` が以下のステップを順に実行:
-    1.  `FindAccountByEmailStep`: メールアドレスでアカウントを検索 (Infrastructure リングの `FindAccountByEmailStepImpl` が実行される)。
-    2.  `VerifyWithPasswordStep`: 提供されたパスワードと保存されているハッシュ化パスワードを検証 (Infrastructure リングの `VerifyWithPasswordStepImpl` が実行される)。
-    3.  `GenerateJWTStep`: 認証成功時にJWTトークンを生成 (Infrastructure リングの `GenerateJWTStepImpl` が実行される)。
-5.  生成された `JsonWebToken` をクライアントに返却。
-
-### サインアップフロー
-
-1.  クライアントが `/api/authentication/signup` エンドポイントにメールアドレスとパスワードを送信。
-2.  `SignupWithEmailHandler` (Infrastructure リング) がリクエストを受け取り、`SignupUsecase` (Application リング) を呼び出す。
-3.  `SignupUsecase` が `SignupWorkflow` (Application リング) を実行。
-4.  `SignupWorkflow` が以下のステップを実行:
-    1.  `CheckExistsEmailStep`: メールアドレスが既に存在するかチェック。
-    2.  `CreateAccountWithEmailStep`: 新しいアカウントエンティティを作成し、リポジトリ (`Accounts`) を通じて保存。
-       - `AccountFactory`を使用してアカウントを作成し、ドメインイベント (`AccountCreated`) を発行。
-       - `IdGenerator` (share モジュール) を使用して一意なIDを生成。
-5.  成功レスポンス (サインアップ成功メッセージ) をクライアントに返却。
-
-### トークン認証フロー (Spring Security連携)
-
-1.  保護されたAPIにアクセスする際、クライアントはリクエストヘッダーにJWTトークンを設定 (`Authorization: Bearer <token>`)。
-2.  Spring Security のフィルタチェーン (設定が必要) がリクエストからトークンを抽出。
-3.  `JsonWebTokenProvider` (Infrastructure リング) を使用してトークンを検証。
-4.  トークンが有効な場合、認証情報 (`Authentication` オブジェクト) を `SecurityContext` に設定。
-5.  Spring Security が後続の処理で API アクセス権限を確認し、認可を実施。
+- ユーザー認証（ログイン）
+- アカウント作成（サインアップ）
+- JWT管理
 
 ## 主要コンポーネント
 
-*   **Domain リング:**
-    *   `Account`, `AccountId`, `Authentication`, `EmailAuthentication`, `JsonWebToken`: ドメインモデル。
-    *   `Accounts`: リポジトリインターフェース。
-    *   `AccountFactory`: アカウント作成を担当するドメインサービス。
-*   **Application リング:**
-    *   `LoginUsecase`: ログイン処理を統括するユースケースクラス。
-    *   `SignupUsecase`: サインアップ処理を統括するユースケースクラス。
-    *   `LoginWorkflow`: ログイン処理のステップを調整するワークフローインターフェース。
-    *   `SignupWorkflow`: サインアップ処理のステップを調整するワークフローインターフェース。
-    *   `FindAccountByEmailStep`, `VerifyWithPasswordStep`, `GenerateJWTStep`, `CheckExistsEmailStep`, `CreateAccountWithEmailStep`: 各処理ステップのインターフェース。
-*   **Infrastructure リング:**
-    *   `LoginWithEmailHandler`: ログインAPIのリクエストハンドラー。
-    *   `SignupWithEmailHandler`: サインアップAPIのリクエストハンドラー。
-    *   `MongoAccounts`: `Accounts` リポジトリの実装。
-    *   `AccountDocument`: MongoDBドキュメントモデル。
-    *   `LoginWorkflowImpl`, `SignupWorkflowImpl`: ワークフローインターフェースの実装。
-    *   `FindAccountByEmailStepImpl`, `VerifyWithPasswordStepImpl`, `GenerateJWTStepImpl`: 各ステップインターフェースの実装。
-    *   `JsonWebTokenProvider`: JWT の生成と検証を担当。
-    *   `JWTProperties`: JWT署名キー、有効期限などの設定管理。
+### ドメインモデル
+- `Account`: アカウント情報を表す集約ルート
+- `Authentication`: 認証方法の共通インターフェース（現在は`EmailAuthentication`のみ）
+- `JsonWebToken`: JWTを表す値オブジェクト
 
-## 設計上のポイント
+### リポジトリ
+`Accounts`: アカウントの検索・保存（`findByEmail`, `save`）
 
-1.  **オニオンアーキテクチャの採用:**
-    *   ドメインリングを中心に置き、外側のリングが内側のリングに依存する構造。
-    *   ドメインリングはアプリケーションリングやインフラストラクチャリングに依存しない。
-    *   リポジトリインターフェースはドメインリングで定義し、実装はインフラストラクチャリングに配置。
-    *   ワークフローとステップのインターフェースはアプリケーションリングで定義し、実装はインフラストラクチャリングに配置。
-2.  **値オブジェクトの活用:**
-    *   `AccountId`, `JsonWebToken`, `Email` (share) など、不変で自己検証ロジックを持つ値オブジェクトとして Java Record を活用。
-3.  **責務の分離 (ワークフローとステップパターン):**
-    *   認証やアカウント作成のプロセスをワークフローとして定義。
-    *   各処理を単一責任のステップ (インターフェースと実装) に分割。
-    *   ワークフロークラスがこれらのステップを協調させることで、拡張性と保守性を向上。
-4.  **リアクティブプログラミング:**
-    *   非同期処理を効率的に扱うため Project Reactor を活用。
-    *   リポジトリ操作やステップ実行は `Mono` を返し、リアクティブなデータフローを実現。
+### ワークフロー
+- `LoginWorkflow`: ログイン処理
+- `SignupWorkflow`: アカウント作成処理
+
+## 主要フロー
+
+### ログイン
+1. メールアドレス・パスワード受信 → アカウント検索 → パスワード検証 → JWT生成
+
+### サインアップ
+1. メールアドレス・パスワード受信 → メールアドレス重複チェック → アカウント作成 → 保存
+
+## 認証機構
+- JWTを使用（`Authorization: Bearer <token>`）
+- Spring Securityによる保護

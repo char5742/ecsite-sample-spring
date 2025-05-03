@@ -2,123 +2,177 @@
 
 このドキュメントでは、開発中に遭遇する可能性のある一般的な問題とその解決策、および問題発生時の調査方法について説明します。
 
-## 問題切り分けの基本
+## 問題切り分けの基本手順
 
 問題が発生した場合、以下の手順で切り分けることが有効です。
 
-1.  **エラーメッセージの確認:** まずはコンソールやログに出力されたエラーメッセージを正確に読みます。特に例外の種類 (`NullPointerException`, `IllegalArgumentException` など) とスタックトレースに注目します。
-2.  **スタックトレースの解析:** スタックトレースはエラーが発生するまでのメソッド呼び出し履歴を示します。一番上の行が直接的なエラー発生箇所ですが、その下の呼び出し元を辿ることで、エラーの原因となったコード箇所を特定しやすくなります。
-3.  **再現手順の特定:** どのような操作や条件で問題が必ず発生するのかを特定します。これにより、デバッグや原因調査が効率化されます。
-4.  **ログレベルの変更:** 必要に応じてログレベルを `DEBUG` や `TRACE` に変更し ([03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) 参照)、より詳細な情報を取得します。
-5.  **デバッガの利用:** デバッガを使ってコードをステップ実行し、変数の値や処理の流れを確認します ([03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) 参照)。
+1. **エラーメッセージ確認:**
+   * コンソールやログに出力されたエラーメッセージを正確に読む
+   * 特に例外の種類 (`NullPointerException`, `IllegalArgumentException` など) とスタックトレースに注目
+
+2. **スタックトレース解析:**
+   * エラーが発生するまでのメソッド呼び出し履歴を示す
+   * 一番上の行が直接的なエラー発生箇所
+   * 呼び出し元を辿ることで、エラーの原因となったコード箇所を特定
+
+3. **再現手順特定:**
+   * どのような操作や条件で問題が必ず発生するかを特定
+   * これによりデバッグや原因調査が効率化される
+
+4. **ログレベル変更:**
+   * 必要に応じてログレベルを `DEBUG` や `TRACE` に変更して詳細情報を取得
+   * `application.properties` の `logging.level.*` プロパティで設定
+   * 詳細は [03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) を参照
+
+5. **デバッガの利用:**
+   * デバッガを使ってコードをステップ実行し、変数の値や処理の流れを確認
+   * 詳細は [03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) を参照
 
 ## よくある問題と解決策
 
-*   **環境構築時のエラー:**
-    *   **JDK関連:**
-        *   原因: 指定バージョン (JDK 23) と異なる、`JAVA_HOME` が未設定または誤っている。
-        *   解決策: [02_ENVIRONMENT_SETUP.md](./02_ENVIRONMENT_SETUP.md) に従い、正しい JDK をインストールし、環境変数を設定する。IDE の JDK 設定も確認する。
-    *   **Docker関連:**
-        *   原因: Docker Desktop が起動していない、MongoDB コンテナが起動失敗している (ポート競合など)。
-        *   解決策: Docker Desktop を起動する。`docker ps` でコンテナの状態を確認し、必要なら `docker logs local-mongo` でログを確認する。ポートを変更して再起動 (`docker run ... -p <別ポート>:27017 ...`) する。
-    *   **Gradle関連:**
-        *   原因: ネットワーク問題による依存関係ダウンロード失敗、Gradle キャッシュの破損。
-        *   解決策: ネットワーク接続を確認する。`./gradlew clean build --refresh-dependencies` でキャッシュをクリアして再試行する。
+### 環境構築時のエラー
 
-*   **ビルドエラー:**
-    *   **コンパイルエラー:**
-        *   原因: 文法ミス、型不一致、import 忘れ、依存関係不足。
-        *   解決策: IDE のエラー表示やコンパイラメッセージに従って修正する。
-    *   **NullAway エラー:**
-        *   原因: `@Nullable` でない変数に `null` が代入される可能性がある、`@Nullable` な変数をチェックせずに使用している。
-        *   解決策: [06_CODING_STANDARDS.md](./06_CODING_STANDARDS.md) の NullAway セクションを参照し、アノテーションを修正するか、null チェックを追加する。
-    *   **テスト失敗:**
-        *   原因: コード変更によるテストの前提条件崩れ、アサーションエラー、テスト内の実行時例外。
-        *   解決策: 失敗したテストのレポート (`build/reports/tests/test/index.html`) やログを確認し、テストコードまたは本体コードを修正する。
+| 問題 | 原因 | 解決策 |
+|------|------|---------|
+| **JDK関連エラー** | • JDKバージョン不一致 (JDK 23 以外の使用)<br>• `JAVA_HOME` が未設定または誤っている<br>• IDEのJDK設定が誤っている | • [02_ENVIRONMENT_SETUP.md](./02_ENVIRONMENT_SETUP.md) に従い、正しい JDK をインストール<br>• 環境変数を正しく設定<br>• IDEの設定を確認 |
+| **Docker関連エラー** | • Dockerが未起動<br>• MongoDBコンテナ起動失敗<br>• ポート競合 (27017ポート)<br>• リソース不足 | • Docker Desktop起動<br>• `docker ps`でコンテナ確認<br>• `docker logs local-mongo`でログ確認<br>• 別ポートで再起動 (`docker run ... -p <別ポート>:27017 ...`)<br>• Docker設定でリソース割り当て確認 |
+| **Gradle関連エラー** | • 依存関係ダウンロード失敗<br>• キャッシュ破損<br>• ネットワーク制限<br>• Gradle Wrapperの破損 | • ネットワーク接続確認<br>• `./gradlew clean build --refresh-dependencies`<br>• プロキシ設定確認<br>• 必要に応じてGradle Wrapperを再生成 |
 
-*   **実行時エラー:**
-    *   **`NullPointerException`:**
-        *   原因: null である可能性のあるオブジェクトのメソッドやフィールドにアクセスしようとした。
-        *   解決策: スタックトレースで発生箇所を特定し、null チェックを追加するか、`Optional` を使う。NullAway が有効であればコンパイル時に検出されることが多い。
-    *   **`ClassCastException`:**
-        *   原因: 互換性のない型へのキャスト。
-        *   解決策: キャスト元のオブジェクトの実際の型を確認し、コードロジックを修正する。
-    *   **MongoDB接続エラー:**
-        *   原因: MongoDB コンテナが起動していない、接続先ホスト/ポートが違う、認証情報が必要 (現在は不要)。
-        *   解決策: Docker で MongoDB コンテナ (`local-mongo`) が起動しているか確認する。`application.properties` の `spring.data.mongodb.uri` (デフォルトは `mongodb://localhost:27017/test`) を確認する。
-    *   **リアクティブ関連 (`TimeoutException`, `OutOfMemoryError` など):**
-        *   原因: 非同期処理のデッドロック、バックプレッシャー問題、リソースリーク。
-        *   解決策: Reactor の `log()` オペレータやデバッガで処理の流れを追う。ブロッキング呼び出しがないか確認する。
+### ビルド/コンパイルエラー
 
-*   **APIエラー:**
-    *   **4xx系エラー (例: 400 Bad Request, 401 Unauthorized, 404 Not Found):**
-        *   原因: リクエスト形式不正 (必須パラメータ欠落、型違い)、認証トークン無効または未提供、リソースが存在しない。
-        *   解決策: API 仕様 (Swagger UI など) を確認し、リクエスト内容を修正する。認証が必要な場合は有効な JWT トークンを `Authorization: Bearer <token>` ヘッダーで送信する。
-    *   **5xx系エラー (例: 500 Internal Server Error):**
-        *   原因: サーバー内部での予期せぬ例外発生。
-        *   解決策: サーバー側のログを確認し、スタックトレースなどから原因を特定して修正する。
+| 問題 | 原因 | 解決策 |
+|------|------|---------|
+| **コンパイルエラー** | • 文法ミス<br>• 型不一致<br>• import忘れ<br>• 依存関係不足 | • IDEのエラー表示確認<br>• コンパイラメッセージに従い修正<br>• 必要なライブラリを`build.gradle`に追加 |
+| **NullAwayエラー** | • `@Nullable`でない変数に`null`が代入される可能性<br>• `@Nullable`な変数をチェックせずに使用<br>• `@NullMarked`/`@NullUnmarked`の使い分け誤り | • [06_CODING_STANDARDS.md](./06_CODING_STANDARDS.md) のNullAwayセクション参照<br>• 適切な`@Nullable`アノテーション適用<br>• nullチェック追加<br>• `Optional`活用 |
+| **テスト失敗** | • コード変更によるテスト前提条件の崩れ<br>• アサーションエラー<br>• テスト内の実行時例外<br>• モックの設定ミス | • `build/reports/tests/test/index.html`でテスト結果確認<br>• テストコードまたは本体コードを修正<br>• モックの振る舞いを正しく設定 |
 
-*   **パフォーマンス問題:**
-    *   **レスポンスが遅い:**
-        *   原因: 非効率な DB クエリ、ブロッキング処理、過剰なデータ処理。
-        *   解決策: クエリ実行計画を確認する (MongoDB Compass など)。デバッガやプロファイラでボトルネックを特定する。
-    *   **メモリ使用量が多い:**
-        *   原因: 大量データの保持、リソースリーク。
-        *   解決策: プロファイラでメモリ使用状況を分析する。不要なオブジェクト参照を解放する。
+### 実行時エラー
+
+| 問題 | 原因 | 解決策 |
+|------|------|---------|
+| **NullPointerException** | • nullオブジェクトのメソッド/フィールドアクセス<br>• NullAwayが検出できないケース | • スタックトレースで発生箇所特定<br>• nullチェック追加<br>• `Optional`活用<br>• 防御的プログラミングの適用 |
+| **ClassCastException** | • 互換性のない型へのキャスト<br>• 型検査の欠如 | • キャスト前に`instanceof`で型検査<br>• コードロジック見直し<br>• ジェネリクス活用 |
+| **MongoDB接続エラー** | • コンテナ未起動<br>• 接続設定不正<br>• ネットワーク問題 | • コンテナ起動確認<br>• `application.properties`の`spring.data.mongodb.uri`確認<br>• ネットワーク接続確認 |
+| **リアクティブ関連エラー** | • デッドロック<br>• バックプレッシャー問題<br>• リソースリーク<br>• ブロッキング処理 | • Reactorの`log()`オペレータ使用<br>• デバッガで処理フロー確認<br>• ブロッキング処理排除<br>• `subscribeOn`/`publishOn`の適切な使用 |
+
+### APIエラー
+
+| ステータス | 原因 | 解決策 |
+|----------|------|---------|
+| **4xx (クライアントエラー)** | • リクエスト形式不正<br>• 必須パラメータ欠落<br>• 型違い<br>• トークン無効/未提供 | • API仕様 (Swagger UI) 確認<br>• リクエスト内容修正<br>• 認証トークン確認<br>• デバッグログでリクエスト内容検証 |
+| **5xx (サーバーエラー)** | • サーバー内部例外<br>• 未処理例外のスロー<br>• DB接続問題<br>• リソース枯渇 | • サーバーログ確認<br>• スタックトレース解析<br>• 例外処理の追加<br>• エラーハンドリング改善 |
+
+## 特定シナリオの対処方法
+
+### MongoDBインデックス問題
+
+MongoDBの検索パフォーマンスが遅い場合：
+
+1. **問題確認:**
+   ```bash
+   # コンテナ内のMongoシェル起動
+   docker exec -it local-mongo mongosh
+   
+   # 使用中のDB選択
+   use test
+   
+   # クエリ実行計画確認
+   db.accounts.find({email: "user@example.com"}).explain("executionStats")
+   ```
+
+2. **インデックス作成:**
+   ```javascript
+   // メールアドレスでのインデックス作成例
+   db.accounts.createIndex({"authentications.email": 1}, {unique: true})
+   ```
+
+### リアクティブストリームのデバッグ
+
+リアクティブプログラミングのデバッグには以下のテクニックが有効です：
+
+1. **`log()`オペレータの挿入:**
+   ```java
+   return accountRepository.findByEmail(email)
+       .log("FIND_RESULT") // 処理の各ステップでシグナルをログ出力
+       .flatMap(this::processAccount)
+       .log("PROCESS_RESULT");
+   ```
+
+2. **デバッグレベルの有効化:**
+   ```properties
+   # application.properties
+   logging.level.reactor.core.publisher.Operators=DEBUG
+   logging.level.reactor=DEBUG
+   ```
+
+3. **ブロッキング呼び出しの特定:**
+   BlockHoundなどのツールを使用（現在未導入）
 
 ## 調査ツール
 
-*   **ログ:**
-    *   デフォルトではコンソールに出力されます。`application.properties` の `logging.file.name` や `logging.file.path` でファイル出力を設定できます。
-    *   ログレベルの変更方法は [03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) を参照してください。
-*   **デバッガ:**
-    *   デバッガのアタッチ方法は [03_BUILD_RUN_DEBUG.md](./03_BUILD_RUN_DEBUG.md) を参照してください。
-    *   ブレークポイント、ステップ実行、式評価、リアクティブデバッグ機能 (`log()` オペレータなど) を活用します。
-*   **Spring Boot Actuator エンドポイント:**
-    *   現在、`spring-boot-starter-actuator` 依存関係はプロジェクトに含まれていません。必要に応じて追加することで、ヘルスチェック (`/actuator/health`) やメトリクス (`/actuator/metrics`) などの監視エンドポイントを利用可能になります。
-*   **プロファイラ (任意):**
-    *   パフォーマンス問題やメモリリークの調査には、VisualVM や JProfiler などの Java プロファイラが有効です。
+### ログ確認
 
-## 質問方法
+* **コンソールログ:** デフォルトではコンソールに出力されます
+* **ファイルログ設定:**
+  ```properties
+  # application.properties
+  logging.file.name=application.log
+  logging.file.path=/path/to/logs
+  ```
+* **ログレベル変更:**
+  ```properties
+  # 全体のログレベル
+  logging.level.root=INFO
+  
+  # 特定パッケージのログレベル
+  logging.level.com.example.ec_2024b_back=DEBUG
+  logging.level.com.example.ec_2024b_back.auth=TRACE
+  ```
 
-問題が解決しない場合は、チームメンバーに質問しましょう。質問する際は以下の点を明確にすると、回答が得られやすくなります。
+### デバッガ活用
 
-1.  **発生している事象:** 何が問題なのか具体的に説明します。エラーメッセージがあれば全文を記載します。
-2.  **再現手順:** どのように操作すれば問題を再現できるか、具体的な手順を記述します。
-3.  **試したこと:** 問題解決のために自分で試したこと（調査、コード修正、参照したドキュメントなど）を記述します。
-4.  **期待する結果:** 本来どうなるべきと考えているかを記述します。
-5.  **環境情報:** OS、JDKバージョン、Dockerバージョン、IDE など、関連する環境情報を記載します。
-6.  **質問先:** 適切な担当者やチームのチャネル (Slack, Teams など) で質問します。
+* **IDEデバッガ:** IntelliJ IDEAなどのJavaデバッガを使用
+* **リモートデバッグ:**
+  ```bash
+  ./gradlew bootRun --debug-jvm
+  ```
+* **条件付きブレークポイント:** 特定条件下でのみ停止するようブレークポイントを設定
+* **ウォッチ式:** 変数や式の値を監視
+* **実行制御:** ステップイン、ステップオーバー、ステップアウト機能を活用
 
-**質問テンプレート例:**
+### その他の調査ツール
+
+* **Spring Boot Actuator:** 現在非導入ですが、導入することでヘルスチェック、メトリクスなどの監視が可能になります
+* **プロファイラ:** VisualVM、JProfilerなどのJavaプロファイラを使用してパフォーマンス問題やメモリリークを調査
+
+## 質問テンプレート
+
+問題が解決しない場合は、チームに質問するときに以下のテンプレートを使用してください。具体的な情報を提供することで、より適切な回答が得られます：
 
 ```markdown
 ## 問題
-(例: ログインAPIを呼び出すと 500 Internal Server Error が発生します)
+[問題の簡潔な説明]
 
 ## エラーメッセージ/ログ
 ```
-(エラーメッセージや関連するログを貼り付け)
+[エラーメッセージや関連するログを貼り付け]
 ```
 
 ## 再現手順
-1. (例: MongoDB コンテナを起動)
-2. (例: `./gradlew bootRun` でアプリケーションを起動)
-3. (例: curl で以下のリクエストを送信)
-   ```bash
-   curl -X POST ... (リクエスト詳細)
-   ```
+1. [手順1]
+2. [手順2]
+3. [手順3]
 
 ## 試したこと
-* (例: ログを確認したが、具体的な原因が特定できなかった)
-* (例: `LoginWorkflow` にブレークポイントを設定してデバッグしたが、途中で例外が発生している様子はない)
-* (例: `03_BUILD_RUN_DEBUG.md` のデバッグ手順を確認した)
+* [調査1]
+* [調査2]
 
 ## 期待する結果
-(例: ステータスコード 200 と JWT トークンが返却される)
+[本来期待される動作]
 
 ## 環境情報
-* OS: macOS Sonoma
-* JDK: GraalVM JDK 23
-* Docker: Docker Desktop 4.x.x
-* IDE: IntelliJ IDEA 2024.1
+* OS: [OS名/バージョン]
+* JDK: [JDKバージョン]
+* Docker: [Dockerバージョン]
+* IDE: [IDE名/バージョン]
+```

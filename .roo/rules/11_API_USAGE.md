@@ -2,45 +2,50 @@
 
 このドキュメントでは、`ecsite-v2` プロジェクトが提供するAPIの利用方法について説明します。主に開発中の動作確認やテストを目的としています。
 
+## OpenAPI仕様
+
+本プロジェクトでは、OpenAPIに準拠したREST APIを提供しています。API仕様はOpenAPI形式で記述され、`docs/openapi/entry.yml`で確認できます。この仕様は常に最新の状態に保たれるよう管理されています。
+
 ## Swagger UI
 
-*   **概要:** 本プロジェクトでは [SpringDoc](https://springdoc.org/) を利用しており、OpenAPI 仕様に基づいたインタラクティブな API ドキュメント (Swagger UI) を生成する機能が含まれています。
-*   **有効化:** デフォルトでは OpenAPI Generator の設定 (`openapi.gradle` の `useSwaggerUI: "false"`) により、Swagger UI は無効化されています。利用したい場合は、`src/main/resources/application.properties` に以下の設定を追加することで有効化できます。
-    ```properties
-    springdoc.swagger-ui.enabled=true
-    ```
-*   **アクセスURL (有効化した場合):** アプリケーションをローカルで起動後、Webブラウザで `http://localhost:8080/swagger-ui.html` にアクセスしてください。(ポート番号は環境によって異なる場合があります)
-*   **使い方 (有効化した場合):**
-    *   画面上部に API のリストが表示されます。各 API をクリックすると詳細（説明、パラメータ、リクエストボディ、レスポンススキーマ、試行機能）が展開されます。
-    *   **API の試行:**
-        1.  試したい API を展開します。
-        2.  右上の "Try it out" ボタンをクリックします。
-        3.  必要なパラメータやリクエストボディを入力します。リクエストボディのスキーマ (例) も表示されるため参考にしてください。
-        4.  "Execute" ボタンをクリックするとリクエストが送信され、結果 (レスポンスコード、レスポンスボディ、ヘッダー、curl コマンド例など) が表示されます。
-*   **注意点:**
-    *   認証が必要な API を試す場合は、後述の「認証」セクションを参照して認証情報を設定する必要があります。
+Swagger UIは、APIをインタラクティブに操作・テストするためのツールです。デフォルトでは無効化されていますが、以下の手順で有効化できます。
 
-## 認証
+### Swagger UI有効化方法
 
-多くの API は認証 (ログイン) が必要です。認証には JWT (JSON Web Token) を使用します。
+1. `application.properties`に以下の設定を追加します：
+   ```properties
+   springdoc.swagger-ui.enabled=true
+   ```
 
-1.  **トークン取得 (ログイン API):**
-    *   まず、`POST /api/authentication/login` エンドポイントを使用してログインします。リクエストボディには `email` と `password` を含めます。
-    *   認証に成功すると、レスポンスボディに JWT トークンが含まれます (`LoginResponse` スキーマ参照)。
-    *   このエンドポイントは認証が不要です。
-2.  **Swagger UI でのトークン設定 (有効化した場合):**
-    *   Swagger UI 右上の "Authorize" ボタンをクリックします。
-    *   表示されたダイアログの "Value" フィールドに、取得した JWT トークンを `Bearer <token>` の形式で入力します (例: `Bearer eyJhbGciOiJIUzI1NiJ9...`)。
-    *   "Authorize" ボタンをクリックし、ダイアログを閉じます。
-    *   これで、以降 Swagger UI から送信されるリクエストの `Authorization` ヘッダーにトークンが付与されます。
-3.  **curl/Postman でのトークン設定:**
-    *   リクエストヘッダーに `Authorization: Bearer <token>` を追加します。
+2. アプリケーションを起動します：
+   ```bash
+   ./gradlew bootRun
+   ```
 
-## 主要API利用例
+3. ブラウザで以下のURLにアクセスします：
+   ```
+   http://localhost:8080/swagger-ui.html
+   ```
+   (ポート番号は環境によって異なる場合があります)
 
-現在実装されている主要な API の利用例を以下に示します。
+### Swagger UI使用方法
 
-### 例: ログイン (curl)
+1. **API一覧確認**: 画面上部にAPI一覧が表示されます。
+2. **API詳細確認**: 各APIをクリックすると詳細（説明、パラメータ、リクエストボディ、レスポンススキーマ）が展開されます。
+3. **API試行手順**:
+   1. 試したいAPIを展開します
+   2. 右上の "Try it out" ボタンをクリックします
+   3. 必要なパラメータやリクエストボディを入力します
+   4. "Execute" ボタンをクリックしてリクエストを送信します
+   5. レスポンス（ステータスコード、レスポンスボディ、ヘッダー、curlコマンド例）が表示されます
+
+## 認証方法
+
+本プロジェクトのAPIは、多くのエンドポイントで認証（JWT）が必要です。以下で認証の流れを説明します。
+
+### 1. トークン取得 (ログインAPI)
+
+認証が必要なAPIにアクセスする前に、まずはログインAPIでJWTトークンを取得する必要があります。
 
 ```bash
 curl -X POST "http://localhost:8080/api/authentication/login" \
@@ -50,25 +55,90 @@ curl -X POST "http://localhost:8080/api/authentication/login" \
   "email": "user@example.com",
   "password": "password"
 }'
-
-# 成功時のレスポンス例 (ステータスコード 200)
-# {
-#  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzEzMDE4MjAwLCJleHAiOjE3MTMwMjE4MDB9.xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-# }
-
-# 失敗時のレスポンス例 (ステータスコード 401)
-# {
-#  "timestamp": "...",
-#  "status": 401,
-#  "error": "Unauthorized",
-#  "message": "Authentication failed", # 実際のエラーメッセージは異なる場合があります
-#  "path": "/api/authentication/login"
-# }
 ```
 
-*(注意: サインアップ API は現在 OpenAPI 定義に含まれていません。実装されている場合は `SignupUsecase` を参照してください)*
+成功すると、以下のような形式でJWTトークンが返却されます：
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzEzMDE4MjAwLCJleHAiOjE3MTMwMjE4MDB9.xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+```
+
+失敗時（認証情報が間違っている場合など）は、401 Unauthorizedエラーが返却されます：
+
+```json
+{
+  "timestamp": "...",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Authentication failed",
+  "path": "/api/authentication/login"
+}
+```
+
+### 2. トークンの使用方法
+
+取得したJWTトークンを使って認証が必要なAPIにアクセスする方法は以下の通りです。
+
+#### Swagger UIでのトークン設定
+
+1. Swagger UI右上の "Authorize" ボタンをクリックします
+2. 表示されたダイアログの "Value" フィールドに、取得したJWTトークンを `Bearer <token>` の形式で入力します
+   ```
+   Bearer eyJhbGciOiJIUzI1NiJ9...
+   ```
+3. "Authorize" ボタンをクリックしてダイアログを閉じます
+4. これで、以降Swagger UIから送信するリクエストの `Authorization` ヘッダーにトークンが自動的に付与されます
+
+#### curl/Postmanでのトークン使用
+
+curlを使用する場合は、Authorizationヘッダーにトークンを設定します：
+
+```bash
+curl -X GET "http://localhost:8080/api/some-protected-endpoint" \
+ -H "accept: application/json" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9..."
+```
+
+Postmanを使用する場合は、Authorizationタブで「Bearer Token」を選択し、トークンを入力します。
+
+## 主要API一覧
+
+本プロジェクトで提供されている主要なAPIエンドポイントの一覧です。詳細な使用方法はSwagger UIを参照してください。
+
+| エンドポイント | メソッド | 認証要否 | 説明 |
+|--------------|---------|---------|-----|
+| `/api/authentication/login` | POST | 不要 | メールアドレスとパスワードでログインし、JWT取得 |
+| `/api/authentication/signup` | POST | 不要 | 新規ユーザー登録 |
+| `/api/users/profile` | GET | 必要 | ログインユーザーのプロファイル情報取得 |
+| `/api/users/profile` | PUT | 必要 | ログインユーザーのプロファイル情報更新 |
+
+## トラブルシューティング
+
+APIの操作中に問題が発生した場合は、以下を確認してください：
+
+1. **認証関連**:
+   - トークンの有効期限切れ → 再度ログインして新しいトークンを取得
+   - トークン形式の誤り → `Bearer` の後にスペースを入れてトークンを設定
+
+2. **リクエスト形式**:
+   - Content-TypeがJSON形式になっているか確認 (`application/json`)
+   - リクエストボディの形式が正しいか確認
+
+3. **サーバー稼働状況**:
+   - アプリケーションが起動しているか確認
+   - 設定しているポート番号が正しいか確認
+
+APIエラーが発生した場合は、サーバーのログを確認して詳細を調査してください。
 
 ## Postman
 
-*   **概要:** API開発・テストのための高機能なツールです。
-*   **コレクション/環境:** 現在、このプロジェクト用の Postman コレクションや環境ファイルは提供されていません。必要に応じて各自で作成してください。
+APIテスト用のGUIツールとしてPostmanの使用もおすすめします。現在、このプロジェクト用のPostmanコレクションは提供されていませんが、必要に応じて以下の手順で作成できます：
+
+1. Postmanをインストール (https://www.postman.com/downloads/)
+2. 新規コレクションを作成
+3. 各APIエンドポイントをリクエストとして追加
+4. 環境変数を設定（BaseURL、トークンなど）
+
+これにより、APIのテストや操作が効率化されます。
