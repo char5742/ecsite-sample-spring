@@ -13,6 +13,7 @@ MongoDB（ドキュメント指向NoSQL）を採用。リアクティブドラ�
 - **`carts`**: ショッピングカート情報
 - **`orders`**: 注文情報
 - **`payments`**: 支払い情報
+- **`shipments`**: 配送情報
 
 ## スキーマ詳細
 
@@ -184,6 +185,30 @@ erDiagram
 ```
 
 **推奨インデックス:** `orderId`, `status`
+
+### `shipments` コレクション
+
+配送情報を保存します。
+
+```mermaid
+erDiagram
+    shipments {
+        String _id PK "配送ID"
+        String orderId FK "注文ID"
+        String shippingAddress "配送先住所"
+        String shippingMethod "配送方法"
+        String status "配送状態"
+        String trackingNumber "追跡番号（任意）"
+        String note "備考（任意）"
+        Date estimatedDeliveryDate "配送予定日時（任意）"
+        Date actualDeliveryDate "実際の配送完了日時（任意）"
+        String receiverName "受取人名（任意）"
+        Date createdAt "作成日時"
+        Date updatedAt "更新日時"
+    }
+```
+
+**推奨インデックス:** `orderId`, `status`, `trackingNumber`
 
 ## 設計ノート
 
