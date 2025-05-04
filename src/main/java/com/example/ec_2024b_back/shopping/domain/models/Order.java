@@ -77,10 +77,10 @@ public class Order implements AggregateRoot<Order, OrderId> {
     }
 
     // カートアイテムから注文アイテムへの変換
-    List<OrderItem> orderItems = cart.getItems().stream().map(OrderItem::fromCartItem).toList();
+    var orderItems = cart.getItems().stream().map(OrderItem::fromCartItem).toList();
 
     // 小計の計算
-    BigDecimal subtotal = cart.calculateTotal();
+    var subtotal = cart.calculateTotal();
 
     // 税額の計算
     var tax = subtotal.multiply(taxRate).setScale(0, BigDecimal.ROUND_HALF_UP);
@@ -89,7 +89,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
     var totalAmount = subtotal.add(tax).add(shippingCost);
 
     // イベント作成
-    List<OrderEvent> events = new ArrayList<>();
+    var events = new ArrayList<OrderEvent>();
     events.add(
         new OrderPlaced(
             id,
@@ -187,7 +187,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
       throw new DomainException("現在の状態 " + status + " の注文はキャンセルできません");
     }
 
-    List<OrderEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new OrderCancelled(id, reason, now));
 
     return new Order(
@@ -226,7 +226,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
       throw new DomainException("現在の状態 " + status + " の注文は支払い済みにできません");
     }
 
-    List<OrderEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new OrderPaid(id, paymentId, paymentMethod, totalAmount, now));
 
     return new Order(
@@ -265,7 +265,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
       throw new DomainException("現在の状態 " + status + " の注文は出荷済みにできません");
     }
 
-    List<OrderEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new OrderShipped(id, trackingNumber, shippingMethod, now));
 
     return new Order(
@@ -299,7 +299,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
       throw new DomainException("現在の状態 " + status + " の注文は配送完了にできません");
     }
 
-    List<OrderEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new OrderDelivered(id, deliveredAt, now));
 
     return new Order(
@@ -332,7 +332,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
       throw new DomainException("現在の状態 " + status + " の注文は完了にできません");
     }
 
-    List<OrderEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new OrderCompleted(id, now));
 
     return new Order(

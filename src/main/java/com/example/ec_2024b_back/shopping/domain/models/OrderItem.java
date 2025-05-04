@@ -29,7 +29,7 @@ public record OrderItem(
     }
 
     // 小計が正しいことを検証
-    BigDecimal calculatedSubtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+    var calculatedSubtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
     if (subtotal.compareTo(calculatedSubtotal) != 0) {
       throw new IllegalArgumentException("小計が一致しません: " + subtotal + " != " + calculatedSubtotal);
     }
@@ -42,7 +42,7 @@ public record OrderItem(
    * @return 作成された注文アイテム
    */
   public static OrderItem fromCartItem(CartItem cartItem) {
-    BigDecimal subtotal = cartItem.unitPrice().multiply(BigDecimal.valueOf(cartItem.quantity()));
+    var subtotal = cartItem.unitPrice().multiply(BigDecimal.valueOf(cartItem.quantity()));
     return new OrderItem(
         cartItem.productId(),
         cartItem.productName(),

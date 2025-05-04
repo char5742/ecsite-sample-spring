@@ -74,16 +74,16 @@ public class Cart implements AggregateRoot<Cart, CartId> {
       throw new IllegalArgumentException("数量は1以上でなければなりません");
     }
 
-    List<CartItem> newItems = new ArrayList<>(this.items);
-    List<CartEvent> newEvents = new ArrayList<>(this.events);
+    var newItems = new ArrayList<>(this.items);
+    var newEvents = new ArrayList<>(this.events);
 
     // 既に同じ商品がカートにあるか確認
-    Optional<CartItem> existingItem = findItemByProductId(productId);
+    var existingItem = findItemByProductId(productId);
 
     if (existingItem.isPresent()) {
       // 既存アイテムの数量を更新
-      CartItem item = existingItem.get();
-      int oldQuantity = item.quantity();
+      var item = existingItem.get();
+      var oldQuantity = item.quantity();
       var newQuantity = oldQuantity + quantity;
 
       // 既存アイテムを削除して新しいアイテムを追加
@@ -115,14 +115,14 @@ public class Cart implements AggregateRoot<Cart, CartId> {
    * @return 更新されたカート
    */
   public Cart removeItem(ProductId productId, Instant now) {
-    Optional<CartItem> existingItem = findItemByProductId(productId);
+    var existingItem = findItemByProductId(productId);
 
     if (existingItem.isEmpty()) {
       return this; // 変更なし
     }
 
-    List<CartItem> newItems = new ArrayList<>(this.items);
-    List<CartEvent> newEvents = new ArrayList<>(this.events);
+    var newItems = new ArrayList<>(this.items);
+    var newEvents = new ArrayList<>(this.events);
 
     newItems.removeIf(item -> item.productId().equals(productId));
     newEvents.add(new ItemRemovedFromCart(id, productId, now));
@@ -150,21 +150,21 @@ public class Cart implements AggregateRoot<Cart, CartId> {
       return removeItem(productId, now);
     }
 
-    Optional<CartItem> existingItem = findItemByProductId(productId);
+    var existingItem = findItemByProductId(productId);
 
     if (existingItem.isEmpty()) {
       return this; // 変更なし
     }
 
-    CartItem item = existingItem.get();
-    int oldQuantity = item.quantity();
+    var item = existingItem.get();
+    var oldQuantity = item.quantity();
 
     if (oldQuantity == newQuantity) {
       return this; // 変更なし
     }
 
-    List<CartItem> newItems = new ArrayList<>(this.items);
-    List<CartEvent> newEvents = new ArrayList<>(this.events);
+    var newItems = new ArrayList<>(this.items);
+    var newEvents = new ArrayList<>(this.events);
 
     // 既存アイテムを削除して新しいアイテムを追加
     newItems.removeIf(i -> i.productId().equals(productId));
@@ -192,7 +192,7 @@ public class Cart implements AggregateRoot<Cart, CartId> {
       return this; // 変更なし
     }
 
-    List<CartEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new CartCleared(id, now));
 
     return new Cart(

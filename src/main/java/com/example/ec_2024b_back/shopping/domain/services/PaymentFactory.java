@@ -44,7 +44,7 @@ public class PaymentFactory {
     var now = Instant.now(clock);
 
     @Var
-    Payment payment =
+    var payment =
         Payment.initiate(paymentId, order.getId(), order.getTotalAmount(), paymentMethod, now);
 
     // 外部トランザクションIDがある場合は承認済み状態に更新

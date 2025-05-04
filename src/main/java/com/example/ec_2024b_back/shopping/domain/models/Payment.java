@@ -121,7 +121,7 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
       throw new DomainException("現在の状態 " + status + " の支払いは承認できません");
     }
 
-    List<PaymentEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(
         new PaymentAuthorized(
             id, orderId, amount, paymentMethod, authorizedAt, externalTransactionId, now));
@@ -151,7 +151,7 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
       throw new DomainException("現在の状態 " + status + " の支払いは確定できません");
     }
 
-    List<PaymentEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new PaymentCaptured(id, orderId, amount, externalTransactionId, now));
 
     return new Payment(
@@ -182,7 +182,7 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
 
     var newError = PaymentError.create(errorCode, errorMessage);
 
-    List<PaymentEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(new PaymentFailed(id, orderId, amount, errorCode, errorMessage, now));
 
     return new Payment(
@@ -237,7 +237,7 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
       newStatus = PaymentStatus.PARTIALLY_REFUNDED;
     }
 
-    List<PaymentEvent> newEvents = new ArrayList<>(this.events);
+    var newEvents = new ArrayList<>(this.events);
     newEvents.add(
         new PaymentRefunded(id, orderId, refundAmount, reason, externalTransactionId, now));
 
