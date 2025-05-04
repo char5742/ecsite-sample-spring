@@ -7,7 +7,6 @@ import com.example.ec_2024b_back.shopping.domain.models.CartId;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 /** カートオブジェクトを生成するファクトリークラス */
@@ -23,8 +22,6 @@ public class CartFactory {
    * @return 新しいカート
    */
   public Cart createEmptyCart(AccountId accountId) {
-    Objects.requireNonNull(accountId, "アカウントIDは必須です");
-
     var cartId = new CartId(idGenerator.newId());
     var now = Instant.now(clock);
 

@@ -60,12 +60,6 @@ public class Order implements AggregateRoot<Order, OrderId> {
       BigDecimal taxRate,
       Instant now) {
 
-    Objects.requireNonNull(id, "注文IDは必須です");
-    Objects.requireNonNull(cart, "カートは必須です");
-    Objects.requireNonNull(shippingAddress, "配送先住所は必須です");
-    Objects.requireNonNull(shippingCost, "配送料は必須です");
-    Objects.requireNonNull(taxRate, "税率は必須です");
-
     if (cart.getItems().isEmpty()) {
       throw new IllegalArgumentException("空のカートから注文を作成できません");
     }
@@ -185,8 +179,6 @@ public class Order implements AggregateRoot<Order, OrderId> {
    * @throws DomainException 注文をキャンセルできない状態の場合
    */
   public Order cancel(String reason, Instant now) {
-    Objects.requireNonNull(reason, "キャンセル理由は必須です");
-
     if (reason.isBlank()) {
       throw new IllegalArgumentException("キャンセル理由は空白であってはなりません");
     }
@@ -226,9 +218,6 @@ public class Order implements AggregateRoot<Order, OrderId> {
    * @throws DomainException 注文の状態更新ができない場合
    */
   public Order markPaid(PaymentId paymentId, String paymentMethod, Instant now) {
-    Objects.requireNonNull(paymentId, "支払いIDは必須です");
-    Objects.requireNonNull(paymentMethod, "支払い方法は必須です");
-
     if (paymentMethod.isBlank()) {
       throw new IllegalArgumentException("支払い方法は空白であってはなりません");
     }
@@ -268,8 +257,6 @@ public class Order implements AggregateRoot<Order, OrderId> {
    * @throws DomainException 注文の状態更新ができない場合
    */
   public Order markShipped(@Nullable String trackingNumber, String shippingMethod, Instant now) {
-    Objects.requireNonNull(shippingMethod, "配送方法は必須です");
-
     if (shippingMethod.isBlank()) {
       throw new IllegalArgumentException("配送方法は空白であってはなりません");
     }
@@ -308,8 +295,6 @@ public class Order implements AggregateRoot<Order, OrderId> {
    * @throws DomainException 注文の状態更新ができない場合
    */
   public Order markDelivered(Instant deliveredAt, Instant now) {
-    Objects.requireNonNull(deliveredAt, "配送完了日時は必須です");
-
     if (!status.canTransitionTo(OrderStatus.DELIVERED)) {
       throw new DomainException("現在の状態 " + status + " の注文は配送完了にできません");
     }

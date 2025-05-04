@@ -11,10 +11,6 @@ public record CartItem(
 
   /** カートアイテムの検証を行うコンストラクタ */
   public CartItem {
-    Objects.requireNonNull(productId, "商品IDは必須です");
-    Objects.requireNonNull(productName, "商品名は必須です");
-    Objects.requireNonNull(unitPrice, "単価は必須です");
-
     if (productName.isBlank()) {
       throw new IllegalArgumentException("商品名は空白であってはなりません");
     }

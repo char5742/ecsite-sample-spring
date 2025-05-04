@@ -15,11 +15,6 @@ public record OrderItem(
 
   /** 注文アイテムの検証を行うコンストラクタ */
   public OrderItem {
-    Objects.requireNonNull(productId, "商品IDは必須です");
-    Objects.requireNonNull(productName, "商品名は必須です");
-    Objects.requireNonNull(unitPrice, "単価は必須です");
-    Objects.requireNonNull(subtotal, "小計は必須です");
-
     if (productName.isBlank()) {
       throw new IllegalArgumentException("商品名は空白であってはなりません");
     }

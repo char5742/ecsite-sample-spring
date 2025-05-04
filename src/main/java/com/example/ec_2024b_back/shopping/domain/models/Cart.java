@@ -70,10 +70,6 @@ public class Cart implements AggregateRoot<Cart, CartId> {
   public Cart addItem(
       ProductId productId, String productName, BigDecimal unitPrice, int quantity, Instant now) {
 
-    Objects.requireNonNull(productId, "商品IDは必須です");
-    Objects.requireNonNull(productName, "商品名は必須です");
-    Objects.requireNonNull(unitPrice, "単価は必須です");
-
     if (quantity <= 0) {
       throw new IllegalArgumentException("数量は1以上でなければなりません");
     }
@@ -119,8 +115,6 @@ public class Cart implements AggregateRoot<Cart, CartId> {
    * @return 更新されたカート
    */
   public Cart removeItem(ProductId productId, Instant now) {
-    Objects.requireNonNull(productId, "商品IDは必須です");
-
     Optional<CartItem> existingItem = findItemByProductId(productId);
 
     if (existingItem.isEmpty()) {
@@ -151,8 +145,6 @@ public class Cart implements AggregateRoot<Cart, CartId> {
    * @return 更新されたカート
    */
   public Cart updateItemQuantity(ProductId productId, int newQuantity, Instant now) {
-    Objects.requireNonNull(productId, "商品IDは必須です");
-
     if (newQuantity <= 0) {
       // 数量が0以下の場合は商品を削除
       return removeItem(productId, now);
