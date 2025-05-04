@@ -2,11 +2,11 @@ package com.example.ec_2024b_back.product.domain.models;
 
 import com.example.ec_2024b_back.product.ProductId;
 import com.example.ec_2024b_back.product.PromotionId;
+import com.example.ec_2024b_back.share.domain.services.TimeProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -106,14 +106,15 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
   /**
    * プロモーションをアクティブにします
    *
+   * @param timeProvider 現在時刻プロバイダー
    * @return 更新されたプロモーション
    */
-  public Promotion activate() {
+  public Promotion activate(TimeProvider timeProvider) {
     if (this.isActive) {
       return this; // 既にアクティブなら変更なし
     }
 
-    var now = LocalDateTime.now(ZoneId.systemDefault());
+    var now = timeProvider.now();
     if (now.isAfter(this.endDateTime)) {
       throw new IllegalStateException("終了日時を過ぎたプロモーションをアクティブにすることはできません");
     }
@@ -158,14 +159,15 @@ public class Promotion implements AggregateRoot<Promotion, PromotionId> {
    * 割引額を計算します
    *
    * @param originalPrice 元の価格
+   * @param timeProvider 現在時刻プロバイダー
    * @return 割引額
    */
-  public BigDecimal calculateDiscount(BigDecimal originalPrice) {
+  public BigDecimal calculateDiscount(BigDecimal originalPrice, TimeProvider timeProvider) {
     if (!isActive) {
       return BigDecimal.ZERO;
     }
 
-    var now = LocalDateTime.now(ZoneId.systemDefault());
+    var now = timeProvider.now();
     if (now.isBefore(startDateTime) || now.isAfter(endDateTime)) {
       return BigDecimal.ZERO;
     }

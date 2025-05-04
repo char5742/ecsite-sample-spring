@@ -27,6 +27,7 @@
 - **Lombok**: ボイラープレート削減 (`@Getter`, `@RequiredArgsConstructor`等)
 - **値オブジェクト**: IDなどの識別子は不変のrecordとして実装 (`record ProductId(UUID value)`)
 - **ファクトリーパターン**: オブジェクト生成の責務は専用のファクトリークラスに委譲
+- **時刻操作**: `LocalDateTime.now()`などの直接呼び出しは避け、`TimeProvider`のような抽象化インターフェースを使用
 
 ### 設定・プロパティ
 - **推奨**: `@ConfigurationProperties`による型安全なクラス
