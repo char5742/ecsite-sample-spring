@@ -36,11 +36,15 @@ flowchart TD
     userprofile --> share;
     userprofile --> auth;
     product --> share;
+    shopping --> share;
+    shopping --> auth;
+    shopping --> product;
 ```
 
 - **[auth](./05_MODULES/auth/README.md)**: 認証・アカウント管理
 - **[userprofile](./05_MODULES/userprofile/README.md)**: ユーザー情報・住所管理
 - **[product](./05_MODULES/product/README.md)**: 商品・カテゴリ・在庫・プロモーション管理
+- **[shopping](./05_MODULES/shopping/README.md)**: カート・注文・決済管理
 - **[share](./05_MODULES/share/README.md)**: 共通ユーティリティ（基盤モジュール）
 
 ## 技術スタック

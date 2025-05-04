@@ -16,15 +16,15 @@
 | オニオンアーキテクチャ | 依存関係の方向を内側に向けた多層アーキテクチャ。中心にドメインモデル、その外側にアプリケーション層、さらに外側にインフラストラクチャ層を配置。 | `domain`, `application`, `infrastructure` パッケージ構造 |
 | モジュラーモノリス | 単一のアプリケーションとしてデプロイされるが、内部的には明確な境界を持つモジュールに分割されたアーキテクチャ。 | `auth`, `share` モジュールの分離と明確なインターフェース |
 | リアクティブプログラミング | 非同期データストリームを使用したプログラミングパラダイム。イベント駆動型でバックプレッシャーを処理できる。 | `Mono<T>`, `Flux<T>`を使用した非同期処理 |
-| ドメインモデル | ビジネス領域の概念やルールを表現するオブジェクトモデル。 | `Account`, `Authentication`など |
-| Value Object (VO) | 同一性ではなく属性値によって識別される不変なオブジェクト。 | `Email`, `AccountId`, `ProductId` |
-| Entity (エンティティ) | 同一性を持ち、ライフサイクルを通じて変化する可能性のあるオブジェクト。 | `Account` (ID による同一性) |
+| ドメインモデル | ビジネス領域の概念やルールを表現するオブジェクトモデル。 | `Account`, `Authentication`, `Cart`, `Order`, `Payment`, `OrderStatus`, `PaymentStatus`など |
+| Value Object (VO) | 同一性ではなく属性値によって識別される不変なオブジェクト。 | `Email`, `AccountId`, `ProductId`, `CartId`, `OrderId`, `PaymentId` |
+| Entity (エンティティ) | 同一性を持ち、ライフサイクルを通じて変化する可能性のあるオブジェクト。 | `Account`, `Cart`, `Order`, `Payment` (ID による同一性) |
 | Factory Pattern (ファクトリーパターン) | オブジェクト生成のロジックを専用のクラスに集約する設計パターン。 | `ProductFactory`, `CategoryFactory` |
-| Aggregate (集約) | 一貫性の境界を形成するエンティティと値オブジェクトのクラスター。 | `Account` と関連する `Authentication` |
-| Repository (リポジトリ) | 集約の永続化と取得を抽象化するインターフェース。 | `Accounts` インターフェース |
+| Aggregate (集約) | 一貫性の境界を形成するエンティティと値オブジェクトのクラスター。 | `Account` と関連する `Authentication`, `Cart` と関連する `CartItem` |
+| Repository (リポジトリ) | 集約の永続化と取得を抽象化するインターフェース。 | `Accounts`, `Carts`, `Orders`, `Payments` インターフェース |
 | Application Service (アプリケーションサービス) | ユースケースを実装し、ドメインオブジェクトを調整するサービス。 | `LoginUsecase`, `SignupUsecase` |
 | DTO (Data Transfer Object) | レイヤー間でデータを受け渡すためのオブジェクト。 | APIリクエスト/レスポンスのDTOクラス |
-| ワークフロー | 一連の処理ステップを定義・実行するパターン。 | `LoginWorkflow`, `SignupWorkflow` |
+| ワークフロー | 一連の処理ステップを定義・実行するパターン。 | `LoginWorkflow`, `SignupWorkflow`, `AddItemToCartWorkflow`, `CreateOrderFromCartWorkflow` |
 | ステップ | ワークフロー内の個別の処理単位。 | `FindAccountByEmailStep`, `VerifyWithPasswordStep` |
 
 ## プロジェクト技術スタック
@@ -56,6 +56,7 @@
 | `auth` | 認証・ユーザーアカウント管理 | `Account`, `Authentication`, `LoginWorkflow`, `SignupWorkflow` |
 | `userprofile` | ユーザー情報・住所管理 | `UserProfile`, `Address`, `AddressFactory`, `CreateUserProfileWorkflow` |
 | `product` | 商品・カテゴリ・在庫・プロモーション管理 | `Product`, `Category`, `Inventory`, `Promotion`, `ProductFactory`, `CategoryFactory` |
+| `shopping` | カート・注文・決済管理 | `Cart`, `CartItem`, `Order`, `OrderItem`, `Payment`, `CartEvent`, `OrderEvent`, `PaymentEvent` |
 | `share` | 複数モジュールで共有されるコンポーネント | `Email`, `IdGenerator`, `DomainException` |
 
 ## 重要な略語
