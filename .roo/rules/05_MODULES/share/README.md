@@ -5,6 +5,7 @@
 ## 主要コンポーネント
 
 - **`Email`**: メールアドレスの値オブジェクト
+- **`AuditInfo`**: 監査情報（作成日時、更新日時）を保持するrecord
 - **`IdGenerator`**: UUID生成インターフェース
 - **`TimeProvider`**: 現在時刻取得のためのインターフェース
 - **`DomainException`**: 基底例外クラス

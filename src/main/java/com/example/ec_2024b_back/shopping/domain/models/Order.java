@@ -142,6 +142,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
    * @param updatedAt 更新日時
    * @return 復元された注文
    */
+  @SuppressWarnings("TooManyParameters")
   public static Order reconstruct(
       OrderId id,
       AccountId accountId,

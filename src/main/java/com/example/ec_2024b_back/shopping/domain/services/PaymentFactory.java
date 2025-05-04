@@ -7,7 +7,6 @@ import com.example.ec_2024b_back.shopping.domain.models.PaymentId;
 import com.google.errorprone.annotations.Var;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -25,9 +24,6 @@ public class PaymentFactory {
    * @return 開始された支払い
    */
   public Payment initiatePayment(Order order, String paymentMethod) {
-    Objects.requireNonNull(order, "注文は必須です");
-    Objects.requireNonNull(paymentMethod, "支払い方法は必須です");
-
     var paymentId = new PaymentId(idGenerator.newId());
     var now = Instant.now(clock);
 
@@ -44,9 +40,6 @@ public class PaymentFactory {
    */
   public Payment initiateExternalPayment(
       Order order, String paymentMethod, @Nullable String externalTransactionId) {
-    Objects.requireNonNull(order, "注文は必須です");
-    Objects.requireNonNull(paymentMethod, "支払い方法は必須です");
-
     var paymentId = new PaymentId(idGenerator.newId());
     var now = Instant.now(clock);
 

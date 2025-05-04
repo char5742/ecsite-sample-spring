@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.shopping.domain.models;
 
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
+import com.example.ec_2024b_back.share.domain.models.AuditInfo;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentAuthorized;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentCaptured;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentFailed;
@@ -21,17 +22,16 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Payment implements AggregateRoot<Payment, PaymentId> {
+
   private final PaymentId id;
   private final OrderId orderId;
   private final BigDecimal amount;
   private final PaymentStatus status;
   private final String paymentMethod;
   private final @Nullable String externalTransactionId;
-  private final @Nullable String errorCode;
-  private final @Nullable String errorMessage;
+  private final PaymentError error;
   private final List<PaymentEvent> events;
-  private final Instant createdAt;
-  private final Instant updatedAt;
+  private final AuditInfo auditInfo;
 
   /**
    * 新しい支払いを開始します
@@ -45,11 +45,6 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
    */
   public static Payment initiate(
       PaymentId id, OrderId orderId, BigDecimal amount, String paymentMethod, Instant now) {
-
-    Objects.requireNonNull(id, "支払いIDは必須です");
-    Objects.requireNonNull(orderId, "注文IDは必須です");
-    Objects.requireNonNull(amount, "金額は必須です");
-    Objects.requireNonNull(paymentMethod, "支払い方法は必須です");
 
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
       throw new IllegalArgumentException("金額は0より大きい値でなければなりません");
@@ -66,11 +61,9 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         PaymentStatus.PENDING,
         paymentMethod,
         null,
-        null,
-        null,
+        PaymentError.empty(),
         Collections.emptyList(),
-        now,
-        now);
+        AuditInfo.create(now));
   }
 
   /**
@@ -88,6 +81,7 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
    * @param updatedAt 更新日時
    * @return 復元された支払い
    */
+  @SuppressWarnings("TooManyParameters")
   public static Payment reconstruct(
       PaymentId id,
       OrderId orderId,
@@ -106,11 +100,9 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         status,
         paymentMethod,
         externalTransactionId,
-        errorCode,
-        errorMessage,
+        PaymentError.reconstruct(errorCode, errorMessage),
         Collections.emptyList(), // 復元時は空のイベントリスト
-        createdAt,
-        updatedAt);
+        AuditInfo.reconstruct(createdAt, updatedAt));
   }
 
   /**
@@ -124,8 +116,6 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
    */
   public Payment authorize(
       @Nullable String externalTransactionId, Instant authorizedAt, Instant now) {
-
-    Objects.requireNonNull(authorizedAt, "承認日時は必須です");
 
     if (!status.canTransitionTo(PaymentStatus.AUTHORIZED)) {
       throw new DomainException("現在の状態 " + status + " の支払いは承認できません");
@@ -143,11 +133,9 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         PaymentStatus.AUTHORIZED,
         paymentMethod,
         externalTransactionId,
-        errorCode,
-        errorMessage,
+        error,
         Collections.unmodifiableList(newEvents),
-        createdAt,
-        now);
+        auditInfo.update(now));
   }
 
   /**
@@ -173,11 +161,9 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         PaymentStatus.CAPTURED,
         paymentMethod,
         externalTransactionId,
-        errorCode,
-        errorMessage,
+        error,
         Collections.unmodifiableList(newEvents),
-        createdAt,
-        now);
+        auditInfo.update(now));
   }
 
   /**
@@ -190,16 +176,11 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
    * @throws DomainException 支払いの状態更新ができない場合
    */
   public Payment fail(@Nullable String errorCode, String errorMessage, Instant now) {
-
-    Objects.requireNonNull(errorMessage, "エラーメッセージは必須です");
-
-    if (errorMessage.isBlank()) {
-      throw new IllegalArgumentException("エラーメッセージは空白であってはなりません");
-    }
-
     if (!status.canTransitionTo(PaymentStatus.FAILED)) {
       throw new DomainException("現在の状態 " + status + " の支払いは失敗状態にできません");
     }
+
+    var newError = PaymentError.create(errorCode, errorMessage);
 
     List<PaymentEvent> newEvents = new ArrayList<>(this.events);
     newEvents.add(new PaymentFailed(id, orderId, amount, errorCode, errorMessage, now));
@@ -211,11 +192,9 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         PaymentStatus.FAILED,
         paymentMethod,
         externalTransactionId,
-        errorCode,
-        errorMessage,
+        newError,
         Collections.unmodifiableList(newEvents),
-        createdAt,
-        now);
+        auditInfo.update(now));
   }
 
   /**
@@ -230,9 +209,6 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
    */
   public Payment refund(
       BigDecimal refundAmount, String reason, @Nullable String externalTransactionId, Instant now) {
-
-    Objects.requireNonNull(refundAmount, "返金金額は必須です");
-    Objects.requireNonNull(reason, "返金理由は必須です");
 
     if (reason.isBlank()) {
       throw new IllegalArgumentException("返金理由は空白であってはなりません");
@@ -272,11 +248,45 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         newStatus,
         paymentMethod,
         externalTransactionId,
-        errorCode,
-        errorMessage,
+        error,
         Collections.unmodifiableList(newEvents),
-        createdAt,
-        now);
+        auditInfo.update(now));
+  }
+
+  /**
+   * 作成日時を取得します
+   *
+   * @return 作成日時
+   */
+  public Instant getCreatedAt() {
+    return auditInfo.createdAt();
+  }
+
+  /**
+   * 更新日時を取得します
+   *
+   * @return 更新日時
+   */
+  public Instant getUpdatedAt() {
+    return auditInfo.updatedAt();
+  }
+
+  /**
+   * エラーコードを取得します
+   *
+   * @return エラーコード
+   */
+  public @Nullable String getErrorCode() {
+    return error.errorCode();
+  }
+
+  /**
+   * エラーメッセージを取得します
+   *
+   * @return エラーメッセージ
+   */
+  public @Nullable String getErrorMessage() {
+    return error.errorMessage();
   }
 
   @Override
@@ -313,18 +323,12 @@ public class Payment implements AggregateRoot<Payment, PaymentId> {
         + ", externalTransactionId='"
         + externalTransactionId
         + '\''
-        + ", errorCode='"
-        + errorCode
-        + '\''
-        + ", errorMessage='"
-        + errorMessage
-        + '\''
+        + ", error="
+        + error
         + ", events="
         + events
-        + ", createdAt="
-        + createdAt
-        + ", updatedAt="
-        + updatedAt
+        + ", auditInfo="
+        + auditInfo
         + '}';
   }
 }

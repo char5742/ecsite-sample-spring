@@ -16,7 +16,8 @@
   - `OrderItem`: 注文内の商品アイテム
   - `OrderStatus`: 注文状態（CREATED, PAID, SHIPPED, DELIVERED, COMPLETED, CANCELLED）
 - **`Payment`**: 支払いを表す集約ルート
-  - `PaymentStatus`: 支払い状態（PENDING, AUTHORIZED, CAPTURED, REFUNDED, FAILED, CANCELLED）
+  - `PaymentStatus`: 支払い状態（PENDING, AUTHORIZED, CAPTURED, REFUNDED, PARTIALLY_REFUNDED, FAILED, CANCELLED）
+  - `PaymentError`: 支払いエラー情報（エラーコード、エラーメッセージ）
 
 ### ドメインサービス
 - **`CartFactory`**: カートオブジェクトの生成を担当
@@ -37,6 +38,8 @@
 - **`Carts`**: カートの永続化と検索
 - **`Orders`**: 注文の永続化と検索
 - **`Payments`**: 支払いの永続化と検索
+  - `MongoPayments`: Paymentsリポジトリのインフラ実装
+  - `PaymentDocument`: MongoDB用のドキュメントクラス
 
 ### ワークフロー
 #### カート関連
@@ -76,3 +79,5 @@
 - ファクトリーパターンによるオブジェクト生成の一元管理
 - リアクティブプログラミングによる非同期処理（Mono/Flux）
 - ワークフローは単一目的の処理に特化
+- 監査情報やエラー情報は専用クラスに分離
+- 不要なnullチェックは省略し、パッケージレベルでnonnull設定を活用

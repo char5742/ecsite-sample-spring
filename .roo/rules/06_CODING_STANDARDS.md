@@ -28,6 +28,9 @@
 - **値オブジェクト**: IDなどの識別子は不変のrecordとして実装 (`record ProductId(UUID value)`)
 - **ファクトリーパターン**: オブジェクト生成の責務は専用のファクトリークラスに委譲
 - **時刻操作**: `LocalDateTime.now()`などの直接呼び出しは避け、`TimeProvider`のような抽象化インターフェースを使用
+- **監査情報の分離**: 作成日時・更新日時などの監査情報は`AuditInfo`クラスに集約
+- **エラー情報の分離**: エラーコード・エラーメッセージなどのエラー情報は専用のクラスに集約（例: `PaymentError`）
+- **警告の抑制**: TooManyParametersなどの警告は必要に応じて`@SuppressWarnings`で抑制（ビルダーパターン導入前に検討）
 
 ### 設定・プロパティ
 - **推奨**: `@ConfigurationProperties`による型安全なクラス
