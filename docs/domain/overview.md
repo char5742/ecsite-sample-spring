@@ -147,7 +147,7 @@ flowchart TD
 
 ### 認証コンテキスト (Authentication Context)
 
-#### コマンド
+#### ユーザー向けコマンド
 
 | コマンド名 | 説明 | 主なパラメータ |
 |------------|------|------------|
@@ -168,7 +168,7 @@ flowchart TD
 
 ### ユーザープロファイルコンテキスト (User Profile Context)
 
-#### コマンド
+#### ユーザー向けコマンド
 
 | コマンド名 | 説明 | 主なパラメータ |
 |------------|------|------------|
@@ -190,20 +190,6 @@ flowchart TD
 
 ### 商品管理コンテキスト (Product Management Context)
 
-#### コマンド
-
-| コマンド名 | 説明 | 主なパラメータ |
-|------------|------|------------|
-| `CreateProduct` | 商品作成 | `name`, `description`, `price`, `categoryId` |
-| `UpdateProduct` | 商品情報更新 | `productId`, `name`, `description`, `price` |
-| `RetireProduct` | 商品取扱終了 | `productId` |
-| `CreateCategory` | カテゴリ作成 | `name`, `description`, `parentCategoryId` |
-| `UpdateCategory` | カテゴリ更新 | `categoryId`, `name`, `description` |
-| `AdjustInventory` | 在庫調整 | `productId`, `quantityChange`, `note` |
-| `CreatePromotion` | プロモーション作成 | `name`, `discountType`, `discountValue`, `startDate`, `endDate` |
-| `ActivatePromotion` | プロモーション有効化 | `promotionId` |
-| `DeactivatePromotion` | プロモーション無効化 | `promotionId` |
-
 #### イベント
 
 | イベント名 | 説明 | 主な情報 | 購読コンテキスト |
@@ -221,7 +207,7 @@ flowchart TD
 
 ### ショッピングコンテキスト (Shopping Context)
 
-#### コマンド
+#### ユーザー向けコマンド
 
 | コマンド名 | 説明 | 主なパラメータ |
 |------------|------|------------|
@@ -234,9 +220,6 @@ flowchart TD
 | `CancelOrder` | 注文キャンセル | `orderId`, `reason` |
 | `InitiatePayment` | 支払い開始 | `orderId`, `paymentMethod` |
 | `AuthorizePayment` | 支払い承認 | `paymentId`, `authorizationCode` |
-| `CapturePayment` | 支払い確定 | `paymentId` |
-| `FailPayment` | 支払い失敗処理 | `paymentId`, `errorCode`, `errorMessage` |
-| `RefundPayment` | 支払い返金 | `paymentId`, `amount`, `reason` |
 
 #### イベント
 
@@ -254,57 +237,18 @@ flowchart TD
 | `OrderDelivered` | 注文配達完了 | `orderId`, `deliveredAt` | 通知コンテキスト |
 | `OrderCompleted` | 注文完了 | `orderId` | 通知コンテキスト |
 | `PaymentAuthorized` | 支払い承認完了 | `paymentId`, `orderId`, `amount`, `paymentMethod` | 通知コンテキスト |
-| `PaymentCaptured` | 支払い確定完了 | `paymentId`, `orderId`, `amount` | - |
 | `PaymentFailed` | 支払い失敗発生 | `paymentId`, `orderId`, `amount`, `errorCode`, `errorMessage` | 通知コンテキスト |
-| `PaymentRefunded` | 支払い返金完了 | `paymentId`, `orderId`, `amount`, `reason` | 通知コンテキスト |
-
-### 物流コンテキスト (Logistics Context)
-
-#### コマンド
-
-| コマンド名 | 説明 | 主なパラメータ |
-|------------|------|------------|
-| `CreateShipment` | 配送作成 | `orderId`, `shippingAddress`, `shippingMethod` |
-| `UpdateShipmentStatus` | 配送状態更新 | `shipmentId`, `newStatus`, `trackingNumber` |
-| `MarkShipmentArrived` | 配送到着登録 | `shipmentId`, `arrivedAt` |
-| `MarkShipmentDelivered` | 配送完了登録 | `shipmentId`, `receiverName`, `deliveredAt` |
-| `RecordShipmentReturn` | 配送返送登録 | `shipmentId`, `reason`, `returnedAt` |
-
-#### イベント
-
-| イベント名 | 説明 | 主な情報 | 購読コンテキスト |
-|------------|------|---------|--------------|
-| `ShipmentCreated` | 配送作成完了 | `shipmentId`, `orderId`, `shippingAddress`, `shippingMethod` | ショッピングコンテキスト |
-| `ShipmentStatusUpdated` | 配送状態更新完了 | `shipmentId`, `previousStatus`, `currentStatus`, `trackingNumber` | ショッピングコンテキスト, 通知コンテキスト |
-| `ShipmentArrived` | 配送到着登録完了 | `shipmentId`, `trackingNumber`, `arrivedAt` | ショッピングコンテキスト, 通知コンテキスト |
-| `ShipmentDelivered` | 配送完了登録完了 | `shipmentId`, `receiverName`, `deliveredAt` | ショッピングコンテキスト, 通知コンテキスト |
-| `ShipmentReturned` | 配送返送登録完了 | `shipmentId`, `reason`, `returnedAt` | ショッピングコンテキスト, 通知コンテキスト |
-
-### 通知コンテキスト (Notification Context)
-
-#### コマンド
-
-| コマンド名 | 説明 | 主なパラメータ |
-|------------|------|------------|
-| `SendNotification` | 通知送信 | `userId`, `type`, `content`, `channel` |
-
-#### イベント
-
-| イベント名 | 説明 | 主な情報 | 購読コンテキスト |
-|------------|------|---------|--------------|
-| `NotificationSent` | 通知送信完了 | `notificationId`, `userId`, `type`, `sentAt` | - |
-| `NotificationFailed` | 通知送信失敗 | `notificationId`, `userId`, `type`, `reason` | - |
 
 ---
 
 ## ユーザーインターフェース向けの主要なクエリ
 
-以下のデータは、HasuraのGraphQL APIを通じて提供されます：
+以下のデータは、HasuraのGraphQL APIを通じて一般ユーザー向けに提供されます：
 
 ### ユーザー関連
 
-- ユーザープロファイル情報
-- 保存された住所リスト
+- ユーザー自身のプロファイル情報
+- 自分の保存した住所リスト
 
 ### 商品関連
 
@@ -315,11 +259,19 @@ flowchart TD
 
 ### ショッピング関連
 
-- カート内容表示
-- 注文履歴一覧
-- 注文詳細情報
-- 支払い情報
+- 自分のカート内容表示
+- 自分の注文履歴一覧
+- 自分の注文詳細情報
+- 自分の支払い情報
+- 自分の注文に関する配送状況の追跡情報
 
-### 物流関連
+## ※注意※
 
-- 配送状況の追跡情報
+本ドキュメントでは一般ユーザー向けの機能のみを記載しています。管理者向けの機能については別途ドキュメントを参照してください。
+
+管理者向け機能には以下が含まれます：
+- 商品管理機能（商品登録・更新）
+- 在庫管理機能（在庫調整）
+- プロモーション管理機能
+- 物流管理機能（配送状態更新）
+- 支払い管理機能（決済確定・返金処理）
