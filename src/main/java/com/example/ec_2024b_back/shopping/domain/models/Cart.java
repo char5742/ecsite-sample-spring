@@ -2,6 +2,7 @@ package com.example.ec_2024b_back.shopping.domain.models;
 
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.product.ProductId;
+import com.example.ec_2024b_back.shopping.CartId;
 import com.example.ec_2024b_back.shopping.domain.models.CartEvent.CartCleared;
 import com.example.ec_2024b_back.shopping.domain.models.CartEvent.ItemAddedToCart;
 import com.example.ec_2024b_back.shopping.domain.models.CartEvent.ItemQuantityChanged;

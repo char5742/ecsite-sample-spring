@@ -1,8 +1,8 @@
 package com.example.ec_2024b_back.shopping.domain.repositories;
 
-import com.example.ec_2024b_back.shopping.domain.models.OrderId;
+import com.example.ec_2024b_back.shopping.OrderId;
+import com.example.ec_2024b_back.shopping.PaymentId;
 import com.example.ec_2024b_back.shopping.domain.models.Payment;
-import com.example.ec_2024b_back.shopping.domain.models.PaymentId;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentStatus;
 import org.jmolecules.ddd.types.Repository;
 import reactor.core.publisher.Flux;

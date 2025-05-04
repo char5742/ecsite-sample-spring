@@ -2,7 +2,7 @@ package com.example.ec_2024b_back.shopping.application.workflow;
 
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
-import com.example.ec_2024b_back.shopping.domain.models.OrderId;
+import com.example.ec_2024b_back.shopping.OrderId;
 import com.example.ec_2024b_back.shopping.domain.models.Payment;
 import java.util.function.Function;
 import reactor.core.publisher.Mono;

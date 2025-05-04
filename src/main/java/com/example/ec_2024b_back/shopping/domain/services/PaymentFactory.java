@@ -1,9 +1,9 @@
 package com.example.ec_2024b_back.shopping.domain.services;
 
 import com.example.ec_2024b_back.share.domain.services.IdGenerator;
+import com.example.ec_2024b_back.shopping.PaymentId;
 import com.example.ec_2024b_back.shopping.domain.models.Order;
 import com.example.ec_2024b_back.shopping.domain.models.Payment;
-import com.example.ec_2024b_back.shopping.domain.models.PaymentId;
 import com.google.errorprone.annotations.Var;
 import java.time.Clock;
 import java.time.Instant;

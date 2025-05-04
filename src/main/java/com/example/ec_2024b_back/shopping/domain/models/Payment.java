@@ -2,6 +2,8 @@ package com.example.ec_2024b_back.shopping.domain.models;
 
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
 import com.example.ec_2024b_back.share.domain.models.AuditInfo;
+import com.example.ec_2024b_back.shopping.OrderId;
+import com.example.ec_2024b_back.shopping.PaymentId;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentAuthorized;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentCaptured;
 import com.example.ec_2024b_back.shopping.domain.models.PaymentEvent.PaymentFailed;

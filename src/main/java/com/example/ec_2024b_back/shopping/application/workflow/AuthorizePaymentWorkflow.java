@@ -2,8 +2,8 @@ package com.example.ec_2024b_back.shopping.application.workflow;
 
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
+import com.example.ec_2024b_back.shopping.PaymentId;
 import com.example.ec_2024b_back.shopping.domain.models.Payment;
-import com.example.ec_2024b_back.shopping.domain.models.PaymentId;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;

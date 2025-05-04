@@ -2,8 +2,8 @@ package com.example.ec_2024b_back.shopping.domain.services;
 
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.share.domain.services.IdGenerator;
+import com.example.ec_2024b_back.shopping.CartId;
 import com.example.ec_2024b_back.shopping.domain.models.Cart;
-import com.example.ec_2024b_back.shopping.domain.models.CartId;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;

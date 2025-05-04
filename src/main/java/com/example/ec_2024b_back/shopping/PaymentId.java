@@ -1,4 +1,4 @@
-package com.example.ec_2024b_back.shopping.domain.models;
+package com.example.ec_2024b_back.shopping;
 
 import java.util.UUID;
 import org.jmolecules.ddd.types.Identifier;

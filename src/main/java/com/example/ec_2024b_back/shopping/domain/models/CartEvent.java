@@ -1,6 +1,7 @@
 package com.example.ec_2024b_back.shopping.domain.models;
 
 import com.example.ec_2024b_back.product.ProductId;
+import com.example.ec_2024b_back.shopping.CartId;
 import java.time.Instant;
 import org.jmolecules.event.types.DomainEvent;
 

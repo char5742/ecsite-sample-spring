@@ -4,7 +4,7 @@ import com.example.ec_2024b_back.logistics.ShipmentId;
 import com.example.ec_2024b_back.logistics.domain.models.Shipment;
 import com.example.ec_2024b_back.share.domain.services.IdGenerator;
 import com.example.ec_2024b_back.share.domain.services.TimeProvider;
-import com.example.ec_2024b_back.shopping.domain.models.OrderId;
+import com.example.ec_2024b_back.shopping.OrderId;
 import java.time.Instant;
 import java.time.ZoneId;
 import org.jspecify.annotations.Nullable;

@@ -1,8 +1,8 @@
 package com.example.ec_2024b_back.shopping.domain.repositories;
 
 import com.example.ec_2024b_back.auth.AccountId;
+import com.example.ec_2024b_back.shopping.CartId;
 import com.example.ec_2024b_back.shopping.domain.models.Cart;
-import com.example.ec_2024b_back.shopping.domain.models.CartId;
 import org.jmolecules.ddd.types.Repository;
 import reactor.core.publisher.Mono;
 

@@ -2,7 +2,7 @@ package com.example.ec_2024b_back.logistics.domain.repositories;
 
 import com.example.ec_2024b_back.logistics.ShipmentId;
 import com.example.ec_2024b_back.logistics.domain.models.Shipment;
-import com.example.ec_2024b_back.shopping.domain.models.OrderId;
+import com.example.ec_2024b_back.shopping.OrderId;
 import org.jmolecules.ddd.types.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

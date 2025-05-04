@@ -8,7 +8,7 @@ import com.example.ec_2024b_back.logistics.domain.models.ShipmentEvent.ShipmentR
 import com.example.ec_2024b_back.logistics.domain.models.ShipmentEvent.ShipmentStatusUpdated;
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
 import com.example.ec_2024b_back.share.domain.models.AuditInfo;
-import com.example.ec_2024b_back.shopping.domain.models.OrderId;
+import com.example.ec_2024b_back.shopping.OrderId;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class Shipment implements AggregateRoot<Shipment, ShipmentId> {
    * 注文情報から新しい配送情報を作成します
    *
    * @param id 配送ID
-   * @param orderId 注文ID
+   * @param orderId 注文参照ID
    * @param shippingAddress 配送先住所
    * @param shippingMethod 配送方法
    * @param estimatedDeliveryDate 配送予定日時
@@ -88,7 +88,7 @@ public class Shipment implements AggregateRoot<Shipment, ShipmentId> {
    * データストアから配送情報を復元します
    *
    * @param id 配送ID
-   * @param orderId 注文ID
+   * @param orderId 注文参照ID
    * @param shippingAddress 配送先住所
    * @param shippingMethod 配送方法
    * @param status 配送状態

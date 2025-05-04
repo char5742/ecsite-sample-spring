@@ -1,5 +1,6 @@
 package com.example.ec_2024b_back.auth.infrastructure.api;
 
+import com.example.ec_2024b_back.auth.api.AuthHandlers;
 import com.example.ec_2024b_back.auth.application.usecase.LoginUsecase;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,11 @@ import reactor.core.publisher.Mono;
 /** メールでのログインを処理するハンドラークラス. */
 @Component
 @RequiredArgsConstructor
-public class LoginWithEmailHandler {
+public class LoginWithEmailHandler implements AuthHandlers {
 
   private final LoginUsecase loginUsecase;
 
+  @Override
   public Mono<ServerResponse> login(ServerRequest request) {
     return request
         .bodyToMono(LoginRequest.class)
@@ -23,6 +25,12 @@ public class LoginWithEmailHandler {
         .flatMap(token -> ServerResponse.ok().bodyValue(new LoginResponse(token.value())))
         .onErrorResume(
             e -> ServerResponse.status(HttpStatus.UNAUTHORIZED).bodyValue(e.getMessage()));
+  }
+
+  @Override
+  public Mono<ServerResponse> signup(ServerRequest request) {
+    // This method is implemented by SignupWithEmailHandler
+    return ServerResponse.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 
   /**

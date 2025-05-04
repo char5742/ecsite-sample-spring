@@ -38,13 +38,13 @@ class SignupWithEmailHandlerTest {
     signupWithEmailHandler = new SignupWithEmailHandler(signupUsecase);
     RouterFunction<ServerResponse> routerFunction =
         RouterFunctions.route()
-            .POST("/api/authentication/signup", signupWithEmailHandler::login)
+            .POST("/api/authentication/signup", signupWithEmailHandler::signup)
             .build();
     webTestClient = WebTestClient.bindToRouterFunction(routerFunction).build();
   }
 
   @Test
-  void login_shouldReturnOk_whenSignupSucceeds() {
+  void signup_shouldReturnOk_whenSignupSucceeds() {
     // Given
     var emailStr = "test@example.com";
     var password = "password";
@@ -67,7 +67,7 @@ class SignupWithEmailHandlerTest {
   }
 
   @Test
-  void login_shouldReturnUnauthorized_whenEmailAlreadyExists() {
+  void signup_shouldReturnUnauthorized_whenEmailAlreadyExists() {
     // Given
     var emailStr = "existing@example.com";
     var email = new Email(emailStr);
@@ -91,7 +91,7 @@ class SignupWithEmailHandlerTest {
   }
 
   @Test
-  void login_shouldReturnUnauthorized_whenSignupFails() {
+  void signup_shouldReturnUnauthorized_whenSignupFails() {
     // Given
     var emailStr = "test@example.com";
     var password = "password";
