@@ -19,6 +19,6 @@ public class GenerateJWTStepImpl implements GenerateJWTStep {
   public Mono<LoginWorkflow.Context.AccountWithJwt> apply(LoginWorkflow.Context.Verified v) {
     return Mono.just(new JsonWebToken(jsonWebTokenProvider.generateToken(v.account())))
         .map(jwt -> new LoginWorkflow.Context.AccountWithJwt(v.account(), jwt))
-        .onErrorMap(e -> new LoginWorkflow.InvalidPasswordException());
+        .onErrorMap(_ -> new LoginWorkflow.InvalidPasswordException());
   }
 }

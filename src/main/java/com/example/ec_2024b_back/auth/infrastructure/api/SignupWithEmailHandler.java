@@ -29,7 +29,7 @@ public class SignupWithEmailHandler implements AuthHandlers {
         .bodyToFlux(SignupRequest.class)
         .single()
         .flatMap(login -> signupUsecase.execute(new Email(login.email()), login.password()))
-        .flatMap(token -> ServerResponse.ok().bodyValue("signup success"))
+        .flatMap(_ -> ServerResponse.ok().bodyValue("signup success"))
         .onErrorResume(
             e -> ServerResponse.status(HttpStatus.UNAUTHORIZED).bodyValue(e.getMessage()));
   }

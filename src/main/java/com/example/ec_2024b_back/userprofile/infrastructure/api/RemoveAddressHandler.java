@@ -20,7 +20,7 @@ public class RemoveAddressHandler {
         .bodyToMono(RemoveAddressRequest.class)
         .flatMap(req -> removeAddressUsecase.execute(req.userProfileId(), req.addressId()))
         .flatMap(
-            profile ->
+            _ ->
                 ServerResponse.ok()
                     .bodyValue(new RemoveAddressResponse("Address removed successfully")))
         .onErrorResume(

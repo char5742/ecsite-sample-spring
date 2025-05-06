@@ -31,7 +31,7 @@ public class AddAddressHandler {
                     req.phoneNumber(),
                     req.isDefault()))
         .flatMap(
-            profile ->
+            _ ->
                 ServerResponse.status(HttpStatus.CREATED)
                     .bodyValue(new AddAddressResponse("Address added successfully")))
         .onErrorResume(

@@ -12,6 +12,7 @@ import com.example.ec_2024b_back.shopping.domain.models.OrderEvent.OrderPlaced;
 import com.example.ec_2024b_back.shopping.domain.models.OrderEvent.OrderShipped;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,7 +86,7 @@ public class Order implements AggregateRoot<Order, OrderId> {
     var subtotal = cart.calculateTotal();
 
     // 税額の計算
-    var tax = subtotal.multiply(taxRate).setScale(0, BigDecimal.ROUND_HALF_UP);
+    var tax = subtotal.multiply(taxRate).setScale(0, RoundingMode.HALF_UP);
 
     // 合計金額の計算
     var totalAmount = subtotal.add(tax).add(shippingCost);
