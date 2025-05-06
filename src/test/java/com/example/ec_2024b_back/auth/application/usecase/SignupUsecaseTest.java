@@ -70,6 +70,32 @@ class SignupUsecaseTest {
   }
 
   @Test
+  void execute_shouldPublishDomainEvents_whenAccountHasDomainEvents() {
+    // Given
+    // アカウント作成のドメインイベントを持つアカウントを作成
+    var accountId = UUID.randomUUID();
+    var accountWithEvent = Account.create(accountId, ImmutableList.of());
+    assertThat(accountWithEvent.getDomainEvents()).hasSize(1);
+
+    when(signupWorkflow.execute(any(Email.class), anyString()))
+        .thenReturn(Mono.just(accountWithEvent));
+    when(accounts.save(any(Account.class))).thenReturn(Mono.just(accountWithEvent));
+
+    // When
+    var resultMono = signupUsecase.execute(email, password);
+
+    // Then
+    StepVerifier.create(resultMono)
+        .assertNext(
+            account -> {
+              assertThat(account).isEqualTo(accountWithEvent);
+              // イベントが発行されたことを検証
+              verify(event).publishEvent(accountWithEvent.getDomainEvents().get(0));
+            })
+        .verifyComplete();
+  }
+
+  @Test
   void execute_shouldThrowAuthenticationFailedException_whenWorkflowFails() {
     // Given
     var cause = new RuntimeException("Workflow error");

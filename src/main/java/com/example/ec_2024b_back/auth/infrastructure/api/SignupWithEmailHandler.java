@@ -26,8 +26,7 @@ public class SignupWithEmailHandler implements AuthHandlers {
   @Override
   public Mono<ServerResponse> signup(ServerRequest request) {
     return request
-        .bodyToFlux(SignupRequest.class)
-        .single()
+        .bodyToMono(SignupRequest.class)
         .flatMap(login -> signupUsecase.execute(new Email(login.email()), login.password()))
         .flatMap(_ -> ServerResponse.ok().bodyValue("signup success"))
         .onErrorResume(

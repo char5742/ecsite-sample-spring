@@ -6,6 +6,7 @@ plugins {
 	id 'org.graalvm.buildtools.native' version '0.10.6'
 	id 'com.diffplug.spotless' version '7.0.3'
 	id "net.ltgt.errorprone" version '4.1.0'
+	id 'com.adarshr.test-logger' version '4.0.0'
 }
 
 group = 'com.example'
@@ -38,6 +39,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava'
 	implementation 'com.google.guava:guava:33.4.8-jre'
 	implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
 	implementation 'org.jmolecules:jmolecules-onion-architecture:1.10.0'
@@ -90,6 +92,10 @@ jacocoTestReport {
         xml.required = true
 		html.required = true
     }
+}
+
+testlogger {
+    showFullStackTraces true
 }
 
 apply from: "spotless.gradle"

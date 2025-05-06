@@ -22,7 +22,7 @@ public class JsonWebTokenProvider {
   private final JWTProperties properties;
 
   private Algorithm getAlgorithm() {
-    return Algorithm.HMAC256(properties.getSecret().getBytes(StandardCharsets.UTF_8));
+    return Algorithm.HMAC256(properties.secret().getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -85,7 +85,7 @@ public class JsonWebTokenProvider {
    */
   private String createToken(Map<String, Object> claims, String subject) {
     var now = Instant.now();
-    var expiry = now.plus(properties.getExpirationMillis(), ChronoUnit.MILLIS);
+    var expiry = now.plus(properties.expirationMillis(), ChronoUnit.MILLIS);
 
     return JWT.create()
         .withPayload(claims)

@@ -5,7 +5,6 @@ import com.example.ec_2024b_back.product.ProductId;
 import com.example.ec_2024b_back.shopping.application.usecase.AddItemToCartUsecase;
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -36,9 +35,7 @@ public class AddItemToCartHandler {
                         new AddItemToCartResponse(
                             cart.getId().toString(),
                             "Item added to cart successfully",
-                            cart.calculateTotal())))
-        .onErrorResume(
-            e -> ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(e.getMessage()));
+                            cart.calculateTotal())));
   }
 
   /**
