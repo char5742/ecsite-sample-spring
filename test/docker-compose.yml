@@ -1,0 +1,21 @@
+services:
+  # APIテスト実行サービス
+  api-tests:
+    build: .
+    volumes:
+      - ./api-tests:/tests/api-tests:ro
+    network_mode: host
+    environment:
+      - API_BASE_URL=http://localhost:8080
+    command: ["run", "/tests/api-tests/**/*.yml"]
+
+  # 単一テスト実行用（docker-compose run one-test api-tests/auth/login.yml）
+  one-test:
+    build: .
+    volumes:
+      - ./api-tests:/tests/api-tests:ro
+    network_mode: host
+    environment:
+      - API_BASE_URL=http://localhost:8080
+    entrypoint: ["runn", "run"]
+    command: ["--help"]  # デフォルトはヘルプ表示
