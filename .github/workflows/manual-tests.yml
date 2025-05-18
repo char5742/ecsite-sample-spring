@@ -1,13 +1,32 @@
-name: Merge Tests
+name: Manual Tests
 
 on:
-  push:
-    branches: [ main ]
-  merge_group:
-    types: [checks_requested]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - fast
+          - integration
+          - database
+          - api
+          - runn
+          - custom
+      custom_include_tags:
+        description: 'Tags to include (for custom type)'
+        required: false
+        default: ''
+      custom_exclude_tags:
+        description: 'Tags to exclude (for custom type)'
+        required: false
+        default: ''
 
 jobs:
-  full-tests:
+  test:
     runs-on: ubuntu-latest
     
     services:
@@ -20,7 +39,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --health-start-period 30s
+        if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'database' || github.event.inputs.test_type == 'api' || github.event.inputs.test_type == 'runn' }}
     
     steps:
     - uses: actions/checkout@v4
@@ -47,35 +66,47 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     
-    - name: Check code formatting
-      run: ./gradlew spotlessCheck
-    
-    - name: Build with Gradle
+    - name: Build application
       run: ./gradlew build -x test
     
-    # JUnit Tests
-    - name: Run all unit tests
-      run: ./gradlew test
+    # Run JUnit tests based on selection
+    - name: Run selected tests
+      run: |
+        case "${{ github.event.inputs.test_type }}" in
+          "all")
+            ./gradlew test
+            ;;
+          "fast")
+            ./gradlew test -PincludeTags="Fast"
+            ;;
+          "integration")
+            ./gradlew test -PincludeTags="IntegrationTest"
+            ;;
+          "database")
+            ./gradlew test -PincludeTags="DatabaseTest"
+            ;;
+          "api")
+            ./gradlew test -PincludeTags="ApiTest"
+            ;;
+          "custom")
+            GRADLE_COMMAND="./gradlew test"
+            if [ -n "${{ github.event.inputs.custom_include_tags }}" ]; then
+              GRADLE_COMMAND="$GRADLE_COMMAND -PincludeTags=${{ github.event.inputs.custom_include_tags }}"
+            fi
+            if [ -n "${{ github.event.inputs.custom_exclude_tags }}" ]; then
+              GRADLE_COMMAND="$GRADLE_COMMAND -PexcludeTags=${{ github.event.inputs.custom_exclude_tags }}"
+            fi
+            echo "Running: $GRADLE_COMMAND"
+            $GRADLE_COMMAND
+            ;;
+        esac
       env:
         SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ecsite-test
+      if: ${{ github.event.inputs.test_type != 'runn' }}
     
-    - name: Run integration tests
-      run: ./gradlew test -PincludeTags="IntegrationTest"
-      env:
-        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ecsite-test
-    
-    - name: Run database tests
-      run: ./gradlew test -PincludeTags="DatabaseTest"
-      env:
-        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ecsite-test
-      
-    - name: Run API tests
-      run: ./gradlew test -PincludeTags="ApiTest"
-      env:
-        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ecsite-test
-    
-    # Runn API Tests
-    - name: Start Spring Boot application for Runn tests
+    # Run Runn tests if selected
+    - name: Start Spring Boot for Runn tests
+      if: ${{ github.event.inputs.test_type == 'runn' || github.event.inputs.test_type == 'all' }}
       run: |
         export SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/ecsite-test
         ./gradlew bootRun &
@@ -92,17 +123,11 @@ jobs:
       env:
         SPRING_PROFILES_ACTIVE: test
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build Runn test runner image
+    - name: Run Runn API tests
+      if: ${{ github.event.inputs.test_type == 'runn' || github.event.inputs.test_type == 'all' }}
       run: |
         cd test
         docker build -t runn-api-tests .
-    
-    - name: Run Runn API tests
-      run: |
-        cd test
         docker run --rm \
           --network host \
           -v $(pwd)/api-tests:/tests/api-tests:ro \
@@ -116,7 +141,6 @@ jobs:
           kill $(cat spring-boot.pid) || true
         fi
         pkill -f "gradlew bootRun" || true
-        pkill -f "GradleWrapperMain bootRun" || true
     
     - name: Generate test report
       run: ./gradlew jacocoTestReport
@@ -126,15 +150,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: all-test-reports
+        name: test-reports
         path: |
           build/reports/tests/
           build/reports/jacoco/
           test/reports/
-    
-    - name: Upload build reports
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: build-reports
-        path: build/reports/

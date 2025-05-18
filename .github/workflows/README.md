@@ -1,112 +1,76 @@
 # GitHub Actions ワークフロー
 
-このディレクトリには、このプロジェクトのCI/CDワークフローが含まれています。
+このディレクトリには、プロジェクトのCI/CDワークフローが含まれています。
 
-## ワークフロー一覧
+## ワークフロー構成
 
-### 1. CI (Light Tests) (`ci.yml`)
+### 1. CI Pipeline (`ci.yml`)
 - **トリガー**: 
   - mainブランチ以外へのプッシュ
-  - mainブランチへのプルリクエスト
+  - PRの作成・更新
 - **実行内容**:
   - コードフォーマットチェック（Spotless）
-  - プロジェクトのビルド（テストなし）
-  - 軽量テスト（Fastタグ）のみ実行
-  - 失敗時のレポートアップロード
+  - ビルド
+  - 軽量テスト（Fastタグ）
+  - API仕様に関連するPRの場合、Runnテストも実行
 - **目的**: 開発中の素早いフィードバック
 
-### 2. Merge Tests (Heavy) (`merge-tests.yml`)
+### 2. Merge Tests (`merge-tests.yml`)
 - **トリガー**: 
-  - mainブランチへのプッシュ（マージ時）
-  - マージグループのチェック要求
+  - mainブランチへのプッシュ
+  - マージグループのチェック
 - **実行内容**:
-  - コードフォーマットチェック（Spotless）
-  - プロジェクトのビルド
-  - 全テストの実行
-  - 統合テスト、データベーステスト、APIテストの実行
-  - テストカバレッジレポートの生成
-  - 全レポートのアップロード
-- **目的**: マージ前の完全な検証
+  - 全JUnitテスト（unit、integration、database、API）
+  - Runn APIテスト
+  - カバレッジレポート生成
+- **目的**: 本番デプロイ前の完全な検証
 
-### 3. タグ付きテスト (`test-with-tags.yml`)
-- **トリガー**: 手動実行（workflow_dispatch）
-- **パラメータ**:
-  - `include_tags`: 実行するテストタグ（カンマ区切り）
-  - `exclude_tags`: 除外するテストタグ（カンマ区切り）
-- **使用例**:
-  - Fastタグのみ実行: `include_tags: Fast`
-  - Slowタグを除外: `exclude_tags: Slow`
-  - 複数タグの組み合わせ: `include_tags: Fast,IntegrationTest`
+### 3. Manual Tests (`manual-tests.yml`)
+- **トリガー**: 手動実行
+- **オプション**:
+  - all: すべてのテスト
+  - fast: 高速テストのみ
+  - integration: 統合テスト
+  - database: データベーステスト
+  - api: APIテスト（JUnit）
+  - runn: Runn APIテスト
+  - custom: カスタムタグ指定
+- **目的**: 特定のテストセットの手動実行
 
-### 4. カテゴリ別テスト (`test-categories.yml`)
-- **トリガー**: 
-  - mainブランチへのプルリクエスト
-  - 手動実行
-- **ジョブ**:
-  - `test-fast`: Fastタグのテストのみ実行
-  - `test-integration`: IntegrationTestタグのテストのみ実行
-  - `test-without-slow`: Slowタグ以外のテストを実行
+## テストタグ
 
-## テスト戦略
+- `@Fast`: 高速実行可能な単体テスト
+- `@Slow`: 実行に時間がかかるテスト
+- `@IntegrationTest`: システム統合テスト
+- `@DatabaseTest`: データベース連携テスト
+- `@ApiTest`: APIエンドポイントテスト
 
-### 開発時（コミット/PR時）
-- 軽量テスト（Fastタグ）のみを実行
-- 素早いフィードバックループを提供
-- フォーマットとビルドの確認
+## Runn APIテスト
 
-### マージ時
-- 全テストを実行
-- 統合テスト、データベーステスト、APIテストを含む
-- カバレッジレポートの生成
-- 完全な品質保証
+- `/test/api-tests/`配下のYAMLファイルで定義
+- PR時は`[api]`タグまたは`api-test`ラベルで実行
+- マージ時は自動実行
 
-## 使用されているテストタグ
-
-プロジェクトで定義されているテストタグ：
-- `@Fast`: 高速に実行されるユニットテスト（開発時に実行）
-- `@Slow`: 実行に時間がかかるテスト（マージ時に実行）
-- `@IntegrationTest`: 統合テスト（マージ時に実行）
-- `@DatabaseTest`: データベースを使用するテスト（マージ時に実行）
-- `@ApiTest`: APIテスト（マージ時に実行）
-
-## キャッシュ戦略
-
-全てのワークフローで以下のキャッシュが設定されています：
-- Gradleの依存関係キャッシュ
-- Gradleラッパーのキャッシュ
-
-キャッシュキーはGradleファイルのハッシュ値に基づいて生成されます。
-
-## セキュリティとベストプラクティス
-
-1. JDK 17（Temurin）を使用
-2. 最新のGitHub Actionsを使用（actions/checkout@v4など）
-3. gradlewに実行権限を付与してから実行
-4. テスト失敗時もレポートをアップロード（`if: always()`）
-5. Pull RequestではFastテストを先に実行し、フィードバックを素早く提供
-
-## ローカルでのテスト実行
-
-ワークフローで実行されるコマンドは、ローカルでも同様に実行できます：
+## ローカルでの実行方法
 
 ```bash
-# フォーマットチェック
-./gradlew spotlessCheck
-
-# ビルド（テストなし）
-./gradlew build -x test
-
-# 軽量テスト（開発時）
+# 軽量テスト
 ./gradlew test -PincludeTags="Fast"
 
-# 全テスト実行（マージ前）
+# すべてのテスト
 ./gradlew test
 
-# 特定カテゴリのテスト
-./gradlew test -PincludeTags="IntegrationTest"
-./gradlew test -PincludeTags="DatabaseTest"
-./gradlew test -PincludeTags="ApiTest"
+# Runn APIテスト
+cd test
+make test
 
-# 重いテストを除外
-./gradlew test -PexcludeTags="Slow"
+# 特定のRunnテスト
+make test-one FILE=api-tests/auth/login.yml
 ```
+
+## セキュリティ設定
+
+- JDK 23（GraalVM）を使用
+- 依存関係のキャッシュでビルド高速化
+- MongoDB 7をテスト用データベースとして使用
+- テスト失敗時もレポートを必ずアップロード

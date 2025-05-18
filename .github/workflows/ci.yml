@@ -1,14 +1,14 @@
-name: CI (Light Tests)
+name: CI Pipeline
 
 on:
   push:
     branches-ignore:
       - main
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  light-tests:
+  quick-tests:
     runs-on: ubuntu-latest
     
     steps:
@@ -51,10 +51,84 @@ jobs:
       with:
         name: test-reports
         path: build/reports/tests/
+
+  api-tests:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' && 
+      (contains(github.event.pull_request.title, '[api]') ||
+       contains(github.event.pull_request.labels.*.name, 'api-test'))
     
-    - name: Upload build reports
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 23
+      uses: actions/setup-java@v4
+      with:
+        java-version: '23'
+        distribution: 'graalvm'
+    
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    
+    - name: Build application
+      run: ./gradlew build -x test
+    
+    - name: Start Spring Boot application
+      run: |
+        export SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/ecsite-test
+        ./gradlew bootRun &
+        echo $! > spring-boot.pid
+        # アプリケーションの起動を待機
+        for i in {1..30}; do
+          if curl -f http://localhost:8080/api/authentication/login -X POST -H "Content-Type: application/json" -d '{}' 2>/dev/null | grep -q "status"; then
+            echo "Application is ready"
+            break
+          fi
+          echo "Waiting for application to start... attempt $i"
+          sleep 5
+        done
+      env:
+        SPRING_PROFILES_ACTIVE: test
+    
+    - name: Run API tests with Runn
+      run: |
+        cd test
+        docker build -t runn-api-tests .
+        docker run --rm \
+          --network host \
+          -v $(pwd)/api-tests:/tests/api-tests:ro \
+          -e API_BASE_URL=http://localhost:8080 \
+          runn-api-tests run /tests/api-tests/**/*.yml
+    
+    - name: Stop Spring Boot application
+      if: always()
+      run: |
+        if [ -f spring-boot.pid ]; then
+          kill $(cat spring-boot.pid) || true
+        fi
+        pkill -f "gradlew bootRun" || true
+    
+    - name: Upload test results
       uses: actions/upload-artifact@v4
       if: failure()
       with:
-        name: build-reports
-        path: build/reports/
+        name: api-test-results
+        path: |
+          test/reports/
+          spring-app.log
