@@ -11,7 +11,7 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.infrastructure.api.SignupWithEmailHandler.SignupRequest;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class SignupWithEmailHandlerTest {
     var emailStr = "test@example.com";
     var password = "password";
     var uuid = UUID.randomUUID();
-    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new AccountId(uuid), List.of());
 
     when(signupUsecase.execute(any(Email.class), anyString())).thenReturn(Mono.just(account));
 

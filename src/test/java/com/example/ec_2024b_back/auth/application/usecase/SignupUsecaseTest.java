@@ -13,7 +13,7 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class SignupUsecaseTest {
   void setUp() {
     email = new Email("test@example.com");
     password = "password";
-    testAccount = Account.reconstruct(new AccountId(UUID.randomUUID()), ImmutableList.of());
+    testAccount = Account.reconstruct(new AccountId(UUID.randomUUID()), List.of());
   }
 
   @Test
@@ -74,7 +74,7 @@ class SignupUsecaseTest {
     // Given
     // アカウント作成のドメインイベントを持つアカウントを作成
     var accountId = UUID.randomUUID();
-    var accountWithEvent = Account.create(accountId, ImmutableList.of());
+    var accountWithEvent = Account.create(accountId, List.of());
     assertThat(accountWithEvent.getDomainEvents()).hasSize(1);
 
     when(signupWorkflow.execute(any(Email.class), anyString()))

@@ -6,7 +6,7 @@ import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.example.ec_2024b_back.auth.domain.models.EmailAuthentication;
 import com.example.ec_2024b_back.auth.domain.models.EmailAuthentication.HashedPassword;
 import com.example.ec_2024b_back.auth.domain.services.AccountFactory;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class CreateAccountWithEmailStepImpl implements CreateAccountWithEmailSte
         new EmailAuthentication(context.email(), new HashedPassword(hashedPassword));
 
     // アカウント作成
-    var account = accountFactory.create(ImmutableList.of(auth));
+    var account = accountFactory.create(List.of(auth));
 
     return Mono.just(new SignupWorkflow.Context.Created(account));
   }

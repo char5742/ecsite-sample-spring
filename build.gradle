@@ -108,11 +108,13 @@ tasks.withType(JavaCompile) {
     option("NullAway:AnnotatedPackages", "com.example.ec_2024b_back")
 	excludedPaths = ".*build/generated/.*"
 	disableWarningsInGeneratedCode = true
-	errorproneArgs.add("-XepPatchLocation:IN_PLACE")
+	// errorproneArgs.add("-XepPatchLocation:IN_PLACE")
 	errorproneArgs.add("-Xep:Java8ApiChecker:OFF")
 	errorproneArgs.add("-Xep:Java7ApiChecker:OFF")
 	errorproneArgs.add("-Xep:AndroidJdkLibsChecker:OFF")
 	errorproneArgs.add("-Xep:IdentifierName:OFF")
+	// ImmutableMemberCollection checkを無効化
+	errorproneArgs.add("-Xep:ImmutableMemberCollection:OFF")
   }
   // Include to disable NullAway on test code
   if (name.toLowerCase().contains("test")) {

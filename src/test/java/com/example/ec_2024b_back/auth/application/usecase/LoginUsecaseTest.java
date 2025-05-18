@@ -13,7 +13,7 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.JsonWebToken;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ class LoginUsecaseTest {
   @Test
   void execute_shouldReturnJsonWebToken_whenWorkflowSucceeds() {
     var account = mock(Account.class);
-    when(account.getDomainEvents()).thenReturn(ImmutableList.of());
+    when(account.getDomainEvents()).thenReturn(List.of());
     var expectedToken = new AccountWithJwt(account, new JsonWebToken("dummy-jwt-token"));
     when(loginWorkflow.execute(any(Email.class), anyString())).thenReturn(Mono.just(expectedToken));
 

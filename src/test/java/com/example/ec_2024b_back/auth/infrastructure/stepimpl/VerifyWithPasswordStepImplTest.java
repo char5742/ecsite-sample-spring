@@ -9,7 +9,7 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.EmailAuthentication;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +36,7 @@ class VerifyWithPasswordStepImplTest {
     var password = new EmailAuthentication.HashedPassword(hashedPassword);
     var authentication = new EmailAuthentication(email, password);
     var uuid = UUID.randomUUID();
-    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of(authentication));
+    var account = Account.reconstruct(new AccountId(uuid), List.of(authentication));
     var context = new LoginWorkflow.Context.Founded(account, rawPassword);
 
     when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(true);
@@ -60,7 +60,7 @@ class VerifyWithPasswordStepImplTest {
     var password = new EmailAuthentication.HashedPassword(hashedPassword);
     var authentication = new EmailAuthentication(email, password);
     var uuid = UUID.randomUUID();
-    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of(authentication));
+    var account = Account.reconstruct(new AccountId(uuid), List.of(authentication));
     var context = new LoginWorkflow.Context.Founded(account, rawPassword);
 
     when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(false);
@@ -75,7 +75,7 @@ class VerifyWithPasswordStepImplTest {
   void apply_shouldThrowNoEmailAuthenticationException_whenNoEmailAuthenticationExists() {
     // Arrange
     var uuid = UUID.randomUUID();
-    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of()); // 空の認証リスト
+    var account = Account.reconstruct(new AccountId(uuid), List.of()); // 空の認証リスト
     var context = new LoginWorkflow.Context.Founded(account, "password");
 
     // Act & Assert

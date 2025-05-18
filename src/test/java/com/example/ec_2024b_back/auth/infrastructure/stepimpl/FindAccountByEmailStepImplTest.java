@@ -8,7 +8,7 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class FindAccountByEmailStepImplTest {
     var password = "password";
     var input = new LoginWorkflow.Context.Input(email, password);
     var uuid = UUID.randomUUID();
-    var account = Account.reconstruct(new AccountId(uuid), ImmutableList.of());
+    var account = Account.reconstruct(new AccountId(uuid), List.of());
 
     when(accounts.findByEmail(email)).thenReturn(Mono.just(account));
 

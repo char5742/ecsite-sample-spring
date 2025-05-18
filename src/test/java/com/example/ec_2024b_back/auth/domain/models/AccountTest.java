@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ class AccountTest {
         new EmailAuthentication.HashedPassword(
             "$2a$10$abcdefghijklmnopqrstuvwxyno12345678901234567890123abc");
     var auth = new EmailAuthentication(email, password);
-    var authentications = ImmutableList.<Authentication>of(auth);
+    var authentications = List.<Authentication>of(auth);
 
     // Act
     var account = Account.create(uuid, authentications);
@@ -43,7 +43,7 @@ class AccountTest {
     // Arrange
     var uuid = UUID.randomUUID();
     var accountId = new AccountId(uuid);
-    var authentications = ImmutableList.<Authentication>of();
+    var authentications = List.<Authentication>of();
 
     // Act
     var account = Account.reconstruct(accountId, authentications);
@@ -65,7 +65,7 @@ class AccountTest {
         new EmailAuthentication.HashedPassword(
             "$2a$10$abcdefghijklmnopqrstuvwxyno12345678901234567890123abc");
     var auth = new EmailAuthentication(email, password);
-    var authentications = ImmutableList.<Authentication>of(auth);
+    var authentications = List.<Authentication>of(auth);
 
     // Act
     var account = Account.reconstruct(accountId, authentications);

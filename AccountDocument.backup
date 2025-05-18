@@ -3,6 +3,8 @@ package com.example.ec_2024b_back.auth.infrastructure.repository;
 import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +20,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public record AccountDocument(
     @Id String id,
     @Indexed(unique = true) String email,
-    List<AuthenticationInfo> authenticationInfos) {
+    ImmutableList<AuthenticationInfo> authenticationInfos) {
 
   /** SpringData用のNo-argコンストラクタ */
   public AccountDocument() {
@@ -51,7 +53,7 @@ public record AccountDocument(
   }
 
   /** 認証情報 */
-  public record AuthenticationInfo(@Nullable String type, Map<String, String> credential) {
+  public record AuthenticationInfo(@Nullable String type, ImmutableMap<String, String> credential) {
 
     /** SpringData用のNo-argコンストラクタ */
     public AuthenticationInfo() {

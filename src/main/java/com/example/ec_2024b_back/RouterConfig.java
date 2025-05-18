@@ -4,7 +4,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import com.example.ec_2024b_back.auth.api.AuthHandlers;
-import com.example.ec_2024b_back.sample.infrastructure.api.CreateSampleHandler;
+import com.example.ec_2024b_back.sample.api.SampleHandlers;
 import com.example.ec_2024b_back.shopping.api.ShoppingHandlers;
 import com.example.ec_2024b_back.userprofile.api.UserProfileHandlers;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +23,7 @@ public class RouterConfig {
    * @param authHandlers 認証系ハンドラー
    * @param userProfileHandlers ユーザープロファイル系ハンドラー
    * @param shoppingHandlers ショッピング系ハンドラー
-   * @param createSampleHandler サンプル作成ハンドラー
+   * @param sampleHandlers サンプルハンドラー
    * @return ルーター機能
    */
   @Bean
@@ -31,7 +31,7 @@ public class RouterConfig {
       AuthHandlers authHandlers,
       UserProfileHandlers userProfileHandlers,
       ShoppingHandlers shoppingHandlers,
-      CreateSampleHandler createSampleHandler) {
+      SampleHandlers sampleHandlers) {
 
     return route()
         // 認証関連エンドポイント
@@ -68,7 +68,8 @@ public class RouterConfig {
             "/api/payments", accept(MediaType.APPLICATION_JSON), shoppingHandlers::initiatePayment)
 
         // サンプル関連エンドポイント
-        .POST("/api/samples", accept(MediaType.APPLICATION_JSON), createSampleHandler::handle)
+        .POST("/api/samples", accept(MediaType.APPLICATION_JSON), sampleHandlers::createSample)
+        .GET("/api/samples/{id}", sampleHandlers::getSample)
         .build();
   }
 }

@@ -8,6 +8,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
@@ -27,10 +29,47 @@ public class SampleHandlersImpl implements SampleHandlers {
   }
 
   @Override
+  public Mono<ServerResponse> createSample(ServerRequest request) {
+    return request
+        .bodyToMono(CreateSampleRequest.class)
+        .flatMap(req -> createSample(req.name(), req.description()))
+        .map(sample -> new CreateSampleResponse(sample.getId().toString(), sample.getName()))
+        .flatMap(response -> ServerResponse.ok().bodyValue(response))
+        .onErrorResume(
+            IllegalArgumentException.class,
+            e ->
+                ServerResponse.badRequest()
+                    .bodyValue(
+                        new ErrorResponse(
+                            e.getMessage() != null ? e.getMessage() : "Invalid request")));
+  }
+
+  @Override
   public Mono<Sample> getSample(String id) {
     return Mono.fromCallable(() -> UUID.fromString(id))
         .map(SampleId::new)
         .flatMap(samples::findById)
         .switchIfEmpty(Mono.error(new IllegalArgumentException("サンプルが見つかりません: " + id)));
   }
+
+  @Override
+  public Mono<ServerResponse> getSample(ServerRequest request) {
+    String id = request.pathVariable("id");
+    return getSample(id)
+        .map(sample -> new GetSampleResponse(sample.getId().toString(), sample.getName()))
+        .flatMap(response -> ServerResponse.ok().bodyValue(response))
+        .onErrorResume(IllegalArgumentException.class, e -> ServerResponse.notFound().build());
+  }
+
+  /** サンプル作成リクエスト。 */
+  public record CreateSampleRequest(String name, @Nullable String description) {}
+
+  /** サンプル作成レスポンス。 */
+  public record CreateSampleResponse(String id, String name) {}
+
+  /** サンプル取得レスポンス。 */
+  public record GetSampleResponse(String id, String name) {}
+
+  /** エラーレスポンス。 */
+  public record ErrorResponse(String message) {}
 }
