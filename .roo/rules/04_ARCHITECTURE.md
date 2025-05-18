@@ -28,6 +28,7 @@ graph TD
 - **Domain層（中心）**: モデル、リポジトリインターフェース、ドメインイベント
 - **Application層**: ユースケース、ワークフロー、ステップの定義
 - **Infrastructure層**: ハンドラ、リポジトリ実装、外部サービス連携
+- **Config層**: アプリケーション全体の設定（セキュリティ、Web設定、ルーティング）
 
 ## モジュール構成と依存関係
 
@@ -42,6 +43,7 @@ flowchart TD
     shopping --> product;
     logistics --> share;
     logistics --> shopping;
+    sample --> share;
 ```
 
 - **[auth](./05_MODULES/auth/README.md)**: 認証・アカウント管理
@@ -50,6 +52,14 @@ flowchart TD
 - **[shopping](./05_MODULES/shopping/README.md)**: カート・注文・決済管理
 - **[logistics](./05_MODULES/logistics/README.md)**: 配送管理・配送状態追跡
 - **[share](./05_MODULES/share/README.md)**: 共通ユーティリティ（基盤モジュール）
+- **[sample](./05_MODULES/sample/README.md)**: 新規モジュール作成の参考となるサンプルモジュール
+
+## 設定クラス（configパッケージ）
+
+- **SecurityConfig**: パスワードエンコーダーなどのセキュリティ関連設定
+- **WebConfig**: エラーハンドリングなどのWeb関連設定
+- **WebSecurityConfig**: Spring Security WebFluxのセキュリティフィルターチェーン設定
+- **RouterConfig**: WebFluxの関数型ルーティング設定（ルートレベルに配置）
 
 ## 技術スタック
 

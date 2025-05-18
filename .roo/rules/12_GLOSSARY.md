@@ -46,7 +46,7 @@
 | Spotless | コードフォーマッター | 7.0.3 | コードスタイルの統一 |
 | Error Prone | 静的解析ツール | 2.37.0 | コンパイル時のバグ検出 |
 | Testcontainers | テスト用コンテナ管理 | JUnit5統合版 | 結合テスト時のMongoDB環境提供 |
-| Gradle | ビルドツール | Wrapper 8.8 | ビルド・テスト・依存関係管理 |
+| Gradle | ビルドツール | Wrapper 8.13 | ビルド・テスト・依存関係管理 |
 | Lefthook | Gitフック管理ツール | 1.5.5 | コミット前の自動チェック |
 
 ## モジュール構成
@@ -57,6 +57,8 @@
 | `userprofile` | ユーザー情報・住所管理 | `UserProfile`, `Address`, `AddressFactory`, `CreateUserProfileWorkflow` |
 | `product` | 商品・カテゴリ・在庫・プロモーション管理 | `Product`, `Category`, `Inventory`, `Promotion`, `ProductFactory`, `CategoryFactory` |
 | `shopping` | カート・注文・決済管理 | `Cart`, `CartItem`, `Order`, `OrderItem`, `Payment`, `CartEvent`, `OrderEvent`, `PaymentEvent` |
+| `logistics` | 配送管理 | `Shipment`, `ShipmentEvent`, `ShipmentStatus`, `ShipmentFactory` |
+| `sample` | サンプルモジュール（参考実装） | `Sample`, `SampleEvent`, `SampleFactory`, `CreateSampleWorkflow` |
 | `share` | 複数モジュールで共有されるコンポーネント | `Email`, `IdGenerator`, `DomainException` |
 
 ## 重要な略語

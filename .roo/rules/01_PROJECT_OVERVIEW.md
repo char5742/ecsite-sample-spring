@@ -16,7 +16,12 @@ src/
 │   │   └── com/example/ec_2024b_back/
 │   │       ├── Ec2024bBackApplication.java
 │   │       ├── auth/        # 認証・認可
+│   │       ├── config/      # アプリケーション設定
+│   │       ├── logistics/   # 配送管理
+│   │       ├── product/     # 商品管理
+│   │       ├── sample/      # サンプルモジュール（参考実装）
 │   │       ├── share/       # 共通コンポーネント
+│   │       ├── shopping/    # ショッピング機能
 │   │       └── userprofile/ # ユーザー情報
 │   └── resources/
 └── test/
