@@ -12,5 +12,7 @@
  *   <li>workflowimpl: ワークフローの具体的な実装
  * </ul>
  */
-@org.jspecify.annotations.NullMarked
+@InfrastructureRing
 package com.example.ec_2024b_back.sample.infrastructure;
+
+import org.jmolecules.architecture.onion.simplified.InfrastructureRing;

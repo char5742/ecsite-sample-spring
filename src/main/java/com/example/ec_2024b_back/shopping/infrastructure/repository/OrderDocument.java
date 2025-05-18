@@ -112,10 +112,10 @@ public record OrderDocument(
     /** ドメインモデルからドキュメントに変換 */
     public static OrderItemDocument fromDomain(OrderItem item) {
       return new OrderItemDocument(
-          item.getProductId().toString(),
-          item.getProductName(),
-          item.getUnitPrice().toString(),
-          item.getQuantity());
+          item.productId().toString(),
+          item.productName(),
+          item.unitPrice().toString(),
+          item.quantity());
     }
 
     /** ドキュメントからドメインモデルに変換 */

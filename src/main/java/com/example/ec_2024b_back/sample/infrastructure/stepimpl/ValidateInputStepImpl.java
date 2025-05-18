@@ -17,7 +17,7 @@ public class ValidateInputStepImpl implements ValidateInputStep {
   public Mono<Void> execute(String name, @Nullable String description) {
     return Mono.fromRunnable(
         () -> {
-          if (name == null || name.isBlank()) {
+          if (name.isBlank()) {
             throw new IllegalArgumentException("名前は必須です");
           }
 

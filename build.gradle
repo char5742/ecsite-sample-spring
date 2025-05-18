@@ -17,7 +17,6 @@ java {
 	targetCompatibility = JavaVersion.VERSION_23
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(23)
-		vendor = JvmVendorSpec.GRAAL_VM
 	}
 }
 

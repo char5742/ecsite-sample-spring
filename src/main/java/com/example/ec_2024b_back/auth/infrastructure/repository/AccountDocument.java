@@ -4,7 +4,8 @@ import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -24,7 +25,7 @@ public record AccountDocument(
 
   /** SpringData用のNo-argコンストラクタ */
   public AccountDocument() {
-    this("", "", ImmutableList.of());
+    this("", "", new ArrayList<>());
   }
 
   /**
@@ -43,7 +44,7 @@ public record AccountDocument(
   public record AuthenticationInfo(String type, ImmutableMap<String, String> credential) {
     /** SpringData用のNo-argコンストラクタ */
     public AuthenticationInfo() {
-      this("", ImmutableMap.of());
+      this("", new HashMap<>());
     }
   }
 }

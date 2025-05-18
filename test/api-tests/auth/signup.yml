@@ -1,83 +1,107 @@
 # サインアップ API テスト
 desc: ユーザー登録機能のテスト
 
-# ベースURL (環境変数で上書き可能)
-host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
+# 設定
+runners:
+  apitest:
+    endpoint: http://localhost:8080
 
-# タグ
-labels:
-  - auth
-  - signup
-
-# テスト変数
+# 現在時刻をエポックタイムとして変数化
 vars:
-  testEmail: "test-{{ now | unixtime }}@example.com"  # タイムスタンプを使用してユニークなメールアドレスを生成
-  testPassword: "Test123!"
+  timestamp: '{{ now | unixtime }}'
 
 # テストステップ
-steps:
+runs:
   # 正常系: 新規ユーザー登録
   - desc: 新規ユーザー登録
     req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "{{ vars.testEmail }}"
-        password: "{{ vars.testPassword }}"
-    test:
-      # ステータスコードの検証
-      status: 200
-      # レスポンスボディの検証
-      body: "signup success"
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: "test-{{ vars.timestamp }}@example.com"
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body == "signup success"
 
   # 異常系: 既存メールアドレスでの登録
   - desc: 既存メールアドレスでの登録（失敗する）
     req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "{{ vars.testEmail }}"  # 上で登録済みのメールアドレス
-        password: "{{ vars.testPassword }}"
-    test:
-      # エラーステータスコードの検証
-      status: 401  # 実装では UNAUTHORIZED が返される
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-{{ vars.timestamp }}@example.com
+              password: Test123!
+    test: |
+      current.res.status == 401
 
   # 異常系: 無効なメールアドレス
   - desc: 無効なメールアドレスでの登録
     req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "invalid-email"
-        password: "{{ vars.testPassword }}"
-    test:
-      status: 401  # 実装ではエラー時は UNAUTHORIZED が返される
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: invalid-email
+              password: Test123!
+    test: |
+      current.res.status == 400
 
-  # 異常系: 必須フィールドが欠けている
+  # 異常系: 弱いパスワード
+  - desc: 弱いパスワードでの登録（短すぎる）
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-short@example.com
+              password: "123"
+    test: |
+      current.res.status == 400
+
+  # 異常系: メールアドレスなし
   - desc: メールアドレスなしでの登録
     req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        password: "{{ vars.testPassword }}"
-    test:
-      status: 400  # Bad Request
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              password: Test123!
+    test: |
+      current.res.status == 400
 
+  # 異常系: パスワードなし
   - desc: パスワードなしでの登録
     req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-no-password@example.com"
-    test:
-      status: 400  # Bad Request
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-no-password@example.com
+    test: |
+      current.res.status == 400
+
+  # 異常系: 空のボディ
+  - desc: 空のボディでの登録
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

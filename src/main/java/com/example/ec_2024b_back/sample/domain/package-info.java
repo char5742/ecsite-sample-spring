@@ -11,5 +11,7 @@
  *   <li>services: ドメインサービス（ファクトリーなど）
  * </ul>
  */
-@org.jspecify.annotations.NullMarked
+@DomainRing
 package com.example.ec_2024b_back.sample.domain;
+
+import org.jmolecules.architecture.onion.simplified.DomainRing;

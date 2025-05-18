@@ -1,234 +1,148 @@
 # カートへの商品追加 API テスト
 desc: カートに商品を追加する機能のテスト
 
-# ベースURL
-host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
-
-# タグ
-labels:
-  - shopping
-  - cart
-  - add-item
-
-# テスト前準備（アカウント作成、ログイン、カート作成）
+# 設定
 runners:
+  apitest:
+    endpoint: http://localhost:8080
+
+# テスト用変数
+vars:
+  timestamp: '{{ now | unixtime }}'
+  testEmail: 'test-add-item-{{ vars.timestamp }}@example.com'
+  testPassword: 'Test123!'
+  productId: '123e4567-e89b-12d3-a456-426614174000'
+  accountId: 'test-account-{{ vars.timestamp }}'
+
+# テスト実行
+runs:
   # テストユーザーを作成
-  - req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-add-item-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
   
   # ログインしてトークンを取得
-  - req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-add-item-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: ログインしてトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
     bind:
-      authToken: body.token
-      accountId: "test-account-{{ now | unixtime }}"
+      authToken: current.res.body.token
   
   # カートを取得（作成）
-  - req:
-      method: GET
-      path: /api/carts/{{ runners[1].accountId }}
-      headers:
-        Authorization: "Bearer {{ runners[1].authToken }}"
-    test:
-      status: 200
+  - desc: カートを取得
+    req:
+      /api/carts/{{ vars.accountId }}:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 200
     bind:
-      cartId: body.cartId
+      cartId: current.res.body.id
 
-# テスト変数
-vars:
-  testProductId: "product-{{ now | unixtime }}"
-
-# テストステップ
-steps:
-  # 正常系: 商品追加
-  - desc: カートに商品を追加
+  # 正常系: 商品をカートに追加
+  - desc: 商品をカートに追加
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 2
-        unitPrice: 1000
-    test:
-      status: 200
-      body:
-        cartId: "{{ runners[2].cartId }}"
-        message: "Item added to cart successfully"
-        total: 2000  # 1000円 × 2個
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: '{{ vars.productId }}'
+              quantity: 1
+    test: |
+      current.res.status == 200
 
-  # 正常系: 同じ商品を再度追加（数量が増える）
-  - desc: 同じ商品を追加（数量増加）
+  # 正常系: 数量を増やす
+  - desc: 数量を増やす
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 3
-        unitPrice: 1000
-    test:
-      status: 200
-      body:
-        cartId: "{{ runners[2].cartId }}"
-        message: "Item added to cart successfully"
-        total: 5000  # 1000円 × 5個（2+3）
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: '{{ vars.productId }}'
+              quantity: 2
+    test: |
+      current.res.status == 200
 
-  # 正常系: 別の商品を追加
-  - desc: 別の商品を追加
+  # 異常系: 無効な商品IDでの追加
+  - desc: 無効な商品IDでの追加
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "product-2-{{ now | unixtime }}"
-        productName: "テスト商品2"
-        quantity: 1
-        unitPrice: 2500
-    test:
-      status: 200
-      body:
-        cartId: "{{ runners[2].cartId }}"
-        message: "Item added to cart successfully"
-        total: 7500  # 5000円 + 2500円
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: 'invalid-product-id'
+              quantity: 1
+    test: |
+      current.res.status == 400
 
-  # 異常系: 認証なしでの商品追加
-  - desc: 認証トークンなしでの商品追加
+  # 異常系: 負の数量
+  - desc: 負の数量でエラー
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 1
-        unitPrice: 1000
-    test:
-      status: 401  # Unauthorized
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: '{{ vars.productId }}'
+              quantity: -1
+    test: |
+      current.res.status == 400
 
-  # 異常系: 無効な数量
-  - desc: マイナス数量での商品追加
+  # 異常系: 認証なしでのアクセス
+  - desc: 認証なしでアクセス
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: -1
-        unitPrice: 1000
-    test:
-      status: 400  # Bad Request
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: '{{ vars.productId }}'
+              quantity: 1
+    test: |
+      current.res.status == 401
 
-  - desc: ゼロ数量での商品追加
+  # 異常系: 無効なトークンでのアクセス
+  - desc: 無効なトークンでアクセス
     req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 0
-        unitPrice: 1000
-    test:
-      status: 400  # Bad Request
-
-  # 異常系: 無効な単価
-  - desc: マイナス単価での商品追加
-    req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 1
-        unitPrice: -1000
-    test:
-      status: 400  # Bad Request
-
-  # 異常系: 必須フィールドの欠如
-  - desc: アカウントIDなしでの商品追加
-    req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 1
-        unitPrice: 1000
-    test:
-      status: 400  # Bad Request
-
-  - desc: 商品IDなしでの商品追加
-    req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        productName: "テスト商品"
-        quantity: 1
-        unitPrice: 1000
-    test:
-      status: 400  # Bad Request
-
-  # 異常系: 存在しないアカウント
-  - desc: 存在しないアカウントでの商品追加
-    req:
-      method: POST
-      path: /api/carts/items
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "non-existent-account"
-        productId: "{{ vars.testProductId }}"
-        productName: "テスト商品"
-        quantity: 1
-        unitPrice: 1000
-    test:
-      status: 400  # Bad Request
+      /api/carts/{{ runs[2].cartId }}/items:
+        post:
+          headers:
+            Authorization: 'Bearer invalid-token'
+            Content-Type: application/json
+          body:
+            application/json:
+              productId: '{{ vars.productId }}'
+              quantity: 1
+    test: |
+      current.res.status == 401

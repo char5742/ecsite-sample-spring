@@ -28,6 +28,9 @@ public class LoginWithEmailHandler implements AuthHandlers {
         .flatMap(token -> ServerResponse.ok().bodyValue(new LoginResponse(token.value())))
         .switchIfEmpty(Mono.error(new IllegalStateException("No token generated")))
         .onErrorMap(
+            LoginUsecase.AuthenticationFailedException.class,
+            e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication failed", e))
+        .onErrorMap(
             LoginWorkflow.UserNotFoundException.class,
             e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication failed", e))
         .onErrorMap(

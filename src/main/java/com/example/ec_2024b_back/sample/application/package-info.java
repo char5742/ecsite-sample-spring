@@ -10,5 +10,7 @@
  *   <li>workflow: ワークフローによるユースケース実装
  * </ul>
  */
-@org.jspecify.annotations.NullMarked
+@ApplicationRing
 package com.example.ec_2024b_back.sample.application;
+
+import org.jmolecules.architecture.onion.simplified.ApplicationRing;

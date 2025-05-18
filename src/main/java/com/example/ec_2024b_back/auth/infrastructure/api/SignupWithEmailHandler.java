@@ -33,6 +33,9 @@ public class SignupWithEmailHandler implements AuthHandlers {
         .flatMap(login -> signupUsecase.execute(new Email(login.email()), login.password()))
         .flatMap(_ -> ServerResponse.ok().bodyValue("signup success"))
         .onErrorMap(
+            SignupUsecase.AuthenticationFailedException.class,
+            e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage(), e))
+        .onErrorMap(
             SignupWorkflow.EmailAlreadyExistsException.class,
             e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage(), e))
         .onErrorMap(

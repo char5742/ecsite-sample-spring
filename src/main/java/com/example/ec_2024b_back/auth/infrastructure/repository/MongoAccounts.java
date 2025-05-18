@@ -5,12 +5,11 @@ import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.example.ec_2024b_back.auth.domain.models.EmailAuthentication;
 import com.example.ec_2024b_back.auth.domain.repositories.Accounts;
 import com.example.ec_2024b_back.share.domain.models.Email;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -63,14 +62,14 @@ public interface MongoAccounts extends ReactiveMongoRepository<AccountDocument, 
 
     // 認証情報の変換
     for (Authentication auth : account.getAuthentications()) {
-      @Var ImmutableMap<String, String> credential = null;
+      @Var Map<String, String> credential = null;
 
       if (auth instanceof EmailAuthentication emailAuth) {
         // EmailAuthenticationの場合、メールアドレスとパスワードをマップに格納
         HashMap<String, String> map = new HashMap<>();
         map.put("email", emailAuth.email().value());
         map.put("password", emailAuth.password().value());
-        credential = ImmutableMap.copyOf(map);
+        credential = map;
 
         // メールアドレスを記録
         emailValue = emailAuth.email().value();
@@ -81,14 +80,10 @@ public interface MongoAccounts extends ReactiveMongoRepository<AccountDocument, 
       }
     }
 
-    // リストをImmutableListに変換
-    ImmutableList<AccountDocument.AuthenticationInfo> authInfos =
-        ImmutableList.copyOf(authInfoList);
-
     // ドキュメントを作成して返す
     return new AccountDocument(
-        account.getId().toString(),
+        account.getId().id().toString(),
         emailValue, // 見つかったメールアドレスを設定
-        authInfos);
+        authInfoList);
   }
 }

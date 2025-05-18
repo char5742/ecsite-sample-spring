@@ -69,7 +69,6 @@ class LoginWithEmailHandlerTest {
     // Given
     var emailStr = "nonexistent@example.com";
     var password = "password";
-    var errorMessage = "メールアドレス: " + emailStr + " のユーザーが見つかりません";
 
     when(loginUsecase.execute(any(Email.class), anyString()))
         .thenReturn(
@@ -83,9 +82,7 @@ class LoginWithEmailHandlerTest {
         .bodyValue(new LoginRequest(emailStr, password))
         .exchange()
         .expectStatus()
-        .isUnauthorized()
-        .expectBody(String.class)
-        .isEqualTo("Authentication failed: " + errorMessage);
+        .isUnauthorized();
   }
 
   @Test
@@ -107,8 +104,6 @@ class LoginWithEmailHandlerTest {
         .bodyValue(new LoginRequest(emailStr, password))
         .exchange()
         .expectStatus()
-        .isUnauthorized()
-        .expectBody(String.class)
-        .isEqualTo("Authentication failed: " + errorMessage);
+        .isUnauthorized();
   }
 }

@@ -23,7 +23,7 @@ run_test() {
     local test_name=$(basename "$test_file" .yml)
     
     echo -e "${BLUE}📝 実行中: $test_name${NC}"
-    if runn run "$test_file"; then
+    if go run github.com/k1LoW/runn/cmd/runn@latest run "$test_file"; then
         echo -e "${GREEN}✅ 成功: $test_name${NC}"
         echo ""
         return 0

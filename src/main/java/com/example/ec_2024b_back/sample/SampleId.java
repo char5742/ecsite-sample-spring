@@ -14,13 +14,8 @@ public record SampleId(UUID value) {
    * 新しいサンプルIDを生成します。
    *
    * @param value UUID値（非null）
-   * @throws IllegalArgumentException valueがnullの場合
    */
-  public SampleId {
-    if (value == null) {
-      throw new IllegalArgumentException("SampleId value cannot be null");
-    }
-  }
+  public SampleId {}
 
   /**
    * 文字列表現を返します。

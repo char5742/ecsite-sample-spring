@@ -1,104 +1,117 @@
 # ショッピングカート API テスト
 desc: カートの取得・作成機能のテスト
 
-# ベースURL
-host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
-
-# タグ
-labels:
-  - shopping
-  - cart
-
-# テスト前準備（アカウント作成、ログイン）
+# 設定
 runners:
+  apitest:
+    endpoint: http://localhost:8080
+
+# テスト変数
+vars:
+  timestamp: '{{ now | unixtime }}'
+  testEmail: 'test-cart-{{ vars.timestamp }}@example.com'
+  testPassword: 'Test123!'
+  accountId: 'test-account-{{ vars.timestamp }}'
+
+# テスト実行
+runs:
   # テストユーザーを作成
-  - req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-cart-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
   
   # ログインしてトークンを取得
-  - req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-cart-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: ログインしてトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
     bind:
-      authToken: body.token
-      # 実際の実装では JWT から accountId を取得する必要がある
-      accountId: "test-account-{{ now | unixtime }}"
+      authToken: current.res.body.token
 
-# テストステップ
-steps:
   # 正常系: カート取得/作成
   - desc: 初回カート取得（新規作成される）
     req:
-      method: GET
-      path: /api/carts/{{ runners[1].accountId }}
-      headers:
-        Authorization: "Bearer {{ runners[1].authToken }}"
-    test:
-      status: 200
-      body:
-        cartId: /^.+$/  # カートIDが存在することを確認
-        accountId: "{{ runners[1].accountId }}"
-        items: []  # 最初は空のカート
-        total: 0
-        createdAt: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/  # 日時形式の確認
-        updatedAt: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+      /api/carts/{{ vars.accountId }}:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 200 && current.res.body.items.length() == 0
     bind:
-      cartId: body.cartId
+      cartId: current.res.body.id
 
-  # 正常系: 既存カート取得
-  - desc: 2回目のカート取得（既存のカートが返る）
+  # 正常系: 既存カートの取得
+  - desc: 既存カートの取得
     req:
-      method: GET
-      path: /api/carts/{{ runners[1].accountId }}
-      headers:
-        Authorization: "Bearer {{ runners[1].authToken }}"
-    test:
-      status: 200
-      body:
-        cartId: "{{ steps[0].cartId }}"  # 同じカートIDが返ることを確認
-        accountId: "{{ runners[1].accountId }}"
-        items: []
-        total: 0
+      /api/carts/{{ vars.accountId }}:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 200 && current.res.body.id == runs[2].cartId
 
-  # 異常系: 認証なしでのカート取得
-  - desc: 認証トークンなしでのカート取得
+  # 正常系: カート詳細の確認
+  - desc: カート詳細の確認
     req:
-      method: GET
-      path: /api/carts/{{ runners[1].accountId }}
-    test:
-      status: 401  # Unauthorized
+      /api/carts/{{ runs[2].cartId }}:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 200
 
-  # 異常系: 無効なアカウントID
-  - desc: 無効な形式のアカウントIDでカート取得
+  # 異常系: 認証なしでのアクセス
+  - desc: 認証なしでアクセス
     req:
-      method: GET
-      path: /api/carts/invalid-account-id
-      headers:
-        Authorization: "Bearer {{ runners[1].authToken }}"
-    test:
-      status: 400  # Bad Request
+      /api/carts/{{ vars.accountId }}:
+        get:
+          headers: {}
+    test: |
+      current.res.status == 401
 
-  # 異常系: 別のアカウントのカートにアクセス
-  - desc: 他のアカウントのカートにアクセス（権限チェック）
+  # 異常系: 他人のカートへのアクセス
+  - desc: 他人のカートへのアクセス
     req:
-      method: GET
-      path: /api/carts/other-account-id
-      headers:
-        Authorization: "Bearer {{ runners[1].authToken }}"
-    test:
-      status: 403  # Forbidden または 400 Bad Request（実装による）
+      /api/carts/other-user-account:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 403
+
+  # 異常系: 無効なトークンでのアクセス
+  - desc: 無効なトークンでアクセス
+    req:
+      /api/carts/{{ vars.accountId }}:
+        get:
+          headers:
+            Authorization: 'Bearer invalid-token'
+    test: |
+      current.res.status == 401
+
+  # 異常系: 存在しないカートへのアクセス
+  - desc: 存在しないカートへのアクセス
+    req:
+      /api/carts/non-existent-id:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 404

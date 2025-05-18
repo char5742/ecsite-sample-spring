@@ -12,5 +12,4 @@
  *   <li>API層: HTTPエンドポイント
  * </ul>
  */
-@org.jspecify.annotations.NullMarked
 package com.example.ec_2024b_back.sample;

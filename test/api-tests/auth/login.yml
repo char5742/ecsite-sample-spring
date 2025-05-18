@@ -1,116 +1,118 @@
 # ログイン API テスト
 desc: ユーザーログイン機能のテスト
 
-# ベースURL
-host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
-
-# タグ
-labels:
-  - auth
-  - login
+# 設定
+runners:
+  apitest:
+    endpoint: http://localhost:8080
 
 # テスト前準備（テストユーザーの作成）
-runners:
-  # テストユーザーを作成
-  - req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-login@example.com"
-        password: "Test123!"
-    test:
-      status: /^20[0-9]$/  # 200番台のステータスコード
+runs:
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-login@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
 
-# テストステップ
-steps:
   # 正常系: 有効な認証情報でログイン
   - desc: 正常なログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-login@example.com"
-        password: "Test123!"
-    test:
-      status: 200
-      body:
-        token: /^\S+$/  # JWTトークンの形式を検証
-    bind:
-      validToken: body.token  # 後続のテストで使用
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-login@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200
+    dump:
+      - current.res.body.token
+      - current.res.body
 
   # 異常系: 無効なパスワード
   - desc: 無効なパスワードでのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-login@example.com"
-        password: "WrongPassword!"
-    test:
-      status: 401  # Unauthorized
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-login@example.com
+              password: WrongPassword!
+    test: |
+      current.res.status == 401
 
   # 異常系: 存在しないユーザー
   - desc: 存在しないユーザーでのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "nonexistent@example.com"
-        password: "Test123!"
-    test:
-      status: 401  # Unauthorized
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: nonexistent@example.com
+              password: Test123!
+    test: |
+      current.res.status == 401
 
   # 異常系: 無効なメールアドレス形式
   - desc: 無効なメールアドレス形式でのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "invalid-email"
-        password: "Test123!"
-    test:
-      status: 400  # Bad Request
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: invalid-email
+              password: Test123!
+    test: |
+      current.res.status == 400
 
   # 異常系: 必須フィールドが欠けている
   - desc: メールアドレスなしでのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        password: "Test123!"
-    test:
-      status: 400  # Bad Request
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              password: Test123!
+    test: |
+      current.res.status == 400
 
   - desc: パスワードなしでのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-login@example.com"
-    test:
-      status: 400  # Bad Request
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-login@example.com
+    test: |
+      current.res.status == 400
 
   # 異常系: 空のボディ
   - desc: 空のボディでのログイン
     req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body: {}
-    test:
-      status: 400  # Bad Request
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

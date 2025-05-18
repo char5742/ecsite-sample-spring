@@ -35,17 +35,8 @@ public class Sample {
       @Nullable String description,
       SampleStatus status,
       AuditInfo auditInfo) {
-    if (id == null) {
-      throw new IllegalArgumentException("IDは必須です");
-    }
-    if (name == null || name.isBlank()) {
+    if (name.isBlank()) {
       throw new IllegalArgumentException("名前は必須です");
-    }
-    if (status == null) {
-      throw new IllegalArgumentException("ステータスは必須です");
-    }
-    if (auditInfo == null) {
-      throw new IllegalArgumentException("監査情報は必須です");
     }
 
     this.id = id;
@@ -61,7 +52,7 @@ public class Sample {
    * @param name 新しい名前（非null）
    */
   public void updateName(String name) {
-    if (name == null || name.isBlank()) {
+    if (name.isBlank()) {
       throw new IllegalArgumentException("名前は必須です");
     }
     this.name = name;
@@ -82,9 +73,6 @@ public class Sample {
    * @param status 新しいステータス（非null）
    */
   public void updateStatus(SampleStatus status) {
-    if (status == null) {
-      throw new IllegalArgumentException("ステータスは必須です");
-    }
     this.status = status;
   }
 

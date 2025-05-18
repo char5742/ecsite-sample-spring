@@ -3,6 +3,7 @@ package com.example.ec_2024b_back.shopping.domain.models;
 import com.example.ec_2024b_back.product.ProductId;
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /** 注文内の商品アイテムを表す値オブジェクト */
@@ -49,6 +50,22 @@ public record OrderItem(
         cartItem.quantity(),
         cartItem.unitPrice(),
         subtotal);
+  }
+
+  /**
+   * データベースから注文アイテムを復元します
+   *
+   * @param productId 商品ID
+   * @param productName 商品名
+   * @param unitPrice 単価
+   * @param quantity 数量
+   * @return 復元された注文アイテム
+   */
+  public static OrderItem fromDatabase(
+      UUID productId, String productName, BigDecimal unitPrice, int quantity) {
+    var productIdObj = new ProductId(productId);
+    var subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+    return new OrderItem(productIdObj, productName, quantity, unitPrice, subtotal);
   }
 
   @Override

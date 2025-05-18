@@ -7,5 +7,8 @@
     "-Xms1g",          // 初期ヒープ 1 GB
     "-Xmx6g",          // 最大ヒープ 6 GB
     "-XX:+AlwaysPreTouch"   // メモリ確保を起動時点で済ませ、GC 安定化
-  ]
+  ],
+  "java.jdt.ls.vmargs": "-Xms1g -Xmx6g -XX:+AlwaysPreTouch",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "interactive",
 }

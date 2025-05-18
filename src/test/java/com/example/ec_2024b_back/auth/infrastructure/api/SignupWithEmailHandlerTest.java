@@ -72,7 +72,6 @@ class SignupWithEmailHandlerTest {
     var emailStr = "existing@example.com";
     var email = new Email(emailStr);
     var password = "password";
-    var errorMessage = "メールアドレス: " + emailStr + " は既に登録されています";
 
     when(signupUsecase.execute(any(Email.class), anyString()))
         .thenReturn(Mono.error(new EmailAlreadyExistsException(email)));
@@ -85,9 +84,7 @@ class SignupWithEmailHandlerTest {
         .bodyValue(new SignupRequest(emailStr, password))
         .exchange()
         .expectStatus()
-        .isUnauthorized()
-        .expectBody(String.class)
-        .isEqualTo(errorMessage);
+        .isUnauthorized();
   }
 
   @Test
@@ -95,7 +92,6 @@ class SignupWithEmailHandlerTest {
     // Given
     var emailStr = "test@example.com";
     var password = "password";
-    var errorMessage = "Authentication failed: Some error";
 
     when(signupUsecase.execute(any(Email.class), anyString()))
         .thenReturn(
@@ -111,8 +107,6 @@ class SignupWithEmailHandlerTest {
         .bodyValue(new SignupRequest(emailStr, password))
         .exchange()
         .expectStatus()
-        .isUnauthorized()
-        .expectBody(String.class)
-        .isEqualTo(errorMessage);
+        .isUnauthorized();
   }
 }

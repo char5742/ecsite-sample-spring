@@ -2,6 +2,7 @@ package com.example.ec_2024b_back.share.infrastructure.api;
 
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
 import com.example.ec_2024b_back.share.infrastructure.api.ErrorResponse.ValidationError;
+import com.google.errorprone.annotations.Var;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.boot.autoconfigure.web.WebProperties;
@@ -54,12 +55,24 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
 
   private Mono<ServerResponse> renderErrorResponse(ServerRequest request) {
     Throwable error = getError(request);
-    return switch (error) {
-      case DomainException e -> handleDomainException(e, request);
-      case ServerWebInputException e -> handleServerWebInputException(e, request);
-      case ResponseStatusException e -> handleResponseStatusException(e, request);
-      default -> handleGenericException(request);
-    };
+
+    // Unwrap the actual error by going through the cause chain
+    @Var var actualError = error;
+    while (actualError != null) {
+      if (actualError instanceof ResponseStatusException rse) {
+        return handleResponseStatusException(rse, request);
+      }
+      if (actualError instanceof DomainException de) {
+        return handleDomainException(de, request);
+      }
+      if (actualError instanceof ServerWebInputException swie) {
+        return handleServerWebInputException(swie, request);
+      }
+      actualError = actualError.getCause();
+    }
+
+    // If no specific error is found, fall back to generic handling
+    return handleGenericException(request);
   }
 
   /** ドメイン例外のハンドリング. ドメイン例外はBadRequestとして扱います。 */

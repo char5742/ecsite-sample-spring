@@ -1,126 +1,182 @@
 # ユーザープロファイル作成 API テスト
 desc: ユーザープロファイル作成機能のテスト
 
-# ベースURL
-host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
-
-# タグ
-labels:
-  - userprofile
-  - create
-
-# テスト前準備（アカウント作成とログイン）
+# 設定
 runners:
+  apitest:
+    endpoint: http://localhost:8080
+
+# テスト変数
+vars:
+  timestamp: '{{ now | unixtime }}'
+  testEmail: 'test-profile-{{ vars.timestamp }}@example.com'
+  testPassword: 'Test123!'
+
+# テスト実行
+runs:
   # テストユーザーを作成
-  - req:
-      method: POST
-      path: /api/authentication/signup
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-profile-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
   
   # ログインしてトークンを取得
-  - req:
-      method: POST
-      path: /api/authentication/login
-      headers:
-        Content-Type: application/json
-      body:
-        email: "test-profile-{{ now | unixtime }}@example.com"
-        password: "Test123!"
-    test:
-      status: 200
+  - desc: ログインしてトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: '{{ vars.testEmail }}'
+              password: '{{ vars.testPassword }}'
+    test: |
+      current.res.status == 200
     bind:
-      authToken: body.token
-      # JWTトークンからアカウントIDを抽出する必要があるが、
-      # テストのために仮のアカウントIDを使用
-      accountId: "test-account-{{ now | unixtime }}"
+      authToken: current.res.body.token
+      accountId: current.res.body.accountId
 
-# テストステップ
-steps:
-  # 正常系: プロファイル作成
-  - desc: 新規プロファイル作成
+  # 正常系: プロファイルを作成
+  - desc: プロファイルを作成
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        name: "テストユーザー"
-    test:
-      status: 201  # Created
-      body:
-        userProfileId: /^.+$/  # ID が存在することを確認
-        name: "テストユーザー"
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json:
+              accountId: '{{ runs[1].accountId }}'
+              name: 'テストユーザー'
+    test: |
+      current.res.status == 201 && current.res.body.name == 'テストユーザー'
+    bind:
+      profileId: current.res.body.id
 
-  # 異常系: 既に作成済みのアカウント
-  - desc: 同じアカウントでプロファイル再作成（失敗する）
+  # 正常系: 作成したプロファイルを取得
+  - desc: 作成したプロファイルを取得
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-        name: "テストユーザー2"
-    test:
-      status: 400  # Bad Request
+      /api/userprofiles/{{ runs[2].profileId }}:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 200 && current.res.body.id == runs[2].profileId
 
-  # 異常系: 認証なし
-  - desc: 認証トークンなしでのプロファイル作成
+  # 正常系: プロファイルを更新
+  - desc: プロファイルを更新
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-      body:
-        accountId: "dummy-account-id"
-        name: "無認証ユーザー"
-    test:
-      status: 401  # Unauthorized
+      /api/userprofiles/{{ runs[2].profileId }}:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json:
+              name: '更新されたユーザー'
+    test: |
+      current.res.status == 200 && current.res.body.name == '更新されたユーザー'
 
-  # 異常系: 無効なリクエストボディ
-  - desc: アカウントIDなしでのプロファイル作成
+  # 異常系: 重複プロファイル作成
+  - desc: 重複プロファイル作成（失敗する）
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        name: "名前のみ"
-    test:
-      status: 400  # Bad Request
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json:
+              accountId: '{{ runs[1].accountId }}'
+              name: '重複プロファイル'
+    test: |
+      current.res.status == 409
 
-  - desc: 名前なしでのプロファイル作成
+  # 異常系: 名前なしでの作成
+  - desc: 名前なしでの作成（失敗する）
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: "{{ runners[1].accountId }}"
-    test:
-      status: 400  # Bad Request
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json:
+              accountId: '{{ runs[1].accountId }}'
+    test: |
+      current.res.status == 400
 
-  # 異常系: 無効なフォーマット
-  - desc: 無効なアカウントID形式
+  # 異常系: アカウントIDなしでの作成
+  - desc: アカウントIDなしでの作成（失敗する）
     req:
-      method: POST
-      path: /api/userprofiles
-      headers:
-        Content-Type: application/json
-        Authorization: "Bearer {{ runners[1].authToken }}"
-      body:
-        accountId: ""  # 空文字列
-        name: "テストユーザー"
-    test:
-      status: 400  # Bad Request
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json:
+              name: 'アカウントIDなし'
+    test: |
+      current.res.status == 400
+
+  # 異常系: 認証なしでの作成
+  - desc: 認証なしでの作成（失敗する）
+    req:
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              accountId: 'some-account-id'
+              name: '認証なし'
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでの作成
+  - desc: 無効なトークンでの作成（失敗する）
+    req:
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer invalid-token'
+          body:
+            application/json:
+              accountId: 'some-account-id'
+              name: '無効なトークン'
+    test: |
+      current.res.status == 401
+
+  # 異常系: 空のボディでの作成
+  - desc: 空のボディでの作成（失敗する）
+    req:
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400
+
+  # 異常系: 存在しないプロファイルの取得
+  - desc: 存在しないプロファイルの取得
+    req:
+      /api/userprofiles/non-existent-profile:
+        get:
+          headers:
+            Authorization: 'Bearer {{ runs[1].authToken }}'
+    test: |
+      current.res.status == 404

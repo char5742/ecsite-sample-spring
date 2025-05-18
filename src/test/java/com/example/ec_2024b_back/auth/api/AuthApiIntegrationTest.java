@@ -2,18 +2,21 @@ package com.example.ec_2024b_back.auth.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.ec_2024b_back.config.TestMongoConfig;
 import com.example.ec_2024b_back.utils.IntegrationTest;
 import com.example.ec_2024b_back.utils.Slow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @IntegrationTest
+@Import(TestMongoConfig.class)
 @Slow
 class AuthApiIntegrationTest {
 
