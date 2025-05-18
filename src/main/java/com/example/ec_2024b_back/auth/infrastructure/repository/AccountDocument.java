@@ -4,9 +4,11 @@ import com.example.ec_2024b_back.auth.AccountId;
 import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,18 +16,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /** MongoDBのaccountsコレクションに対応するドキュメントクラス. */
 @Document(collection = "accounts")
 public record AccountDocument(
-    /** アカウントID */
     @Id String id,
-
-    /** メールアドレス（検索用にインデックス追加） */
     @Indexed(unique = true) String email,
-
-    /** 認証情報のリスト */
     ImmutableList<AuthenticationInfo> authenticationInfos) {
 
   /** SpringData用のNo-argコンストラクタ */
   public AccountDocument() {
-    this("", "", new ArrayList<>());
+    this("", "", List.of());
+  }
+
+  /** 通常のListからImmutableListに変換するためのstatic factory method */
+  public static AccountDocument create(
+      String id, String email, List<AuthenticationInfo> authenticationInfos) {
+    return new AccountDocument(id, email, ImmutableList.copyOf(authenticationInfos));
   }
 
   /**
@@ -35,16 +38,24 @@ public record AccountDocument(
    */
   public Account toDomain() {
     return Account.reconstruct(
-        new AccountId(UUID.fromString(this.id)),
-        this.authenticationInfos.stream()
-            .map(i -> Authentication.of(i.type, i.credential))
+        new AccountId(UUID.fromString(id)),
+        authenticationInfos.stream()
+            .map(
+                i -> {
+                  if (i.type() == null) {
+                    throw new IllegalStateException("Authentication type cannot be null");
+                  }
+                  return Authentication.of(i.type(), ImmutableMap.copyOf(i.credential()));
+                })
             .collect(ImmutableList.toImmutableList()));
   }
 
-  public record AuthenticationInfo(String type, ImmutableMap<String, String> credential) {
+  /** 認証情報 */
+  public record AuthenticationInfo(@Nullable String type, ImmutableMap<String, String> credential) {
+
     /** SpringData用のNo-argコンストラクタ */
     public AuthenticationInfo() {
-      this("", new HashMap<>());
+      this(null, Map.of());
     }
   }
 }
