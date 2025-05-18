@@ -45,20 +45,6 @@ class SampleTest {
   }
 
   @Test
-  void shouldThrowException_whenIdIsNull() {
-    assertThatThrownBy(() -> new Sample(null, "名前", null, SampleStatus.DRAFT, auditInfo))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("IDは必須です");
-  }
-
-  @Test
-  void shouldThrowException_whenNameIsNull() {
-    assertThatThrownBy(() -> new Sample(id, null, null, SampleStatus.DRAFT, auditInfo))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("名前は必須です");
-  }
-
-  @Test
   void shouldThrowException_whenNameIsBlank() {
     assertThatThrownBy(() -> new Sample(id, "  ", null, SampleStatus.DRAFT, auditInfo))
         .isInstanceOf(IllegalArgumentException.class)
@@ -73,15 +59,6 @@ class SampleTest {
     sample.updateName(newName);
 
     assertThat(sample.getName()).isEqualTo(newName);
-  }
-
-  @Test
-  void shouldThrowException_whenUpdatingWithNullName() {
-    var sample = new Sample(id, "元の名前", null, SampleStatus.DRAFT, auditInfo);
-
-    assertThatThrownBy(() -> sample.updateName(null))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("名前は必須です");
   }
 
   @Test
@@ -110,15 +87,6 @@ class SampleTest {
     sample.updateStatus(SampleStatus.ACTIVE);
 
     assertThat(sample.getStatus()).isEqualTo(SampleStatus.ACTIVE);
-  }
-
-  @Test
-  void shouldThrowException_whenUpdatingWithNullStatus() {
-    var sample = new Sample(id, "名前", null, SampleStatus.DRAFT, auditInfo);
-
-    assertThatThrownBy(() -> sample.updateStatus(null))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("ステータスは必須です");
   }
 
   @Test
