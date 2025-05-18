@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.Var;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
@@ -77,8 +76,7 @@ public interface MongoAccounts extends ReactiveMongoRepository<AccountDocument, 
       }
 
       if (credential != null) {
-        authInfoList.add(
-            new AccountDocument.AuthenticationInfo(auth.type(), new HashMap<>(credential)));
+        authInfoList.add(new AccountDocument.AuthenticationInfo(auth.type(), credential));
       }
     }
 

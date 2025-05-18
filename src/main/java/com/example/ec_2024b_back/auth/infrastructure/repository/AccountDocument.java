@@ -5,8 +5,6 @@ import com.example.ec_2024b_back.auth.domain.models.Account;
 import com.example.ec_2024b_back.auth.domain.models.Authentication;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
@@ -22,13 +20,13 @@ public record AccountDocument(
 
   /** SpringData用のNo-argコンストラクタ */
   public AccountDocument() {
-    this("", "", new ArrayList<>());
+    this("", "", ImmutableList.of());
   }
 
-  /** ImmutableListから通常のListに変換するためのstatic factory method */
+  /** static factory method */
   public static AccountDocument create(
       String id, String email, ImmutableList<AuthenticationInfo> authenticationInfos) {
-    return new AccountDocument(id, email, new ArrayList<>(authenticationInfos));
+    return new AccountDocument(id, email, authenticationInfos);
   }
 
   /**
@@ -55,7 +53,7 @@ public record AccountDocument(
 
     /** SpringData用のNo-argコンストラクタ */
     public AuthenticationInfo() {
-      this(null, new HashMap<>());
+      this(null, ImmutableMap.of());
     }
   }
 }
