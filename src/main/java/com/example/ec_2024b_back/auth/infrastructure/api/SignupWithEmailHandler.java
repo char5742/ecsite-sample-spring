@@ -2,12 +2,15 @@ package com.example.ec_2024b_back.auth.infrastructure.api;
 
 import com.example.ec_2024b_back.auth.api.AuthHandlers;
 import com.example.ec_2024b_back.auth.application.usecase.SignupUsecase;
+import com.example.ec_2024b_back.auth.application.workflow.SignupWorkflow;
+import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
 import com.example.ec_2024b_back.share.domain.models.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 /** メールでのサインアップを処理するハンドラークラス. */
@@ -29,8 +32,12 @@ public class SignupWithEmailHandler implements AuthHandlers {
         .bodyToMono(SignupRequest.class)
         .flatMap(login -> signupUsecase.execute(new Email(login.email()), login.password()))
         .flatMap(_ -> ServerResponse.ok().bodyValue("signup success"))
-        .onErrorResume(
-            e -> ServerResponse.status(HttpStatus.UNAUTHORIZED).bodyValue(e.getMessage()));
+        .onErrorMap(
+            SignupWorkflow.EmailAlreadyExistsException.class,
+            e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage(), e))
+        .onErrorMap(
+            DomainException.class,
+            e -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage(), e));
   }
 
   /**

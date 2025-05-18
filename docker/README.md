@@ -37,10 +37,10 @@ cp .env.example .env
 
 ```bash
 # バックグラウンドで起動
-docker-compose up -d
+docker compose up -d
 
 # ログを表示しながら起動
-docker-compose up
+docker compose up
 ```
 
 ### 4. アプリケーションの確認
@@ -49,10 +49,10 @@ docker-compose up
 
 ```bash
 # コンテナの状態確認
-docker-compose ps
+docker compose ps
 
 # アプリケーションのログ確認
-docker-compose logs app
+docker compose logs app
 
 # ヘルスチェック
 curl http://localhost:8080/actuator/health
@@ -64,10 +64,10 @@ API テストを実行：
 
 ```bash
 # テストコンテナを実行
-docker-compose run --rm api-tests
+docker compose run --rm api-tests
 
 # 特定のテストのみ実行
-docker-compose run --rm api-tests /bin/sh -c "cd /app/test && ./scripts/run-specific-test.sh api-tests/auth/login.yml"
+docker compose run --rm api-tests /bin/sh -c "cd /app/test && ./scripts/run-specific-test.sh api-tests/auth/login.yml"
 ```
 
 ## Docker Compose コマンド
@@ -76,48 +76,48 @@ docker-compose run --rm api-tests /bin/sh -c "cd /app/test && ./scripts/run-spec
 
 ```bash
 # 起動
-docker-compose up -d
+docker compose up -d
 
 # 停止
-docker-compose down
+docker compose down
 
 # 再起動
-docker-compose restart
+docker compose restart
 
 # ログ表示
-docker-compose logs -f
+docker compose logs -f
 
 # 特定サービスのログ
-docker-compose logs -f app
+docker compose logs -f app
 ```
 
 ### データベース操作
 
 ```bash
 # MongoDB シェルへ接続
-docker-compose exec mongodb mongosh -u admin -p password --authenticationDatabase admin
+docker compose exec mongodb mongosh -u admin -p password --authenticationDatabase admin
 
 # データベースのバックアップ
-docker-compose exec mongodb mongodump -u admin -p password --authenticationDatabase admin --out /tmp/backup
+docker compose exec mongodb mongodump -u admin -p password --authenticationDatabase admin --out /tmp/backup
 
 # データベースのリストア
-docker-compose exec mongodb mongorestore -u admin -p password --authenticationDatabase admin /tmp/backup
+docker compose exec mongodb mongorestore -u admin -p password --authenticationDatabase admin /tmp/backup
 ```
 
 ### 開発中の操作
 
 ```bash
 # アプリケーションの再ビルド
-docker-compose build app
+docker compose build app
 
 # 全サービスの再ビルド
-docker-compose build
+docker compose build
 
 # キャッシュなしでビルド
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # 特定サービスのみ再起動
-docker-compose restart app
+docker compose restart app
 ```
 
 ## トラブルシューティング

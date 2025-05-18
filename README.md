@@ -33,10 +33,10 @@ cd ecsite-sample-spring
 cp .env.example .env
 
 # Docker Compose で起動
-docker-compose up -d
+docker compose up -d
 
 # APIテストを実行
-docker-compose run --rm api-tests
+docker compose run --rm api-tests
 ```
 
 アプリケーションは http://localhost:8080 でアクセスできます。

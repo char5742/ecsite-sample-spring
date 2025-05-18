@@ -10,6 +10,7 @@ import com.example.ec_2024b_back.share.domain.models.Email;
 import com.example.ec_2024b_back.utils.Fast;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,8 +45,8 @@ class FindAccountByEmailStepImplTest {
     StepVerifier.create(result)
         .assertNext(
             founded -> {
-              org.assertj.core.api.Assertions.assertThat(founded.account()).isEqualTo(account);
-              org.assertj.core.api.Assertions.assertThat(founded.rawPassword()).isEqualTo(password);
+              Assertions.assertThat(founded.account()).isEqualTo(account);
+              Assertions.assertThat(founded.rawPassword()).isEqualTo(password);
             })
         .verifyComplete();
   }

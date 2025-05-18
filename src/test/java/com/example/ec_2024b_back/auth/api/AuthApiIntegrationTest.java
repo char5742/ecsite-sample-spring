@@ -94,12 +94,14 @@ class AuthApiIntegrationTest {
         .expectAll(
             spec -> spec.expectStatus().isUnauthorized(),
             spec ->
-                spec.expectBody(String.class)
+                spec.expectBody()
+                    .jsonPath("$.message")
                     .value(
                         error -> {
-                          assertThat(error.contains("Authentication failed")).isTrue();
-                          assertThat(error.contains("non-existent@example.com")).isTrue();
-                        }));
+                          assertThat(error.toString()).isEqualTo("Authentication failed");
+                        }),
+            spec -> spec.expectBody().jsonPath("$.status").isEqualTo("Unauthorized"),
+            spec -> spec.expectBody().jsonPath("$.code").isEqualTo(401));
   }
 
   @Test
@@ -137,12 +139,14 @@ class AuthApiIntegrationTest {
         .expectAll(
             spec -> spec.expectStatus().isUnauthorized(),
             spec ->
-                spec.expectBody(String.class)
+                spec.expectBody()
+                    .jsonPath("$.message")
                     .value(
                         error -> {
-                          assertThat(error.contains(email)).isTrue();
-                          assertThat(error.contains("既に登録されています")).isTrue();
-                        }));
+                          assertThat(error.toString()).contains("既に登録されています");
+                        }),
+            spec -> spec.expectBody().jsonPath("$.status").isEqualTo("Unauthorized"),
+            spec -> spec.expectBody().jsonPath("$.code").isEqualTo(401));
   }
 
   @Test
@@ -189,11 +193,13 @@ class AuthApiIntegrationTest {
         .expectAll(
             spec -> spec.expectStatus().isUnauthorized(),
             spec ->
-                spec.expectBody(String.class)
+                spec.expectBody()
+                    .jsonPath("$.message")
                     .value(
                         error -> {
-                          assertThat(error.contains("Authentication failed")).isTrue();
-                          assertThat(error.contains("パスワードが一致しません")).isTrue();
-                        }));
+                          assertThat(error.toString()).isEqualTo("Authentication failed");
+                        }),
+            spec -> spec.expectBody().jsonPath("$.status").isEqualTo("Unauthorized"),
+            spec -> spec.expectBody().jsonPath("$.code").isEqualTo(401));
   }
 }

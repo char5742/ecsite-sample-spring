@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -57,15 +58,17 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
       case DomainException e -> handleDomainException(e, request);
       case ServerWebInputException e -> handleServerWebInputException(e, request);
       case ResponseStatusException e -> handleResponseStatusException(e, request);
-      default -> handleGenericException(error, request);
+      default -> handleGenericException(request);
     };
   }
 
   /** ドメイン例外のハンドリング. ドメイン例外はBadRequestとして扱います。 */
-  private Mono<ServerResponse> handleDomainException(DomainException ex, ServerRequest request) {
+  private static Mono<ServerResponse> handleDomainException(
+      DomainException ex, ServerRequest request) {
     HttpStatus status = HttpStatus.BAD_REQUEST;
-    ErrorResponse response =
-        ErrorResponse.of(status.getReasonPhrase(), status.value(), ex.getMessage(), request.path());
+    String message = ex.getMessage() != null ? ex.getMessage() : "Bad Request";
+    var response =
+        ErrorResponse.of(status.getReasonPhrase(), status.value(), message, request.path());
 
     return ServerResponse.status(status)
         .contentType(MediaType.APPLICATION_JSON)
@@ -73,10 +76,10 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
   }
 
   /** ResponseStatusExceptionのハンドリング. 例外が持つHTTPステータスを使用します。 */
-  private Mono<ServerResponse> handleResponseStatusException(
+  private static Mono<ServerResponse> handleResponseStatusException(
       ResponseStatusException ex, ServerRequest request) {
     HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
-    ErrorResponse response =
+    var response =
         ErrorResponse.of(status.getReasonPhrase(), status.value(), ex.getReason(), request.path());
 
     return ServerResponse.status(status)
@@ -85,18 +88,18 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
   }
 
   /** ServerWebInputExceptionのハンドリング. バリデーションエラーを含む入力エラーを処理します。 */
-  private Mono<ServerResponse> handleServerWebInputException(
+  private static Mono<ServerResponse> handleServerWebInputException(
       ServerWebInputException ex, ServerRequest request) {
     HttpStatus status = HttpStatus.BAD_REQUEST;
 
     // バリデーションエラーの場合
-    if (ex.getCause() instanceof org.springframework.validation.BindingResult bindingResult) {
+    if (ex.getCause() instanceof BindingResult bindingResult) {
       List<ValidationError> validationErrors =
           bindingResult.getFieldErrors().stream()
               .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
               .collect(Collectors.toList());
 
-      ErrorResponse response =
+      var response =
           ErrorResponse.ofValidationError(
               status.getReasonPhrase(),
               status.value(),
@@ -110,7 +113,7 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
     }
 
     // その他の入力エラー
-    ErrorResponse response =
+    var response =
         ErrorResponse.of(status.getReasonPhrase(), status.value(), ex.getReason(), request.path());
 
     return ServerResponse.status(status)
@@ -119,9 +122,9 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
   }
 
   /** 汎用的な例外ハンドリング. 想定外の例外はInternal Server Errorとして扱います。 */
-  private Mono<ServerResponse> handleGenericException(Throwable ex, ServerRequest request) {
+  private static Mono<ServerResponse> handleGenericException(ServerRequest request) {
     HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    ErrorResponse response =
+    var response =
         ErrorResponse.of(
             status.getReasonPhrase(),
             status.value(),

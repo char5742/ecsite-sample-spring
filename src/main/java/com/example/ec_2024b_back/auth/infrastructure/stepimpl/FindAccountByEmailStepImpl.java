@@ -20,6 +20,8 @@ public class FindAccountByEmailStepImpl implements FindAccountByEmailStep {
         .findByEmail(i.email())
         .map(a -> new LoginWorkflow.Context.Founded(a, i.rawPassword()))
         .switchIfEmpty(Mono.error(new LoginWorkflow.UserNotFoundException(i.email().value())))
-        .onErrorMap(_ -> new LoginWorkflow.UserNotFoundException(i.email().value()));
+        .onErrorMap(
+            throwable -> !(throwable instanceof LoginWorkflow.UserNotFoundException),
+            _ -> new LoginWorkflow.UserNotFoundException(i.email().value()));
   }
 }
