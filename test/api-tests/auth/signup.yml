@@ -1,0 +1,83 @@
+# サインアップ API テスト
+desc: ユーザー登録機能のテスト
+
+# ベースURL (環境変数で上書き可能)
+host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
+
+# タグ
+labels:
+  - auth
+  - signup
+
+# テスト変数
+vars:
+  testEmail: "test-{{ now | unixtime }}@example.com"  # タイムスタンプを使用してユニークなメールアドレスを生成
+  testPassword: "Test123!"
+
+# テストステップ
+steps:
+  # 正常系: 新規ユーザー登録
+  - desc: 新規ユーザー登録
+    req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        email: "{{ vars.testEmail }}"
+        password: "{{ vars.testPassword }}"
+    test:
+      # ステータスコードの検証
+      status: 200
+      # レスポンスボディの検証
+      body: "signup success"
+
+  # 異常系: 既存メールアドレスでの登録
+  - desc: 既存メールアドレスでの登録（失敗する）
+    req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        email: "{{ vars.testEmail }}"  # 上で登録済みのメールアドレス
+        password: "{{ vars.testPassword }}"
+    test:
+      # エラーステータスコードの検証
+      status: 401  # 実装では UNAUTHORIZED が返される
+
+  # 異常系: 無効なメールアドレス
+  - desc: 無効なメールアドレスでの登録
+    req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        email: "invalid-email"
+        password: "{{ vars.testPassword }}"
+    test:
+      status: 401  # 実装ではエラー時は UNAUTHORIZED が返される
+
+  # 異常系: 必須フィールドが欠けている
+  - desc: メールアドレスなしでの登録
+    req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        password: "{{ vars.testPassword }}"
+    test:
+      status: 400  # Bad Request
+
+  - desc: パスワードなしでの登録
+    req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        email: "test-no-password@example.com"
+    test:
+      status: 400  # Bad Request

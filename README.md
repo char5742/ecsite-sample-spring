@@ -6,6 +6,7 @@
 ![Spring WebFlux](https://img.shields.io/badge/Spring%20WebFlux-Reactive-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Reactive-green)
 ![Architecture](https://img.shields.io/badge/Architecture-Onion-purple)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 
 ## 🚀 概要
 
@@ -18,6 +19,43 @@
 - **リアクティブプログラミング**による非同期・ノンブロッキング処理
 - **ドメイン駆動設計(DDD)**の原則に基づいた実装
 - **最新のJava 23**の機能を活用したコーディング
+
+## 🚀 クイックスタート
+
+### Docker Compose を使用した起動（推奨）
+
+```bash
+# リポジトリをクローン
+git clone <repository-url>
+cd ecsite-sample-spring
+
+# 環境変数を設定
+cp .env.example .env
+
+# Docker Compose で起動
+docker-compose up -d
+
+# APIテストを実行
+docker-compose run --rm api-tests
+```
+
+アプリケーションは http://localhost:8080 でアクセスできます。
+
+### ローカル環境での起動
+
+```bash
+# MongoDB を起動（Docker使用）
+docker run --name local-mongo -p 27017:27017 -d mongo:latest
+
+# アプリケーションをビルド・起動
+./gradlew bootRun
+
+# 別ターミナルでAPIテストを実行
+cd test
+./scripts/run-tests.sh
+```
+
+詳細な環境構築手順は [docker/README.md](docker/README.md) を参照してください。
 
 ## 🏗️ アーキテクチャ
 
@@ -182,6 +220,8 @@ graph TD
     C --> C1[リポジトリテスト]
     C --> C2[APIエンドポイントテスト]
     
+    D --> D1[Runn APIテスト]
+    
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#bbf,stroke:#333,stroke-width:1px
     style C fill:#bfb,stroke:#333,stroke-width:1px
@@ -190,7 +230,18 @@ graph TD
 
 - **単体テスト**: JUnit 5, Mockito, AssertJ, StepVerifier
 - **結合テスト**: Testcontainers, WebTestClient
+- **APIテスト**: Runn（Yamlベースのシナリオテスト）
 - **テスト実行速度分類**: `@Fast`, `@Slow`アノテーション
+
+### API テスト（Runn）
+
+`test/` ディレクトリに Runn を使用した包括的な API テストスイートが含まれています：
+
+- **認証テスト**: ログイン、サインアップ
+- **ユーザープロファイルテスト**: プロファイル作成、住所管理
+- **ショッピングテスト**: カート操作、商品追加
+
+詳細は [test/TESTING_GUIDE.md](test/TESTING_GUIDE.md) を参照してください。
 
 ## 🛠️ 品質保証
 

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: ecsite-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: ecsite
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - ecsite-network
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecsite-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/ecsite?authSource=admin
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-for-jwt}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME:-3600000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    networks:
+      - ecsite-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Runn API Tests
+  api-tests:
+    build:
+      context: .
+      dockerfile: docker/runn/Dockerfile
+    container_name: ecsite-api-tests
+    environment:
+      API_BASE_URL: http://app:8080
+    volumes:
+      - ./test:/app/test:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - ecsite-network
+    command: ["/bin/sh", "-c", "cd /app/test && ./scripts/run-tests.sh"]
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  ecsite-network:
+    driver: bridge

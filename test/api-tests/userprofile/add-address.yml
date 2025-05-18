@@ -1,0 +1,203 @@
+# 住所追加 API テスト
+desc: ユーザープロファイルに住所を追加する機能のテスト
+
+# ベースURL
+host: {{ env.API_BASE_URL | default("http://localhost:8080") }}
+
+# タグ
+labels:
+  - userprofile
+  - address
+
+# テスト前準備（アカウント作成、ログイン、プロファイル作成）
+runners:
+  # テストユーザーを作成
+  - req:
+      method: POST
+      path: /api/authentication/signup
+      headers:
+        Content-Type: application/json
+      body:
+        email: "test-address-{{ now | unixtime }}@example.com"
+        password: "Test123!"
+    test:
+      status: 200
+  
+  # ログインしてトークンを取得
+  - req:
+      method: POST
+      path: /api/authentication/login
+      headers:
+        Content-Type: application/json
+      body:
+        email: "test-address-{{ now | unixtime }}@example.com"
+        password: "Test123!"
+    test:
+      status: 200
+    bind:
+      authToken: body.token
+      accountId: "test-account-{{ now | unixtime }}"
+  
+  # プロファイルを作成
+  - req:
+      method: POST
+      path: /api/userprofiles
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        accountId: "{{ runners[1].accountId }}"
+        name: "テストユーザー"
+    test:
+      status: 201
+    bind:
+      userProfileId: body.userProfileId
+
+# テストステップ
+steps:
+  # 正常系: 住所追加
+  - desc: 新規住所追加（デフォルト住所）
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        userProfileId: "{{ runners[2].userProfileId }}"
+        name: "自宅"
+        postalCode: "100-0001"
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: "テストビル101号室"
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 201  # Created
+      body:
+        message: "Address added successfully"
+
+  # 正常系: 2つ目の住所追加
+  - desc: 2つ目の住所追加（非デフォルト）
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        userProfileId: "{{ runners[2].userProfileId }}"
+        name: "勤務先"
+        postalCode: "160-0023"
+        prefecture: "東京都"
+        city: "新宿区"
+        street: "西新宿2-8-1"
+        building: ""  # 建物名は任意
+        phoneNumber: "03-9876-5432"
+        isDefault: false
+    test:
+      status: 201
+      body:
+        message: "Address added successfully"
+
+  # 異常系: 認証なし
+  - desc: 認証トークンなしでの住所追加
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+      body:
+        userProfileId: "{{ runners[2].userProfileId }}"
+        name: "自宅"
+        postalCode: "100-0001"
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: ""
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 401  # Unauthorized
+
+  # 異常系: 必須フィールドの欠如
+  - desc: プロファイルIDなしでの住所追加
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        name: "自宅"
+        postalCode: "100-0001"
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: ""
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 400  # Bad Request
+
+  - desc: 住所名なしでの住所追加
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        userProfileId: "{{ runners[2].userProfileId }}"
+        postalCode: "100-0001"
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: ""
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 400  # Bad Request
+
+  # 異常系: 無効なフォーマット
+  - desc: 無効な郵便番号形式
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        userProfileId: "{{ runners[2].userProfileId }}"
+        name: "自宅"
+        postalCode: "invalid"  # 無効な郵便番号
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: ""
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 400  # Bad Request
+
+  # 異常系: 存在しないプロファイルID
+  - desc: 存在しないプロファイルへの住所追加
+    req:
+      method: POST
+      path: /api/userprofiles/addresses
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ runners[1].authToken }}"
+      body:
+        userProfileId: "non-existent-profile-id"
+        name: "自宅"
+        postalCode: "100-0001"
+        prefecture: "東京都"
+        city: "千代田区"
+        street: "千代田1-1-1"
+        building: ""
+        phoneNumber: "03-1234-5678"
+        isDefault: true
+    test:
+      status: 400  # Bad Request
