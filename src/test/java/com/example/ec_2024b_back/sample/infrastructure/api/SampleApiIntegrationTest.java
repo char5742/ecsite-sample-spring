@@ -1,6 +1,6 @@
 package com.example.ec_2024b_back.sample.infrastructure.api;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.ec_2024b_back.config.TestMongoConfig;
 import com.example.ec_2024b_back.sample.infrastructure.repository.SampleDocumentRepository;
@@ -52,15 +52,22 @@ class SampleApiIntegrationTest {
         """
             .formatted(name, description);
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectBody().jsonPath("$.id").exists().jsonPath("$.name").isEqualTo(name));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.id")
+        .exists()
+        .jsonPath("$.name")
+        .isEqualTo(name);
   }
 
   @Test
@@ -73,22 +80,22 @@ class SampleApiIntegrationTest {
         }
         """;
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.message")
-                    .value(
-                        message -> {
-                          assertThat(message).isNotNull();
-                          assertThat(message.toString().contains("名前は必須です")).isTrue();
-                        }));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isBadRequest()
+        .expectBody()
+        .jsonPath("$.message")
+        .exists()
+        .jsonPath("$.message")
+        .value(message -> assertThat(message.toString()).contains("名前は必須です"));
   }
 
   @Test
@@ -103,22 +110,22 @@ class SampleApiIntegrationTest {
         """
             .formatted(longName);
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.message")
-                    .value(
-                        message -> {
-                          assertThat(message).isNotNull();
-                          assertThat(message.toString().contains("名前は100文字以内で入力してください")).isTrue();
-                        }));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isBadRequest()
+        .expectBody()
+        .jsonPath("$.message")
+        .exists()
+        .jsonPath("$.message")
+        .value(message -> assertThat(message.toString()).contains("名前は100文字以内で入力してください"));
   }
 
   @Test
@@ -133,22 +140,22 @@ class SampleApiIntegrationTest {
         """
             .formatted(longDescription);
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.message")
-                    .value(
-                        message -> {
-                          assertThat(message).isNotNull();
-                          assertThat(message.toString().contains("説明は500文字以内で入力してください")).isTrue();
-                        }));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isBadRequest()
+        .expectBody()
+        .jsonPath("$.message")
+        .exists()
+        .jsonPath("$.message")
+        .value(message -> assertThat(message.toString()).contains("説明は500文字以内で入力してください"));
   }
 
   @Test
@@ -162,15 +169,22 @@ class SampleApiIntegrationTest {
         """
             .formatted(name);
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectBody().jsonPath("$.id").exists().jsonPath("$.name").isEqualTo(name));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.id")
+        .exists()
+        .jsonPath("$.name")
+        .isEqualTo(name);
   }
 
   @Test
@@ -183,21 +197,21 @@ class SampleApiIntegrationTest {
         }
         """;
 
-    client
-        .post()
-        .uri("/api/samples")
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(createRequestJson)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.message")
-                    .value(
-                        message -> {
-                          assertThat(message).isNotNull();
-                          assertThat(message.toString().contains("名前に使用できない文字が含まれています")).isTrue();
-                        }));
+    var response =
+        client
+            .post()
+            .uri("/api/samples")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequestJson)
+            .exchange();
+
+    response
+        .expectStatus()
+        .isBadRequest()
+        .expectBody()
+        .jsonPath("$.message")
+        .exists()
+        .jsonPath("$.message")
+        .value(message -> assertThat(message.toString()).contains("名前に使用できない文字が含まれています"));
   }
 }
