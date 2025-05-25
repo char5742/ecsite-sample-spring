@@ -46,18 +46,29 @@ flowchart TD
     sample --> share;
 ```
 
+### 各モジュールの責務
+
 - **[auth](./05_MODULES/auth/README.md)**: 認証・アカウント管理
+  - allowedDependencies: `share`
 - **[userprofile](./05_MODULES/userprofile/README.md)**: ユーザー情報・住所管理
+  - allowedDependencies: `share`, `auth`
+  - type: CLOSED
 - **[product](./05_MODULES/product/README.md)**: 商品・カテゴリ・在庫・プロモーション管理
+  - デフォルト設定（OPEN）
 - **[shopping](./05_MODULES/shopping/README.md)**: カート・注文・決済管理
+  - allowedDependencies: `share`, `auth`, `product`
+  - type: CLOSED
 - **[logistics](./05_MODULES/logistics/README.md)**: 配送管理・配送状態追跡
+  - allowedDependencies: `share`, `shopping`
 - **[share](./05_MODULES/share/README.md)**: 共通ユーティリティ（基盤モジュール）
+  - 他のモジュールに依存しない
 - **[sample](./05_MODULES/sample/README.md)**: 新規モジュール作成の参考となるサンプルモジュール
+  - allowedDependencies: `share`
 
 ## 設定クラス（configパッケージ）
 
-- **SecurityConfig**: パスワードエンコーダーなどのセキュリティ関連設定
-- **WebConfig**: エラーハンドリングなどのWeb関連設定
+- **SecurityConfig**: パスワードエンコーダーなどのセキュリティ関連Bean定義
+- **WebConfig**: エラーハンドリング、CORS設定などのWeb関連設定
 - **WebSecurityConfig**: Spring Security WebFluxのセキュリティフィルターチェーン設定
 - **RouterConfig**: WebFluxの関数型ルーティング設定（ルートレベルに配置）
 
