@@ -1,12 +1,68 @@
+version: '3.8'
+
 services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: test-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: ecsite
+    ports:
+      - "27018:27017"  # ホストの27018ポートを使用して既存のMongoDBとの競合を避ける
+    volumes:
+      - test_mongodb_data:/data/db
+      - ../docker/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Spring Boot Application
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: test-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/ecsite?authSource=admin
+      JWT_SECRET_KEY: test-secret-key-for-jwt
+      JWT_EXPIRATION_TIME: 3600000
+    ports:
+      - "8081:8080"  # ホストの8081ポートを使用して既存のアプリとの競合を避ける
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   # APIテスト実行サービス
   api-tests:
     build: .
+    container_name: test-runner
     volumes:
       - ./api-tests:/tests/api-tests:ro
-    network_mode: host
     environment:
-      - API_BASE_URL=http://localhost:8080
+      - API_BASE_URL=http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - test-network
     command: ["run", "/tests/api-tests/**/*.yml"]
 
   # 単一テスト実行用（docker-compose run one-test api-tests/auth/login.yml）
@@ -14,8 +70,20 @@ services:
     build: .
     volumes:
       - ./api-tests:/tests/api-tests:ro
-    network_mode: host
     environment:
-      - API_BASE_URL=http://localhost:8080
+      - API_BASE_URL=http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - test-network
     entrypoint: ["runn", "run"]
     command: ["--help"]  # デフォルトはヘルプ表示
+
+volumes:
+  test_mongodb_data:
+    driver: local
+
+networks:
+  test-network:
+    driver: bridge
