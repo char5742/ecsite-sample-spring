@@ -3,8 +3,7 @@ desc: ユーザープロファイルに住所を追加する機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # テスト変数
 vars:
@@ -13,7 +12,7 @@ vars:
   testPassword: 'Test123!'
 
 # テスト実行
-runs:
+steps:
   # テストユーザーを作成
   - desc: テストユーザーを作成
     req:
@@ -52,10 +51,10 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
-              accountId: '{{ runs[1].accountId }}'
+              accountId: '{{ steps[1].accountId }}'
               name: 'テストユーザー'
     test: |
       current.res.status == 201
@@ -65,11 +64,11 @@ runs:
   # 正常系: 住所を追加
   - desc: 住所を追加
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               label: '自宅'
@@ -89,11 +88,11 @@ runs:
   # 正常系: 複数の住所を追加
   - desc: 勤務先住所を追加
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               label: '勤務先'
@@ -111,21 +110,21 @@ runs:
   # 正常系: 住所一覧取得
   - desc: 住所一覧を取得
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 200 && current.res.body.length() == 2
 
   # 異常系: 無効な郵便番号
   - desc: 無効な郵便番号で失敗
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               label: '無効な住所'
@@ -140,11 +139,11 @@ runs:
   # 異常系: 必須フィールド不足
   - desc: 必須フィールド不足で失敗
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               label: '不完全な住所'
@@ -155,7 +154,7 @@ runs:
   # 異常系: 認証なしでのアクセス
   - desc: 認証なしでアクセス
     req:
-      /api/userprofiles/{{ runs[2].profileId }}/addresses:
+      /api/userprofiles/{{ steps[2].profileId }}/addresses:
         post:
           headers:
             Content-Type: application/json
@@ -177,7 +176,7 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               label: '存在しないプロファイル'

@@ -1,0 +1,154 @@
+# ユーザープロファイル更新 API テスト
+desc: ユーザープロファイル更新機能のテスト
+
+# 設定
+runners:
+  req: http://localhost:8080
+
+# テスト前準備
+steps:
+  # テストユーザーの作成
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-update-profile@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  # ログインしてトークンを取得
+  - desc: ログインしてJWTトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-update-profile@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body.token != null
+    bind:
+      token: current.res.body.token
+
+  # プロファイルの作成
+  - desc: プロファイルを作成
+    req:
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              name: "初期 太郎"
+    test: |
+      current.res.status == 201 && current.res.body.id != null
+    bind:
+      profileId: current.res.body.id
+
+  # 正常系: プロファイルの更新
+  - desc: 正常なプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              id: "{{ profileId }}"
+              name: "更新後 太郎"
+    test: |
+      current.res.status == 200
+
+  # 異常系: 認証なしでの更新
+  - desc: 認証なしでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              id: "{{ profileId }}"
+              name: "認証なし 太郎"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでの更新
+  - desc: 無効なトークンでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer invalid-token"
+          body:
+            application/json:
+              id: "{{ profileId }}"
+              name: "無効トークン 太郎"
+    test: |
+      current.res.status == 401
+
+  # 異常系: IDなしでの更新
+  - desc: IDなしでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              name: "IDなし 太郎"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 存在しないIDでの更新
+  - desc: 存在しないIDでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              id: "non-existent-id"
+              name: "存在しないID 太郎"
+    test: |
+      current.res.status == 404
+
+  # 異常系: 必須フィールドが欠けている
+  - desc: 名前なしでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              id: "{{ profileId }}"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 空のボディ
+  - desc: 空のボディでのプロファイル更新
+    req:
+      /api/userprofiles:
+        put:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

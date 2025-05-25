@@ -3,8 +3,7 @@ desc: カートに商品を追加する機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # テスト用変数
 vars:
@@ -15,7 +14,7 @@ vars:
   accountId: 'test-account-{{ vars.timestamp }}'
 
 # テスト実行
-runs:
+steps:
   # テストユーザーを作成
   - desc: テストユーザーを作成
     req:
@@ -52,7 +51,7 @@ runs:
       /api/carts/{{ vars.accountId }}:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 200
     bind:
@@ -61,10 +60,10 @@ runs:
   # 正常系: 商品をカートに追加
   - desc: 商品をカートに追加
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
             Content-Type: application/json
           body:
             application/json:
@@ -76,10 +75,10 @@ runs:
   # 正常系: 数量を増やす
   - desc: 数量を増やす
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
             Content-Type: application/json
           body:
             application/json:
@@ -91,10 +90,10 @@ runs:
   # 異常系: 無効な商品IDでの追加
   - desc: 無効な商品IDでの追加
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
             Content-Type: application/json
           body:
             application/json:
@@ -106,10 +105,10 @@ runs:
   # 異常系: 負の数量
   - desc: 負の数量でエラー
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
             Content-Type: application/json
           body:
             application/json:
@@ -121,7 +120,7 @@ runs:
   # 異常系: 認証なしでのアクセス
   - desc: 認証なしでアクセス
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
             Content-Type: application/json
@@ -135,7 +134,7 @@ runs:
   # 異常系: 無効なトークンでのアクセス
   - desc: 無効なトークンでアクセス
     req:
-      /api/carts/{{ runs[2].cartId }}/items:
+      /api/carts/{{ steps[2].cartId }}/items:
         post:
           headers:
             Authorization: 'Bearer invalid-token'

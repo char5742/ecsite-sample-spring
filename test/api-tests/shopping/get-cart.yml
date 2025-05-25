@@ -1,0 +1,178 @@
+# カート取得 API テスト
+desc: ユーザーのカートを取得または作成する機能のテスト
+
+# 設定
+runners:
+  req: http://localhost:8080
+
+# テスト前準備
+steps:
+  # テストユーザーの作成
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-get-cart@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  # ログインしてトークンを取得
+  - desc: ログインしてJWTトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-get-cart@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body.token != null
+    bind:
+      token: current.res.body.token
+      accountId: current.res.body.accountId
+
+  # 正常系: 初回カート取得（新規作成）
+  - desc: 初回カート取得（新規作成される）
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200 && 
+      current.res.body.id != null && 
+      current.res.body.accountId == accountId &&
+      current.res.body.items != null &&
+      current.res.body.items.length == 0
+    bind:
+      cartId: current.res.body.id
+
+  # 正常系: 既存カートの取得
+  - desc: 既存カートの取得（同じカートIDが返される）
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200 && 
+      current.res.body.id == cartId &&
+      current.res.body.accountId == accountId
+
+  # カートに商品を追加
+  - desc: カートに商品を追加してからカート取得
+    req:
+      /api/carts/items:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              productId: "test-product-001"
+              quantity: 2
+    test: |
+      current.res.status == 200
+
+  # 商品が入ったカートの取得
+  - desc: 商品が入ったカートの取得
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200 && 
+      current.res.body.id == cartId &&
+      current.res.body.items.length > 0 &&
+      current.res.body.items[0].productId == "test-product-001" &&
+      current.res.body.items[0].quantity == 2
+
+  # 異常系: 認証なしでのカート取得
+  - desc: 認証なしでのカート取得
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでのカート取得
+  - desc: 無効なトークンでのカート取得
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer invalid-token"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 他のユーザーのカート取得（アクセス拒否）
+  - desc: 他のユーザーのカート取得（アクセス拒否）
+    req:
+      /api/carts/other-user-account-id:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 403
+
+  # 異常系: 無効なアカウントIDでのカート取得
+  - desc: 無効なアカウントIDでのカート取得
+    req:
+      /api/carts/invalid-format-id!@#:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 400
+
+  # 別のユーザーでのテスト
+  - desc: 別のテストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-get-cart-2@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  - desc: 別のユーザーでログイン
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-get-cart-2@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200
+    bind:
+      token2: current.res.body.token
+      accountId2: current.res.body.accountId
+
+  # 正常系: 別のユーザーのカート取得
+  - desc: 別のユーザーとしてカート取得（新規作成）
+    req:
+      /api/carts/{{ accountId2 }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token2 }}"
+    test: |
+      current.res.status == 200 && 
+      current.res.body.id != cartId &&
+      current.res.body.accountId == accountId2 &&
+      current.res.body.items.length == 0

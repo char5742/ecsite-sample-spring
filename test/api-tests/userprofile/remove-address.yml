@@ -1,0 +1,211 @@
+# 住所削除 API テスト
+desc: ユーザープロファイルから住所を削除する機能のテスト
+
+# 設定
+runners:
+  req: http://localhost:8080
+
+# テスト前準備
+steps:
+  # テストユーザーの作成
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-remove-address@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  # ログインしてトークンを取得
+  - desc: ログインしてJWTトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-remove-address@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body.token != null
+    bind:
+      token: current.res.body.token
+
+  # プロファイルの作成
+  - desc: プロファイルを作成
+    req:
+      /api/userprofiles:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              name: "住所削除 太郎"
+    test: |
+      current.res.status == 201 && current.res.body.id != null
+    bind:
+      profileId: current.res.body.id
+
+  # 住所の追加（削除テスト用）
+  - desc: 削除対象の住所を追加
+    req:
+      /api/userprofiles/addresses:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              street: "削除テスト通り 1-2-3"
+              city: "削除市"
+              state: "削除県"
+              postalCode: "111-1111"
+              country: "日本"
+    test: |
+      current.res.status == 200 && current.res.body.addresses != null && current.res.body.addresses.length > 0
+    bind:
+      addressId: current.res.body.addresses[current.res.body.addresses.length - 1].id
+
+  # 正常系: 住所の削除
+  - desc: 正常な住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              addressId: "{{ addressId }}"
+    test: |
+      current.res.status == 200
+
+  # 削除確認用の住所を再度追加
+  - desc: 別の削除テスト用住所を追加
+    req:
+      /api/userprofiles/addresses:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              street: "削除テスト通り 4-5-6"
+              city: "削除市2"
+              state: "削除県2"
+              postalCode: "222-2222"
+              country: "日本"
+    test: |
+      current.res.status == 200
+    bind:
+      addressId2: current.res.body.addresses[current.res.body.addresses.length - 1].id
+
+  # 異常系: 認証なしでの削除
+  - desc: 認証なしでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              addressId: "{{ addressId2 }}"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでの削除
+  - desc: 無効なトークンでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer invalid-token"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              addressId: "{{ addressId2 }}"
+    test: |
+      current.res.status == 401
+
+  # 異常系: プロファイルIDなしでの削除
+  - desc: プロファイルIDなしでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              addressId: "{{ addressId2 }}"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 住所IDなしでの削除
+  - desc: 住所IDなしでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 存在しないプロファイルIDでの削除
+  - desc: 存在しないプロファイルIDでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "non-existent-profile-id"
+              addressId: "{{ addressId2 }}"
+    test: |
+      current.res.status == 404
+
+  # 異常系: 存在しない住所IDでの削除
+  - desc: 存在しない住所IDでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              profileId: "{{ profileId }}"
+              addressId: "non-existent-address-id"
+    test: |
+      current.res.status == 404
+
+  # 異常系: 空のボディ
+  - desc: 空のボディでの住所削除
+    req:
+      /api/userprofiles/addresses:
+        delete:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

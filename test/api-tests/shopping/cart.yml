@@ -3,8 +3,7 @@ desc: カートの取得・作成機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # テスト変数
 vars:
@@ -14,7 +13,7 @@ vars:
   accountId: 'test-account-{{ vars.timestamp }}'
 
 # テスト実行
-runs:
+steps:
   # テストユーザーを作成
   - desc: テストユーザーを作成
     req:
@@ -51,7 +50,7 @@ runs:
       /api/carts/{{ vars.accountId }}:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 200 && current.res.body.items.length() == 0
     bind:
@@ -63,17 +62,17 @@ runs:
       /api/carts/{{ vars.accountId }}:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
-      current.res.status == 200 && current.res.body.id == runs[2].cartId
+      current.res.status == 200 && current.res.body.id == steps[2].cartId
 
   # 正常系: カート詳細の確認
   - desc: カート詳細の確認
     req:
-      /api/carts/{{ runs[2].cartId }}:
+      /api/carts/{{ steps[2].cartId }}:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 200
 
@@ -92,7 +91,7 @@ runs:
       /api/carts/other-user-account:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 403
 
@@ -112,6 +111,6 @@ runs:
       /api/carts/non-existent-id:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 404

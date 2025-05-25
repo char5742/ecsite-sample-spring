@@ -1,0 +1,275 @@
+# 支払い開始 API テスト
+desc: 注文に対する支払いを開始する機能のテスト
+
+# 設定
+runners:
+  req: http://localhost:8080
+
+# テスト前準備
+steps:
+  # テストユーザーの作成
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-payment@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  # ログインしてトークンを取得
+  - desc: ログインしてJWTトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-payment@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body.token != null
+    bind:
+      token: current.res.body.token
+      accountId: current.res.body.accountId
+
+  # カートの取得または作成
+  - desc: カートを取得または作成
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200 && current.res.body.id != null
+    bind:
+      cartId: current.res.body.id
+
+  # カートに商品を追加
+  - desc: カートに商品を追加
+    req:
+      /api/carts/items:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              productId: "test-product-001"
+              quantity: 3
+    test: |
+      current.res.status == 200
+
+  # 注文の作成
+  - desc: 注文を作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              shippingAddress: "東京都港区六本木1-2-3 支払いテストビル"
+    test: |
+      current.res.status == 201 && current.res.body.id != null
+    bind:
+      orderId: current.res.body.id
+      totalAmount: current.res.body.totalAmount
+
+  # 正常系: 支払いの開始
+  - desc: 正常な支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 201 && current.res.body.id != null && current.res.body.status == "PENDING"
+    bind:
+      paymentId: current.res.body.id
+
+  # 別の注文を作成（異なる支払い方法のテスト用）
+  - desc: 新しいカートを取得
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200
+    bind:
+      cartId2: current.res.body.id
+
+  - desc: 新しいカートに商品を追加
+    req:
+      /api/carts/items:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId2 }}"
+              productId: "test-product-002"
+              quantity: 1
+    test: |
+      current.res.status == 200
+
+  - desc: 新しい注文を作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId2 }}"
+              shippingAddress: "大阪府大阪市北区梅田1-2-3"
+    test: |
+      current.res.status == 201
+    bind:
+      orderId2: current.res.body.id
+
+  # 正常系: 別の支払い方法での支払い開始
+  - desc: 銀行振込での支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "{{ orderId2 }}"
+              method: "BANK_TRANSFER"
+    test: |
+      current.res.status == 201 && current.res.body.method == "BANK_TRANSFER"
+
+  # 異常系: 認証なしでの支払い開始
+  - desc: 認証なしでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでの支払い開始
+  - desc: 無効なトークンでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer invalid-token"
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 注文IDなしでの支払い開始
+  - desc: 注文IDなしでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 支払い方法なしでの支払い開始
+  - desc: 支払い方法なしでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 存在しない注文IDでの支払い開始
+  - desc: 存在しない注文IDでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "non-existent-order-id"
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 404
+
+  # 異常系: 無効な支払い方法での支払い開始
+  - desc: 無効な支払い方法での支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+              method: "INVALID_METHOD"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 既に支払い済みの注文への再支払い
+  - desc: 既に支払い開始済みの注文への再支払い
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              orderId: "{{ orderId }}"
+              method: "CREDIT_CARD"
+    test: |
+      current.res.status == 409
+
+  # 異常系: 空のボディ
+  - desc: 空のボディでの支払い開始
+    req:
+      /api/payments:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

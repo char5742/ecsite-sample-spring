@@ -3,8 +3,7 @@ desc: ユーザープロファイル作成機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # テスト変数
 vars:
@@ -13,7 +12,7 @@ vars:
   testPassword: 'Test123!'
 
 # テスト実行
-runs:
+steps:
   # テストユーザーを作成
   - desc: テストユーザーを作成
     req:
@@ -52,10 +51,10 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
-              accountId: '{{ runs[1].accountId }}'
+              accountId: '{{ steps[1].accountId }}'
               name: 'テストユーザー'
     test: |
       current.res.status == 201 && current.res.body.name == 'テストユーザー'
@@ -65,21 +64,21 @@ runs:
   # 正常系: 作成したプロファイルを取得
   - desc: 作成したプロファイルを取得
     req:
-      /api/userprofiles/{{ runs[2].profileId }}:
+      /api/userprofiles/{{ steps[2].profileId }}:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
-      current.res.status == 200 && current.res.body.id == runs[2].profileId
+      current.res.status == 200 && current.res.body.id == steps[2].profileId
 
   # 正常系: プロファイルを更新
   - desc: プロファイルを更新
     req:
-      /api/userprofiles/{{ runs[2].profileId }}:
+      /api/userprofiles/{{ steps[2].profileId }}:
         put:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               name: '更新されたユーザー'
@@ -93,10 +92,10 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
-              accountId: '{{ runs[1].accountId }}'
+              accountId: '{{ steps[1].accountId }}'
               name: '重複プロファイル'
     test: |
       current.res.status == 409
@@ -108,10 +107,10 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
-              accountId: '{{ runs[1].accountId }}'
+              accountId: '{{ steps[1].accountId }}'
     test: |
       current.res.status == 400
 
@@ -122,7 +121,7 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json:
               name: 'アカウントIDなし'
@@ -165,7 +164,7 @@ runs:
         post:
           headers:
             Content-Type: application/json
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
           body:
             application/json: {}
     test: |
@@ -177,6 +176,6 @@ runs:
       /api/userprofiles/non-existent-profile:
         get:
           headers:
-            Authorization: 'Bearer {{ runs[1].authToken }}'
+            Authorization: 'Bearer {{ steps[1].authToken }}'
     test: |
       current.res.status == 404

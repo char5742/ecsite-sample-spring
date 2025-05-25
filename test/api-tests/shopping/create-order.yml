@@ -1,0 +1,212 @@
+# 注文作成 API テスト
+desc: カートから注文を作成する機能のテスト
+
+# 設定
+runners:
+  req: http://localhost:8080
+
+# テスト前準備
+steps:
+  # テストユーザーの作成
+  - desc: テストユーザーを作成
+    req:
+      /api/authentication/signup:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-create-order@example.com
+              password: Test123!
+    test: |
+      current.res.status >= 200 && current.res.status < 300
+
+  # ログインしてトークンを取得
+  - desc: ログインしてJWTトークンを取得
+    req:
+      /api/authentication/login:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              email: test-create-order@example.com
+              password: Test123!
+    test: |
+      current.res.status == 200 && current.res.body.token != null
+    bind:
+      token: current.res.body.token
+      accountId: current.res.body.accountId
+
+  # カートの取得または作成
+  - desc: カートを取得または作成
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200 && current.res.body.id != null
+    bind:
+      cartId: current.res.body.id
+
+  # カートに商品を追加
+  - desc: カートに商品を追加
+    req:
+      /api/carts/items:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              productId: "test-product-001"
+              quantity: 2
+    test: |
+      current.res.status == 200
+
+  # 別の商品も追加
+  - desc: カートに別の商品を追加
+    req:
+      /api/carts/items:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              productId: "test-product-002"
+              quantity: 1
+    test: |
+      current.res.status == 200
+
+  # 正常系: 注文の作成
+  - desc: 正常な注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ cartId }}"
+              shippingAddress: "東京都渋谷区渋谷1-2-3 テストビル4F"
+    test: |
+      current.res.status == 201 && current.res.body.id != null && current.res.body.status == "PENDING"
+    bind:
+      orderId: current.res.body.id
+
+  # 再度カートを取得して新しいカートIDを取得
+  - desc: 新しいカートを取得または作成
+    req:
+      /api/carts/{{ accountId }}:
+        get:
+          headers:
+            Authorization: "Bearer {{ token }}"
+    test: |
+      current.res.status == 200
+    bind:
+      newCartId: current.res.body.id
+
+  # 異常系: 認証なしでの注文作成
+  - desc: 認証なしでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+          body:
+            application/json:
+              cartId: "{{ newCartId }}"
+              shippingAddress: "東京都渋谷区渋谷1-2-3"
+    test: |
+      current.res.status == 401
+
+  # 異常系: 無効なトークンでの注文作成
+  - desc: 無効なトークンでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer invalid-token"
+          body:
+            application/json:
+              cartId: "{{ newCartId }}"
+              shippingAddress: "東京都渋谷区渋谷1-2-3"
+    test: |
+      current.res.status == 401
+
+  # 異常系: カートIDなしでの注文作成
+  - desc: カートIDなしでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              shippingAddress: "東京都渋谷区渋谷1-2-3"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 配送先住所なしでの注文作成
+  - desc: 配送先住所なしでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ newCartId }}"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 存在しないカートIDでの注文作成
+  - desc: 存在しないカートIDでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "non-existent-cart-id"
+              shippingAddress: "東京都渋谷区渋谷1-2-3"
+    test: |
+      current.res.status == 404
+
+  # 異常系: 空のカートからの注文作成
+  - desc: 空のカートからの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json:
+              cartId: "{{ newCartId }}"
+              shippingAddress: "東京都渋谷区渋谷1-2-3"
+    test: |
+      current.res.status == 400
+
+  # 異常系: 空のボディ
+  - desc: 空のボディでの注文作成
+    req:
+      /api/orders:
+        post:
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ token }}"
+          body:
+            application/json: {}
+    test: |
+      current.res.status == 400

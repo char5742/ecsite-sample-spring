@@ -3,11 +3,10 @@ desc: ユーザーログイン機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # テスト前準備（テストユーザーの作成）
-runs:
+steps:
   - desc: テストユーザーを作成
     req:
       /api/authentication/signup:
@@ -34,9 +33,6 @@ runs:
               password: Test123!
     test: |
       current.res.status == 200
-    dump:
-      - current.res.body.token
-      - current.res.body
 
   # 異常系: 無効なパスワード
   - desc: 無効なパスワードでのログイン

@@ -3,15 +3,14 @@ desc: ユーザー登録機能のテスト
 
 # 設定
 runners:
-  apitest:
-    endpoint: http://localhost:8080
+  req: http://localhost:8080
 
 # 現在時刻をエポックタイムとして変数化
 vars:
   timestamp: '{{ now | unixtime }}'
 
 # テストステップ
-runs:
+steps:
   # 正常系: 新規ユーザー登録
   - desc: 新規ユーザー登録
     req:
