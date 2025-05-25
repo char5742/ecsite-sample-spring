@@ -22,6 +22,6 @@ public class FindAccountByEmailStepImpl implements FindAccountByEmailStep {
         .switchIfEmpty(Mono.error(new LoginWorkflow.UserNotFoundException(i.email().value())))
         .onErrorMap(
             throwable -> !(throwable instanceof LoginWorkflow.UserNotFoundException),
-            _ -> new LoginWorkflow.UserNotFoundException(i.email().value()));
+            throwable -> new LoginWorkflow.UserNotFoundException(i.email().value()));
   }
 }

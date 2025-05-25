@@ -61,7 +61,7 @@ public class UserProfile implements AggregateRoot<UserProfile, UserProfileId> {
         .filter(a -> a.id().equals(address.id()))
         .findAny()
         .ifPresent(
-            _ -> {
+            existing -> {
               throw new IllegalArgumentException("住所ID: " + address.id() + " は既に存在します");
             });
 
