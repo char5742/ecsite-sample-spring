@@ -1,9 +1,8 @@
 # ユーザープロファイル作成 API テスト
 desc: ユーザープロファイル作成機能のテスト
 
-# 設定
 runners:
-  req: http://localhost:8080
+  req: http://app:8080
 
 # テスト変数
 vars:

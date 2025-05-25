@@ -1,9 +1,7 @@
 # サインアップ API テスト
 desc: ユーザー登録機能のテスト
-
-# 設定
 runners:
-  req: http://localhost:8080
+  req: http://app:8080
 
 # 現在時刻をエポックタイムとして変数化
 vars:

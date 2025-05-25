@@ -1,9 +1,8 @@
 # 住所削除 API テスト
 desc: ユーザープロファイルから住所を削除する機能のテスト
 
-# 設定
 runners:
-  req: http://localhost:8080
+  req: http://app:8080
 
 # テスト前準備
 steps:

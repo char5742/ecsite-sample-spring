@@ -1,9 +1,8 @@
 # ユーザープロファイル更新 API テスト
 desc: ユーザープロファイル更新機能のテスト
 
-# 設定
 runners:
-  req: http://localhost:8080
+  req: http://app:8080
 
 # テスト前準備
 steps:

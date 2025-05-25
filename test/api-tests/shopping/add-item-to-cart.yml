@@ -1,10 +1,8 @@
 # カートへの商品追加 API テスト
 desc: カートに商品を追加する機能のテスト
 
-# 設定
 runners:
-  req: http://localhost:8080
-
+  req: http://app:8080
 # テスト用変数
 vars:
   timestamp: '{{ now | unixtime }}'

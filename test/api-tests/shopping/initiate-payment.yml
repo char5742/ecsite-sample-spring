@@ -1,10 +1,8 @@
 # 支払い開始 API テスト
 desc: 注文に対する支払いを開始する機能のテスト
 
-# 設定
 runners:
-  req: http://localhost:8080
-
+  req: http://app:8080
 # テスト前準備
 steps:
   # テストユーザーの作成
