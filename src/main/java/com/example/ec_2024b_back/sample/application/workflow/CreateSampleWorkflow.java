@@ -1,71 +1,76 @@
 package com.example.ec_2024b_back.sample.application.workflow;
 
-import com.example.ec_2024b_back.sample.application.usecase.CreateSampleUsecase;
 import com.example.ec_2024b_back.sample.domain.models.Sample;
-import lombok.Getter;
+import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 /**
- * サンプル作成ワークフロー。
+ * サンプル作成ワークフローのインターフェース。
  *
- * <p>このクラスは、複数のステップで構成されるワークフローパターンの実装例を示します。 各ステップは独立したインターフェースとして定義され、テスト容易性を高めています。
+ * <p>このインターフェースは、複数のステップで構成されるワークフローパターンの実装例を示します。 各ステップは独立したインターフェースとして定義され、テスト容易性を高めています。
  */
-@Getter
-public abstract class CreateSampleWorkflow implements CreateSampleUsecase {
-  private final ValidateInputStep validateInputStep;
-  private final CreateSampleStep createSampleStep;
-  private final SaveSampleStep saveSampleStep;
-
-  protected CreateSampleWorkflow(
-      ValidateInputStep validateInputStep,
-      CreateSampleStep createSampleStep,
-      SaveSampleStep saveSampleStep) {
-    this.validateInputStep = validateInputStep;
-    this.createSampleStep = createSampleStep;
-    this.saveSampleStep = saveSampleStep;
-  }
-
-  @Override
-  public Mono<Sample> execute(String name, @Nullable String description) {
-    return validateInputStep
-        .execute(name, description)
-        .then(createSampleStep.execute(name, description))
-        .flatMap(saveSampleStep::execute);
-  }
+public interface CreateSampleWorkflow {
 
   /** 入力検証ステップ。 */
-  public interface ValidateInputStep {
-    /**
-     * 入力値を検証します。
-     *
-     * @param name 名前
-     * @param description 説明
-     * @return 検証結果
-     */
-    Mono<Void> execute(String name, @Nullable String description);
-  }
+  @FunctionalInterface
+  interface ValidateInputStep extends Function<Context.Input, Mono<Context.Validated>> {}
 
   /** サンプル作成ステップ。 */
-  public interface CreateSampleStep {
-    /**
-     * サンプルを作成します。
-     *
-     * @param name 名前
-     * @param description 説明
-     * @return 作成されたサンプル
-     */
-    Mono<Sample> execute(String name, @Nullable String description);
-  }
+  @FunctionalInterface
+  interface CreateSampleStep extends Function<Context.Validated, Mono<Context.SampleCreated>> {}
 
   /** サンプル保存ステップ。 */
-  public interface SaveSampleStep {
+  @FunctionalInterface
+  interface SaveSampleStep extends Function<Context.SampleCreated, Mono<Context.Created>> {}
+
+  /**
+   * ワークフローを実行します。
+   *
+   * @param input 入力コンテキスト
+   * @return 作成されたサンプルを含むコンテキスト
+   */
+  Mono<Context.Created> execute(Context.Input input);
+
+  /** ワークフローのコンテキストを定義するsealed interface。 */
+  sealed interface Context
+      permits Context.Input, Context.Validated, Context.SampleCreated, Context.Created {
+
     /**
-     * サンプルを保存します。
+     * 入力コンテキスト。
      *
-     * @param sample サンプル
-     * @return 保存されたサンプル
+     * @param name 名前
+     * @param description 説明（nullable）
      */
-    Mono<Sample> execute(Sample sample);
+    record Input(String name, @Nullable String description) implements Context {}
+
+    /**
+     * 検証済みコンテキスト。
+     *
+     * @param name 検証済みの名前
+     * @param description 検証済みの説明（nullable）
+     */
+    record Validated(String name, @Nullable String description) implements Context {}
+
+    /**
+     * サンプル作成済みコンテキスト。
+     *
+     * @param sample 作成されたサンプル（未保存）
+     */
+    record SampleCreated(Sample sample) implements Context {}
+
+    /**
+     * 作成完了コンテキスト。
+     *
+     * @param sample 保存されたサンプル
+     */
+    record Created(Sample sample) implements Context {}
+  }
+
+  /** 入力値が不正な場合のカスタム例外。 */
+  class InvalidInputException extends RuntimeException {
+    public InvalidInputException(String message) {
+      super(message);
+    }
   }
 }

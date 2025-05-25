@@ -1,7 +1,7 @@
 package com.example.ec_2024b_back.sample.infrastructure.stepimpl;
 
+import com.example.ec_2024b_back.sample.application.workflow.CreateSampleWorkflow;
 import com.example.ec_2024b_back.sample.application.workflow.CreateSampleWorkflow.SaveSampleStep;
-import com.example.ec_2024b_back.sample.domain.models.Sample;
 import com.example.ec_2024b_back.sample.domain.repositories.Samples;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,8 @@ public class SaveSampleStepImpl implements SaveSampleStep {
   private final Samples samples;
 
   @Override
-  public Mono<Sample> execute(Sample sample) {
-    return samples.save(sample);
+  public Mono<CreateSampleWorkflow.Context.Created> apply(
+      CreateSampleWorkflow.Context.SampleCreated sampleCreated) {
+    return samples.save(sampleCreated.sample()).map(CreateSampleWorkflow.Context.Created::new);
   }
 }

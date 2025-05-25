@@ -1,5 +1,6 @@
 package com.example.ec_2024b_back.sample.infrastructure.stepimpl;
 
+import com.example.ec_2024b_back.sample.application.workflow.CreateSampleWorkflow;
 import com.example.ec_2024b_back.sample.application.workflow.CreateSampleWorkflow.ValidateInputStep;
 import com.example.ec_2024b_back.share.domain.exceptions.DomainException;
 import org.jspecify.annotations.Nullable;
@@ -15,14 +16,14 @@ import reactor.core.publisher.Mono;
 public class ValidateInputStepImpl implements ValidateInputStep {
 
   @Override
-  public Mono<Void> execute(String name, @Nullable String description) {
+  public Mono<CreateSampleWorkflow.Context.Validated> apply(
+      CreateSampleWorkflow.Context.Input input) {
     return Mono.fromCallable(
-            () -> {
-              validateName(name);
-              validateDescription(description);
-              return null;
-            })
-        .then();
+        () -> {
+          validateName(input.name());
+          validateDescription(input.description());
+          return new CreateSampleWorkflow.Context.Validated(input.name(), input.description());
+        });
   }
 
   /**
